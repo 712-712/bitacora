@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Bitacora Automotriz</string>
+    <string name="brand_bitacora">BITÁCORA</string>
+    <string name="brand_automotriz">AUTOMOTRIZ</string>
+    <string name="taller">TALLER</string>
+    <string name="cliente">CLIENTE</string>
+    <string name="ingresar">INGRESAR</string>
+</resources>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ============================================ -->
+    <!-- COLORES NEÓN ORIGINALES (necesarios para XML) -->
+    <!-- ============================================ -->
+    <color name="neon_primary">#00F5FF</color>
+    <color name="neon_secondary">#00B8D4</color>
+    <color name="neon_surface">#050A18</color>
+    <color name="neon_background">#050A18</color>
+    <color name="neon_border">#00F5FF</color>
+    <color name="neon_button_primary">#00F5FF</color>
+    <color name="neon_button_text">#00F5FF</color>
+    <color name="neon_badge_bg">#00F5FF</color>
+    <color name="neon_badge_text">#000000</color>
+    <color name="neon_accent_1">#FF6B6B</color>
+    <color name="neon_accent_2">#4ECDC4</color>
+    <color name="neon_text_primary">#00F5FF</color>
+    <color name="neon_text_secondary">#90CAF9</color>
+    <color name="neon_text_on_primary">#000000</color>
+
+    <!-- ============================================ -->
+    <!-- COLORES ESTÁNDAR -->
+    <!-- ============================================ -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- ============================================ -->
+    <!-- COLORES SUAVIZADOS (para Jetpack Compose) -->
+    <!-- ============================================ -->
+    <color name="fondo_pantalla">#0B1426</color>
+    <color name="titulo_principal">#5CC8D0</color>
+    <color name="fondo_tarjeta">#4A8F8A</color>
+    <color name="texto_tarjeta">#E0E0E0</color>
+    <color name="etiqueta_campo">#7BA7C9</color>
+    <color name="texto_boton">#7DD4DB</color>
+    <color name="borde_boton">#5CC8D0</color>
+    <color name="fondo_secundario">#1A2744</color>
+</resources>
