@@ -21,6 +21,20 @@
     </style>
 
     <!-- ============================================ -->
+    <!-- TEMA DE CALENDARIO VERDE UNIFICADO          -->
+    <!-- ============================================ -->
+    <style name="CalendarioVerdeTheme" parent="Theme.AppCompat.Light.Dialog">
+        <item name="colorAccent">#006C4C</item>
+        <item name="colorPrimary">#006C4C</item>
+        <item name="colorPrimaryDark">#004D33</item>
+        <item name="android:colorBackground">#FFFFFF</item>
+        <item name="android:textColorPrimary">#000000</item>
+        <item name="android:textColorSecondary">#006C4C</item>
+        <item name="android:textColorPrimaryInverse">#FFFFFF</item>
+        <item name="android:headerBackground">#006C4C</item>
+    </style>
+
+    <!-- ============================================ -->
     <!-- ESTILOS DE TARJETAS NEÓN                     -->
     <!-- ============================================ -->
 

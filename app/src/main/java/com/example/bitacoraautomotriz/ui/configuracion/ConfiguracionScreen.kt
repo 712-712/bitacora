@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,6 +53,9 @@ fun ConfiguracionScreen(
         BotonModulo3D(
             texto = "ACERCA DE",
             icono = "ℹ️",
+            colorClaro = Color(0xFFFFF59D),
+            colorMedio = Color(0xFFFFEB3B),
+            colorOscuro = Color(0xFFFBC02D),
             onClick = onAcercaDe,
             modifier = Modifier.fillMaxWidth()
         )
@@ -62,8 +66,12 @@ fun ConfiguracionScreen(
         BotonModulo3D(
             texto = "REGRESAR",
             icono = "🔙",
+            colorClaro = Colores.RegresarClaro,
+            colorMedio = Colores.RegresarMedio,
+            colorOscuro = Colores.RegresarOscuro,
             onClick = onRegresar,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colorTexto = Color.White
         )
     }
 }

@@ -11,15 +11,19 @@ object Colores {
     val TituloPrincipal = Color(0xFF90CAF9)
     val TextoGlobal = Color(0xFF90CAF9)
 
-    // ✅ TARJETAS: Verde Esmeralda Oscuro (El que elegiste)
+    // ✅ TARJETAS: Verde Esmeralda Oscuro
     val FondoTarjeta = Color(0xFF006C4C)
 
-    // ✅ Textos DENTRO de las tarjetas y formularios (REVERTIDO A BLANCO)
-    // Este es el cambio clave: al ser blanco, se leerá perfecto sobre el fondo oscuro.
+    // ✅ Textos DENTRO de las tarjetas y formularios
     val TextoTarjeta = Color.White
 
     // ✅ Etiquetas y Botones
     val EtiquetaCampo = Color(0xFF7BA7C9)
     val TextoBoton = Color(0xFF9FE0E5)
     val BordeBoton = Color(0xFF7DD4D9)
+
+    // ✅ BOTÓN REGRESAR (Gris Oscuro Unificado)
+    val RegresarClaro = Color(0xFF546E7A)
+    val RegresarMedio = Color(0xFF37474F)
+    val RegresarOscuro = Color(0xFF263238)
 }

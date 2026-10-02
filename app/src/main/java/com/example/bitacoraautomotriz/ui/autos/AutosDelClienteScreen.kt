@@ -100,9 +100,9 @@ fun AutosDelClienteScreen(
                             colorMedio = Color(0xFF1976D2),
                             colorOscuro = Color(0xFF0D47A1),
                             onClick = { onEditarAuto(auto.id) },
-                            modifier = Modifier.fillMaxWidth().height(48.dp), // ✅ AHORA OCUPA TODO EL ANCHO
-                            tamanioTexto = 14,
-                            colorTexto = Color.White // ✅ TEXTO BLANCO PARA CONTRASTE
+                            modifier = Modifier.fillMaxWidth().height(56.dp), // ✅ AHORA OCUPA TODO EL ANCHO
+                            tamanioTexto = 16,
+                            colorTexto = Color.Black // ✅ TEXTO NEGRO NEGRITA
                         )
                     }
                 }
@@ -121,10 +121,11 @@ fun AutosDelClienteScreen(
 
         BotonModulo3D(
             texto = "REGRESAR",
-            colorClaro = Color(0xFFD5E1E6),
-            colorMedio = Color(0xFF90A4AE),
-            colorOscuro = Color(0xFF455A64),
-            onClick = onRegresar
+            colorClaro = Colores.RegresarClaro,
+            colorMedio = Colores.RegresarMedio,
+            colorOscuro = Colores.RegresarOscuro,
+            onClick = onRegresar,
+            colorTexto = Color.White
         )
     }
 }

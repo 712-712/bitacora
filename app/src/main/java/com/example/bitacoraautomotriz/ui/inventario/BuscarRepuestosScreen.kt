@@ -1,341 +1,229 @@
 package com.example.bitacoraautomotriz.ui.inventario
 
-import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
-import android.location.Location
-import android.location.LocationManager
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.json.JSONArray
-import org.json.JSONObject
-import java.io.OutputStreamWriter
-import java.net.HttpURLConnection
-import java.net.URL
-
-// =====================================
-// MODELO DE DATOS
-// =====================================
-
-data class LugarRepuestoTexto(
-    val nombre: String,
-    val lat: Double,
-    val lon: Double,
-    val direccion: String,
-    val distanciaMetros: Double
-)
-
-// =====================================
-// FUNCIÓN QUE CONSULTA OVERPASS API (GRATIS, SIN API KEY)
-// =====================================
-
-suspend fun buscarRepuestosCercanosTexto(
-    lat: Double,
-    lon: Double,
-    radioMetros: Int = 5000
-): List<LugarRepuestoTexto> = withContext(Dispatchers.IO) {
-
-    val query = """
-        [out:json][timeout:25];
-        (
-          node["shop"="car_parts"](around:$radioMetros,$lat,$lon);
-          node["shop"="car_repair"](around:$radioMetros,$lat,$lon);
-          way["shop"="car_parts"](around:$radioMetros,$lat,$lon);
-          way["shop"="car_repair"](around:$radioMetros,$lat,$lon);
-        );
-        out center;
-    """.trimIndent()
-
-    val resultado = mutableListOf<LugarRepuestoTexto>()
-
-    try {
-        val url = URL("https://overpass-api.de/api/interpreter")
-        val conexion = url.openConnection() as HttpURLConnection
-
-        conexion.requestMethod = "POST"
-        conexion.doOutput = true
-        conexion.setRequestProperty(
-            "Content-Type",
-            "application/x-www-form-urlencoded"
-        )
-
-        OutputStreamWriter(conexion.outputStream).use { writer ->
-            writer.write("data=" + java.net.URLEncoder.encode(query, "UTF-8"))
-        }
-
-        val respuesta = conexion.inputStream.bufferedReader().use { it.readText() }
-
-        val json = JSONObject(respuesta)
-        val elementos: JSONArray = json.getJSONArray("elements")
-
-        for (i in 0 until elementos.length()) {
-            val elemento = elementos.getJSONObject(i)
-
-            val latItem: Double
-            val lonItem: Double
-
-            if (elemento.has("center")) {
-                val center = elemento.getJSONObject("center")
-                latItem = center.getDouble("lat")
-                lonItem = center.getDouble("lon")
-            } else {
-                latItem = elemento.optDouble("lat")
-                lonItem = elemento.optDouble("lon")
-            }
-
-            val tags = elemento.optJSONObject("tags")
-            val nombre = tags?.optString("name", "Refaccionaria / Taller sin nombre")
-                ?: "Refaccionaria / Taller sin nombre"
-
-            val calle = tags?.optString("addr:street", "") ?: ""
-            val numero = tags?.optString("addr:housenumber", "") ?: ""
-            val direccion = if (calle.isNotEmpty()) "$calle $numero".trim() else "Dirección no disponible"
-
-            val distancia = distanciaEntreCoordenadasTexto(lat, lon, latItem, lonItem)
-
-            resultado.add(
-                LugarRepuestoTexto(
-                    nombre = nombre,
-                    lat = latItem,
-                    lon = lonItem,
-                    direccion = direccion,
-                    distanciaMetros = distancia
-                )
-            )
-        }
-
-    } catch (e: Exception) {
-        e.printStackTrace()
-    }
-
-    resultado.sortedBy { it.distanciaMetros }
-}
-
-fun distanciaEntreCoordenadasTexto(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
-    val resultados = FloatArray(1)
-    Location.distanceBetween(lat1, lon1, lat2, lon2, resultados)
-    return resultados[0].toDouble()
-}
-
-fun obtenerUbicacionActualTexto(context: Context, onUbicacion: (Location?) -> Unit) {
-
-    val tienePermiso = ContextCompat.checkSelfPermission(
-        context,
-        Manifest.permission.ACCESS_FINE_LOCATION
-    ) == PackageManager.PERMISSION_GRANTED
-
-    if (!tienePermiso) {
-        onUbicacion(null)
-        return
-    }
-
-    val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-
-    val proveedores = listOf(
-        LocationManager.GPS_PROVIDER,
-        LocationManager.NETWORK_PROVIDER
-    )
-
-    var mejorUbicacion: Location? = null
-
-    for (proveedor in proveedores) {
-        try {
-            val ubicacion = locationManager.getLastKnownLocation(proveedor)
-            if (ubicacion != null) {
-                if (mejorUbicacion == null || ubicacion.accuracy < mejorUbicacion!!.accuracy) {
-                    mejorUbicacion = ubicacion
-                }
-            }
-        } catch (e: SecurityException) {
-            e.printStackTrace()
-        }
-    }
-
-    onUbicacion(mejorUbicacion)
-}
-
-// =====================================
-// PANTALLA: BÚSQUEDA DE REPUESTOS POR TEXTO/NOMBRE
-// (con lista de refaccionarias/talleres cercanos)
-// =====================================
+import com.example.bitacoraautomotriz.data.Repuesto
+import com.example.bitacoraautomotriz.repository.RepuestoRepository
+import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
+import com.example.bitacoraautomotriz.ui.theme.Colores
+import java.util.Locale
 
 @Composable
 fun BuscarRepuestosScreen(
-    onRegresar: () -> Unit = {}
+    onRegresar: () -> Unit = {},
 ) {
-
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
 
-    var textoBusqueda by remember { mutableStateOf("") }
-
-    var permisoConcedido by remember {
-        mutableStateOf(
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        )
-    }
-
-    var ubicacionUsuario by remember { mutableStateOf<Location?>(null) }
-    var lugares by remember { mutableStateOf<List<LugarRepuestoTexto>>(emptyList()) }
-    var cargando by remember { mutableStateOf(false) }
-    var mensajeError by remember { mutableStateOf("") }
-
-    val lanzadorPermiso = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
-    ) { concedido ->
-        permisoConcedido = concedido
-        if (!concedido) {
-            mensajeError = "SE NECESITA EL PERMISO DE UBICACIÓN PARA BUSCAR REPUESTOS CERCANOS"
-        }
-    }
+    var textoBusqueda by remember { mutableStateOf(value = "") }
+    var repuestosLocales by remember { mutableStateOf<List<Repuesto>>(value = emptyList()) }
+    var cargando by remember { mutableStateOf(value = true) }
 
     LaunchedEffect(Unit) {
-        if (!permisoConcedido) {
-            lanzadorPermiso.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        try {
+            repuestosLocales = RepuestoRepository.obtenerRepuestos(context)
+        } catch (_: Exception) {
+            repuestosLocales = emptyList()
+        } finally {
+            cargando = false
         }
     }
 
-    LaunchedEffect(permisoConcedido) {
-        if (permisoConcedido) {
-            cargando = true
-            obtenerUbicacionActualTexto(context) { ubicacion ->
-                ubicacionUsuario = ubicacion
-
-                if (ubicacion != null) {
-                    scope.launch {
-                        lugares = buscarRepuestosCercanosTexto(ubicacion.latitude, ubicacion.longitude)
-                        cargando = false
-                    }
-                } else {
-                    mensajeError = "NO SE PUDO OBTENER TU UBICACIÓN. ACTIVA EL GPS E INTENTA DE NUEVO"
-                    cargando = false
-                }
-            }
-        }
-    }
-
-    // Filtra los resultados según lo que el usuario escriba
-    val lugaresFiltrados = if (textoBusqueda.isBlank()) {
-        lugares
+    val repuestosFiltrados = if (textoBusqueda.isBlank()) {
+        repuestosLocales
     } else {
-        lugares.filter {
-            it.nombre.contains(textoBusqueda, ignoreCase = true)
+        val query = textoBusqueda.trim()
+        repuestosLocales.filter { rep ->
+            rep.nombre.contains(query, ignoreCase = true) ||
+                    rep.marca.contains(query, ignoreCase = true) ||
+                    rep.categoria.contains(query, ignoreCase = true)
         }
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(12.dp)
+            .background(Colores.FondoPantalla)
+            .statusBarsPadding()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top
     ) {
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            TextButton(onClick = onRegresar) {
-                Text(text = "← Regresar")
-            }
-        }
-
         Text(
-            text = "BUSCAR REPUESTO POR NOMBRE",
-            fontSize = 20.sp,
+            text = "BUSCAR REPUESTO EN INVENTARIO",
+            fontSize = 22.sp,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.fillMaxWidth()
+            color = Colores.TituloPrincipal
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = "NOMBRE, MARCA O CATEGORÍA",
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Bold,
+                color = Colores.EtiquetaCampo
+            )
+        }
+        Spacer(modifier = Modifier.height(6.dp))
 
         OutlinedTextField(
             value = textoBusqueda,
             onValueChange = { textoBusqueda = it },
-            label = { Text("Nombre del repuesto o negocio") },
-            modifier = Modifier.fillMaxWidth()
+            textStyle = TextStyle(color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold),
+            placeholder = { Text("Escriba para buscar...", fontSize = 18.sp, color = Colores.EtiquetaCampo.copy(alpha = 0.6f)) },
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(
+                onSearch = { focusManager.clearFocus() },
+                onDone = { focusManager.clearFocus() }
+            ),
+            singleLine = true,
+            shape = RoundedCornerShape(12.dp),
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = Colores.FondoSecundario,
+                unfocusedContainerColor = Colores.FondoSecundario,
+                disabledContainerColor = Colores.FondoSecundario,
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                focusedIndicatorColor = Colores.BordeBoton,
+                unfocusedIndicatorColor = Colores.BordeBoton.copy(alpha = 0.5f),
+                cursorColor = Color.White
+            ),
+            modifier = Modifier.fillMaxWidth().height(70.dp)
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        if (mensajeError.isNotEmpty()) {
-            Text(
-                text = mensajeError,
-                color = MaterialTheme.colorScheme.error,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-        }
+        Spacer(modifier = Modifier.height(16.dp))
 
         if (cargando) {
             Box(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = Color.White)
             }
-        } else if (lugaresFiltrados.isEmpty()) {
-            Text(
-                text = "NO SE ENCONTRARON RESULTADOS",
-                modifier = Modifier.fillMaxWidth()
-            )
+        } else if (repuestosFiltrados.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = if (repuestosLocales.isEmpty())
+                        "NO HAY REPUESTOS EN EL INVENTARIO"
+                    else
+                        "NO SE ENCONTRARON COINCIDENCIAS",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         } else {
             LazyColumn(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(lugaresFiltrados) { lugar ->
+                items(repuestosFiltrados) { repuesto ->
+                    val cantidad = repuesto.cantidad.coerceAtLeast(0)
+                    val precioUnitario = if (repuesto.precio.isNaN() || repuesto.precio < 0) 0.0 else repuesto.precio
+                    val importe = cantidad * precioUnitario
+                    val iva = importe * 0.16
+                    val total = importe + iva
+
                     Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp)
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = CardDefaults.cardColors(containerColor = Colores.FondoTarjeta),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
                     ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(18.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
                             Text(
-                                text = lugar.nombre,
+                                text = repuesto.nombre.uppercase(),
+                                fontSize = 22.sp,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
+                                color = Color.White
                             )
-                            Text(text = lugar.direccion)
                             Text(
-                                text = "${(lugar.distanciaMetros / 1000).let { "%.1f".format(it) }} km de distancia"
+                                text = "MARCA: ${repuesto.marca.uppercase()}",
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
                             )
+                            Text(
+                                text = "CATEGORÍA: ${repuesto.categoria.uppercase()}",
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
+
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color(0xFF004D33))
+
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(text = "CANTIDAD:", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(text = "$cantidad", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(text = "PRECIO:", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(text = String.format(Locale.US, "$ %,.2f", precioUnitario), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(text = "IMPORTE:", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(text = String.format(Locale.US, "$ %,.2f", importe), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(text = "I.V.A. 16%:", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(text = String.format(Locale.US, "$ %,.2f", iva), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(text = "TOTAL:", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(text = String.format(Locale.US, "$ %,.2f", total), fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
+                            }
                         }
                     }
                 }
             }
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        BotonModulo3D(
+            texto = "REGRESAR",
+            colorClaro = Colores.RegresarClaro,
+            colorMedio = Colores.RegresarMedio,
+            colorOscuro = Colores.RegresarOscuro,
+            onClick = onRegresar,
+            modifier = Modifier.fillMaxWidth().height(58.dp),
+            tamanioTexto = 16,
+            colorTexto = Color.White
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
     }
 }

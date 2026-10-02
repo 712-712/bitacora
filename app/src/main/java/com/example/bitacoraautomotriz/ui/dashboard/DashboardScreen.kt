@@ -82,10 +82,18 @@ fun DashboardScreen(
         BotonModulo3D(texto = "CONFIGURACIÓN", colorClaro = Color(0xFFFFF59D), colorMedio = Color(0xFFFFEB3B), colorOscuro = Color(0xFFFBC02D), onClick = onConfiguracionClick)
         Spacer(modifier = Modifier.height(24.dp))
 
-        BotonModulo3D(texto = "ÁREA DEL CLIENTE", colorClaro = Color(0xFFFF5252), colorMedio = Color(0xFFD50000), colorOscuro = Color(0xFF8B0000), onClick = onAreaClienteClick)
+        BotonModulo3D(texto = "ÁREA DEL CLIENTE", colorClaro = Color(0xFFD7B899), colorMedio = Color(0xFF9B6B43), colorOscuro = Color(0xFF5D3A1A), onClick = onAreaClienteClick)
         Spacer(modifier = Modifier.height(16.dp))
 
-        BotonModulo3D(texto = "SALIR DE LA APP", colorClaro = Color(0xFFB0BEC5), colorMedio = Color(0xFF607D8B), colorOscuro = Color(0xFF263238), onClick = onRegresar)
+        BotonModulo3D(
+            texto = "SALIR DE LA APP",
+            colorClaro = Colores.RegresarClaro,
+            colorMedio = Colores.RegresarMedio,
+            colorOscuro = Colores.RegresarOscuro,
+            onClick = onRegresar,
+            colorTexto = Color.White
+        )
         Spacer(modifier = Modifier.height(16.dp))
     }
+
 }

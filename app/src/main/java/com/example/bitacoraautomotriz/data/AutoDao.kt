@@ -18,13 +18,13 @@ interface AutoDao {
     @Delete
     suspend fun eliminarAuto(auto: Auto)
 
-    @Query("SELECT * FROM autos")
+    @Query("SELECT * FROM autos ORDER BY id DESC")
     suspend fun obtenerAutos(): List<Auto>
 
     @Query("SELECT * FROM autos WHERE id = :id LIMIT 1")
     suspend fun obtenerAutoPorId(id: Int): Auto?
 
-    @Query("SELECT * FROM autos WHERE cliente = :nombreCliente")
+    @Query("SELECT * FROM autos WHERE cliente = :nombreCliente ORDER BY id DESC")
     suspend fun obtenerAutosPorCliente(nombreCliente: String): List<Auto>
 
     // ✅ CORREGIDO: Ahora incluye VIN y es insensible a mayúsculas/minúsculas
@@ -34,6 +34,7 @@ interface AutoDao {
            OR UPPER(marca) LIKE '%' || UPPER(:termino) || '%' 
            OR UPPER(modelo) LIKE '%' || UPPER(:termino) || '%' 
            OR UPPER(vin) LIKE '%' || UPPER(:termino) || '%'
+        ORDER BY id DESC
     """)
     suspend fun buscarAutos(termino: String): List<Auto>
 

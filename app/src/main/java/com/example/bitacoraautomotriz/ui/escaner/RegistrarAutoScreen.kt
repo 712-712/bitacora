@@ -1,15 +1,23 @@
 package com.example.bitacoraautomotriz.ui.escaner
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -17,9 +25,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.bitacoraautomotriz.data.Auto
@@ -28,6 +44,7 @@ import com.example.bitacoraautomotriz.repository.AutoRepository
 import com.example.bitacoraautomotriz.repository.ClienteRepository
 import com.example.bitacoraautomotriz.ui.autos.SelectorClientesDialog
 import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
+import com.example.bitacoraautomotriz.ui.theme.Colores
 import kotlinx.coroutines.launch
 
 @Composable
@@ -36,6 +53,15 @@ fun RegistrarAutoScreen(
     onGuardado: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
+
+    // ✅ FocusRequesters para navegación fluida entre campos
+    val marcaFocus = remember { FocusRequester() }
+    val modeloFocus = remember { FocusRequester() }
+    val anioFocus = remember { FocusRequester() }
+    val placaFocus = remember { FocusRequester() }
+    val colorFocus = remember { FocusRequester() }
+    val kilometrajeFocus = remember { FocusRequester() }
 
     var cliente by remember { mutableStateOf("") }
     var marca by remember { mutableStateOf("") }
@@ -48,18 +74,15 @@ fun RegistrarAutoScreen(
     var guardando by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
 
-    // ♿ Estados para el Selector de Clientes
     var mostrarSelectorCliente by remember { mutableStateOf(false) }
     var listaClientes by remember { mutableStateOf(emptyList<Cliente>()) }
     var clienteSeleccionado by remember { mutableStateOf<Cliente?>(null) }
 
-    // Cargar la lista de clientes al abrir la pantalla
     LaunchedEffect(Unit) {
         listaClientes = ClienteRepository.obtenerClientes()
     }
 
     fun guardar() {
-        // Usamos el nombre del cliente seleccionado, o el escrito manualmente si no hay selección
         val nombreClienteFinal = clienteSeleccionado?.nombre ?: cliente.trim()
 
         if (nombreClienteFinal.isBlank() || marca.isBlank() || modelo.isBlank() || placa.isBlank()) {
@@ -99,98 +122,177 @@ fun RegistrarAutoScreen(
         }
     }
 
+    val estiloCampo = TextStyle(
+        color = Color.White,
+        fontSize = 18.sp,
+        fontWeight = FontWeight.Bold
+    )
+
+    val coloresCampo = TextFieldDefaults.colors(
+        focusedContainerColor = Colores.FondoSecundario,
+        unfocusedContainerColor = Colores.FondoSecundario,
+        focusedTextColor = Color.White,
+        unfocusedTextColor = Color.White,
+        cursorColor = Color.White,
+        focusedIndicatorColor = Colores.BordeBoton,
+        unfocusedIndicatorColor = Colores.BordeBoton.copy(alpha = 0.5f)
+    )
+
     Scaffold { padding ->
         Column(
             modifier = Modifier
+                .fillMaxSize()
+                .background(Colores.FondoPantalla) // ✅ 1. Fondo correcto
                 .padding(padding)
-                .padding(20.dp)
-                .verticalScroll(rememberScrollState()),
+                .padding(start = 24.dp, end = 24.dp, top = 48.dp, bottom = 24.dp)
+                .verticalScroll(rememberScrollState())
+                .imePadding(), // ✅ Scroll y teclado
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
         ) {
+            Text(
+                text = "REGISTRAR AUTO",
+                fontSize = 26.sp,
+                fontWeight = FontWeight.Bold,
+                color = Colores.TituloPrincipal
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             Text(
                 text = "VIN ESCANEADO: $vin",
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
-                color = Color(0xFF00AEEF)
+                color = Colores.TituloPrincipal
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // ♿ BOTÓN PARA ABRIR EL SELECTOR DE CLIENTES
+            // CLIENTE
+            Text(
+                text = "CLIENTE:",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = Colores.TituloPrincipal, // ✅ 3. Etiqueta arriba en azul
+                modifier = Modifier.align(Alignment.Start)
+            )
             BotonModulo3D(
                 texto = if (clienteSeleccionado != null) "CLIENTE: ${clienteSeleccionado!!.nombre}" else "SELECCIONAR CLIENTE",
                 colorClaro = Color(0xFF80D8FF),
                 colorMedio = Color(0xFF00B8D4),
                 colorOscuro = Color(0xFF006064),
-                onClick = { mostrarSelectorCliente = true }
+                onClick = { mostrarSelectorCliente = true },
+                modifier = Modifier.fillMaxWidth()
             )
-
             Spacer(modifier = Modifier.height(16.dp))
 
+            // MARCA
+            Text(text = "MARCA:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
             OutlinedTextField(
                 value = marca,
                 onValueChange = { marca = it.uppercase() },
-                label = { Text("Marca") },
-                modifier = Modifier.fillMaxWidth(),
+                textStyle = estiloCampo,
+                colors = coloresCampo, // ✅ 2. Fondo de campo correcto
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true, // ✅ 4. Evita saltos de línea
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { modeloFocus.requestFocus() }),
+                modifier = Modifier.fillMaxWidth().focusRequester(marcaFocus)
             )
             Spacer(modifier = Modifier.height(12.dp))
 
+            // MODELO
+            Text(text = "MODELO:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
             OutlinedTextField(
                 value = modelo,
                 onValueChange = { modelo = it.uppercase() },
-                label = { Text("Modelo") },
-                modifier = Modifier.fillMaxWidth(),
+                textStyle = estiloCampo,
+                colors = coloresCampo,
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { anioFocus.requestFocus() }),
+                modifier = Modifier.fillMaxWidth().focusRequester(modeloFocus)
             )
             Spacer(modifier = Modifier.height(12.dp))
 
+            // AÑO
+            Text(text = "AÑO:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
             OutlinedTextField(
                 value = anio,
-                onValueChange = { anio = it },
-                label = { Text("Año") },
-                modifier = Modifier.fillMaxWidth(),
+                onValueChange = { anio = it.filter { char -> char.isDigit() } }, // Solo dígitos
+                textStyle = estiloCampo,
+                colors = coloresCampo,
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next), // ✅ 5. Teclado numérico
+                keyboardActions = KeyboardActions(onNext = { placaFocus.requestFocus() }),
+                modifier = Modifier.fillMaxWidth().focusRequester(anioFocus)
             )
             Spacer(modifier = Modifier.height(12.dp))
 
+            // PLACA
+            Text(text = "PLACA:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
             OutlinedTextField(
                 value = placa,
                 onValueChange = { placa = it.uppercase() },
-                label = { Text("Placa") },
-                modifier = Modifier.fillMaxWidth(),
+                textStyle = estiloCampo,
+                colors = coloresCampo,
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { colorFocus.requestFocus() }),
+                modifier = Modifier.fillMaxWidth().focusRequester(placaFocus)
             )
             Spacer(modifier = Modifier.height(12.dp))
 
+            // COLOR
+            Text(text = "COLOR:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
             OutlinedTextField(
                 value = color,
                 onValueChange = { color = it.uppercase() },
-                label = { Text("Color") },
-                modifier = Modifier.fillMaxWidth(),
+                textStyle = estiloCampo,
+                colors = coloresCampo,
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { kilometrajeFocus.requestFocus() }),
+                modifier = Modifier.fillMaxWidth().focusRequester(colorFocus)
             )
             Spacer(modifier = Modifier.height(12.dp))
 
+            // KILOMETRAJE
+            Text(text = "KILOMETRAJE:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
             OutlinedTextField(
                 value = kilometraje,
-                onValueChange = { kilometraje = it },
-                label = { Text("Kilometraje") },
-                modifier = Modifier.fillMaxWidth(),
+                onValueChange = { kilometraje = it.filter { char -> char.isDigit() } }, // Solo dígitos
+                textStyle = estiloCampo,
+                colors = coloresCampo,
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done), // ✅ 5. Teclado numérico y "Listo"
+                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+                modifier = Modifier.fillMaxWidth().focusRequester(kilometrajeFocus)
             )
 
             if (error != null) {
-                Text(
-                    text = error!!,
-                    modifier = Modifier.padding(top = 12.dp),
-                    color = Color(0xFFFF5252),
-                    fontWeight = FontWeight.Bold
-                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(text = "⚠️ $error", color = Color(0xFFFF5252), fontWeight = FontWeight.Bold, fontSize = 16.sp)
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // ♿ BOTÓN DE GUARDAR CON ESTILO 3D
+            // ✅ 6. Botones con fillMaxWidth y clearFocus para garantizar que funcionen
             BotonModulo3D(
                 texto = if (guardando) "GUARDANDO..." else "GUARDAR AUTO",
                 colorClaro = Color(0xFFB9F6CA),
                 colorMedio = Color(0xFF00C853),
                 colorOscuro = Color(0xFF00695C),
-                onClick = { if (!guardando) guardar() }
+                onClick = {
+                    focusManager.clearFocus()
+                    if (!guardando) guardar()
+                },
+                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -200,23 +302,27 @@ fun RegistrarAutoScreen(
                 colorClaro = Color(0xFFD5E1E6),
                 colorMedio = Color(0xFF90A4AE),
                 colorOscuro = Color(0xFF455A64),
-                onClick = onGuardado
+                onClick = {
+                    focusManager.clearFocus()
+                    onGuardado()
+                },
+                modifier = Modifier.fillMaxWidth()
             )
+
+            // Espacio final para garantizar que el scroll tenga recorrido
+            Spacer(modifier = Modifier.height(120.dp))
         }
     }
 
-    // ♿ AQUÍ SE MUESTRA EL DIÁLOGO CUANDO EL USUARIO TOCA "SELECCIONAR CLIENTE"
     if (mostrarSelectorCliente) {
         SelectorClientesDialog(
             clientes = listaClientes,
             onClienteSeleccionado = { clienteElegido ->
                 clienteSeleccionado = clienteElegido
-                cliente = clienteElegido.nombre // Mantenemos compatibilidad con tu base de datos
+                cliente = clienteElegido.nombre
                 mostrarSelectorCliente = false
             },
-            onCerrar = {
-                mostrarSelectorCliente = false
-            }
+            onCerrar = { mostrarSelectorCliente = false }
         )
     }
 }

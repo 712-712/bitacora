@@ -10,12 +10,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,13 +38,13 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CitaEntregaScreen(
-    onRegresar: () -> Unit
+    onRegresar: () -> Unit,
 ) {
-    var mostrarCalendario by remember { mutableStateOf(false) }
-    var mostrarHorarios by remember { mutableStateOf(false) }
-    var fechaSeleccionada by remember { mutableStateOf("No seleccionada") }
-    var horarioSeleccionado by remember { mutableStateOf("No seleccionado") }
-    var citaConfirmada by remember { mutableStateOf(false) }
+    var mostrarCalendario by remember { mutableStateOf(value = false) }
+    var mostrarHorarios by remember { mutableStateOf(value = false) }
+    var fechaSeleccionada by remember { mutableStateOf(value = "No seleccionada") }
+    var horarioSeleccionado by remember { mutableStateOf(value = "No seleccionado") }
+    var citaConfirmada by remember { mutableStateOf(value = false) }
 
     Column(
         modifier = Modifier
@@ -58,8 +61,8 @@ fun CitaEntregaScreen(
     ) {
         // TÍTULO
         Text(
-            text = "CITA DE ENTREGA",
-            fontSize = 29.sp,
+            text = "CITA DE INGRESO AL TALLER",
+            fontSize = 26.sp,
             fontWeight = FontWeight.Bold,
             color = Colores.TituloPrincipal
         )
@@ -67,7 +70,7 @@ fun CitaEntregaScreen(
         Spacer(modifier = Modifier.height(10.dp))
 
         Text(
-            text = "Programe la entrega de su vehículo",
+            text = "Programe la recepción de su vehículo",
             fontSize = 17.sp,
             fontWeight = FontWeight.Bold,
             color = Colores.EtiquetaCampo
@@ -77,7 +80,7 @@ fun CitaEntregaScreen(
 
         // FECHA
         Text(
-            text = "FECHA DE ENTREGA",
+            text = "FECHA DE INGRESO",
             fontSize = 19.sp,
             fontWeight = FontWeight.Bold,
             color = Colores.TextoTarjeta
@@ -85,6 +88,7 @@ fun CitaEntregaScreen(
 
         Spacer(modifier = Modifier.height(10.dp))
 
+        // SELECCIONAR FECHA (CAFÉ)
         BotonModulo3D(
             texto = if (fechaSeleccionada == "No seleccionada") {
                 "SELECCIONAR FECHA"
@@ -92,6 +96,10 @@ fun CitaEntregaScreen(
                 fechaSeleccionada
             },
             icono = "📅",
+            colorClaro = Color(0xFFD7B899),
+            colorMedio = Color(0xFF9B6B43),
+            colorOscuro = Color(0xFF5D3A1A),
+            colorTexto = Color.Black,
             onClick = { mostrarCalendario = true },
             modifier = Modifier.fillMaxWidth()
         )
@@ -100,7 +108,7 @@ fun CitaEntregaScreen(
 
         // HORARIO
         Text(
-            text = "HORARIO DE ENTREGA",
+            text = "HORARIO DE INGRESO",
             fontSize = 19.sp,
             fontWeight = FontWeight.Bold,
             color = Colores.TextoTarjeta
@@ -108,6 +116,7 @@ fun CitaEntregaScreen(
 
         Spacer(modifier = Modifier.height(10.dp))
 
+        // SELECCIONAR HORARIO (CAFÉ)
         BotonModulo3D(
             texto = if (horarioSeleccionado == "No seleccionado") {
                 "SELECCIONAR HORARIO"
@@ -115,6 +124,10 @@ fun CitaEntregaScreen(
                 horarioSeleccionado
             },
             icono = "🕐",
+            colorClaro = Color(0xFFD7B899),
+            colorMedio = Color(0xFF9B6B43),
+            colorOscuro = Color(0xFF5D3A1A),
+            colorTexto = Color.Black,
             onClick = { mostrarHorarios = true },
             modifier = Modifier.fillMaxWidth()
         )
@@ -147,30 +160,32 @@ fun CitaEntregaScreen(
 
         Spacer(modifier = Modifier.height(28.dp))
 
-        // CONFIRMAR CITA
-        Button(
+        // CONFIRMAR CITA (CAFÉ)
+        BotonModulo3D(
+            texto = "CONFIRMAR CITA",
+            icono = "✔️",
+            colorClaro = Color(0xFFD7B899),
+            colorMedio = Color(0xFF9B6B43),
+            colorOscuro = Color(0xFF5D3A1A),
+            colorTexto = Color.Black,
             onClick = {
-                if (fechaSeleccionada != "No seleccionada" && horarioSeleccionado != "No seleccionado") {
+                if ((fechaSeleccionada != "No seleccionada") && (horarioSeleccionado != "No seleccionado")) {
                     citaConfirmada = true
                 }
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(58.dp)
-        ) {
-            Text(
-                text = "CONFIRMAR CITA",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
+            modifier = Modifier.fillMaxWidth()
+        )
 
         Spacer(modifier = Modifier.height(18.dp))
 
-        // REGRESAR
+        // REGRESAR (GRIS)
         BotonModulo3D(
             texto = "REGRESAR",
             icono = "🔙",
+            colorClaro = Colores.RegresarClaro,
+            colorMedio = Colores.RegresarMedio,
+            colorOscuro = Colores.RegresarOscuro,
+            colorTexto = Color.White,
             onClick = onRegresar,
             modifier = Modifier.fillMaxWidth()
         )
@@ -192,20 +207,38 @@ fun CitaEntregaScreen(
                         mostrarCalendario = false
                     }
                 ) {
-                    Text(text = "ACEPTAR", fontWeight = FontWeight.Bold)
+                    Text(text = "ACEPTAR", fontWeight = FontWeight.Bold, color = Color.White)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { mostrarCalendario = false }) {
-                    Text("CANCELAR")
+                    Text("CANCELAR", color = Color.White)
                 }
             }
         ) {
-            DatePicker(state = datePickerState)
+            DatePicker(
+                state = datePickerState,
+                colors = DatePickerDefaults.colors(
+                    containerColor = Color(0xFF006C4C),
+                    titleContentColor = Color.White,
+                    headlineContentColor = Color.White,
+                    weekdayContentColor = Color.White,
+                    subheadContentColor = Color.White,
+                    yearContentColor = Color.White,
+                    currentYearContentColor = Color.White,
+                    selectedYearContentColor = Color.White,
+                    selectedYearContainerColor = Color(0xFF004D33),
+                    dayContentColor = Color.White,
+                    selectedDayContentColor = Color.White,
+                    selectedDayContainerColor = Color(0xFF004D33),
+                    todayContentColor = Color(0xFFFFD700),
+                    todayDateBorderColor = Color(0xFFFFD700)
+                )
+            )
         }
     }
 
-    // SELECCIÓN DE HORARIO
+    // SELECCIÓN DE HORARIO (CAFÉ)
     if (mostrarHorarios) {
         AlertDialog(
             onDismissRequest = { mostrarHorarios = false },
@@ -224,11 +257,19 @@ fun CitaEntregaScreen(
                                 horarioSeleccionado = horario
                                 mostrarHorarios = false
                             },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF9B6B43)
+                            ),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 3.dp)
                         ) {
-                            Text(text = horario, fontSize = 16.sp)
+                            Text(
+                                text = horario,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
                         }
                     }
                 }
@@ -246,7 +287,7 @@ fun CitaEntregaScreen(
             },
             text = {
                 Text(
-                    text = "Su cita de entrega ha sido programada para:\n\n" +
+                    text = "Su cita de ingreso ha sido programada para:\n\n" +
                             "Fecha: $fechaSeleccionada\n" +
                             "Horario: $horarioSeleccionado",
                     fontSize = 17.sp

@@ -15,7 +15,7 @@ interface ClienteDao {
     @Update
     suspend fun actualizarCliente(cliente: Cliente): Int
 
-    @Query("SELECT * FROM clientes")
+    @Query("SELECT * FROM clientes ORDER BY id DESC")
     suspend fun obtenerClientes(): List<Cliente>
 
     @Query("SELECT * FROM clientes WHERE id = :id LIMIT 1")

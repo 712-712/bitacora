@@ -31,10 +31,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FlashOff
-import androidx.compose.material.icons.filled.FlashOn
-import androidx.compose.material.icons.filled.Keyboard
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.path
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -169,7 +169,7 @@ fun BarcodeScannerScreen(
                         modifier = Modifier.align(Alignment.CenterStart),
                     ) {
                         Icon(
-                            imageVector = if (flashActivo) Icons.Filled.FlashOn else Icons.Filled.FlashOff,
+                            imageVector = if (flashActivo) FlashOnIcon else FlashOffIcon,
                             contentDescription = "Linterna",
                             tint = Color.White,
                         )
@@ -179,7 +179,7 @@ fun BarcodeScannerScreen(
                         onClick = { mostrarEntradaManual = true },
                         modifier = Modifier.align(Alignment.Center),
                     ) {
-                        Icon(Icons.Filled.Keyboard, contentDescription = null)
+                        Icon(KeyboardIcon, contentDescription = null)
                         Text(" Escribir VIN")
                     }
                 }
@@ -358,3 +358,142 @@ private fun CameraPreviewVin(
         },
     )
 }
+
+private val FlashOnIcon: ImageVector
+    get() = ImageVector.Builder(
+        name = "FlashOn",
+        defaultWidth = 24.dp,
+        defaultHeight = 24.dp,
+        viewportWidth = 24f,
+        viewportHeight = 24f
+    ).apply {
+        path(fill = SolidColor(Color.White)) {
+            moveTo(7f, 2f)
+            verticalLineToRelative(11f)
+            horizontalLineToRelative(3f)
+            verticalLineToRelative(9f)
+            lineToRelative(7f, -12f)
+            horizontalLineToRelative(-4f)
+            lineToRelative(4f, -8f)
+            close()
+        }
+    }.build()
+
+private val FlashOffIcon: ImageVector
+    get() = ImageVector.Builder(
+        name = "FlashOff",
+        defaultWidth = 24.dp,
+        defaultHeight = 24.dp,
+        viewportWidth = 24f,
+        viewportHeight = 24f
+    ).apply {
+        path(fill = SolidColor(Color.White)) {
+            moveTo(3.27f, 1.44f)
+            lineTo(2f, 2.72f)
+            lineToRelative(5f, 5f)
+            verticalLineTo(13f)
+            horizontalLineToRelative(3f)
+            verticalLineToRelative(9f)
+            lineToRelative(3.58f, -6.14f)
+            lineToRelative(5.7f, 5.7f)
+            lineToRelative(1.27f, -1.27f)
+            lineTo(3.27f, 1.44f)
+            close()
+            moveTo(17f, 10f)
+            horizontalLineToRelative(-4f)
+            lineToRelative(4f, -8f)
+            horizontalLineTo(7f)
+            verticalLineToRelative(1.17f)
+            lineTo(14.83f, 11f)
+            horizontalLineTo(17f)
+            close()
+        }
+    }.build()
+
+private val KeyboardIcon: ImageVector
+    get() = ImageVector.Builder(
+        name = "Keyboard",
+        defaultWidth = 24.dp,
+        defaultHeight = 24.dp,
+        viewportWidth = 24f,
+        viewportHeight = 24f
+    ).apply {
+        path(fill = SolidColor(Color.White)) {
+            moveTo(20f, 5f)
+            horizontalLineTo(4f)
+            curveToRelative(-1.1f, 0f, -1.99f, 0.9f, -1.99f, 2f)
+            lineTo(2f, 17f)
+            curveToRelative(0f, 1.1f, 0.9f, 2f, 2f, 2f)
+            horizontalLineToRelative(16f)
+            curveToRelative(1.1f, 0f, 2f, -0.9f, 2f, -2f)
+            verticalLineTo(7f)
+            curveToRelative(0f, -1.1f, -0.9f, -2f, -2f, -2f)
+            close()
+            moveTo(11f, 8f)
+            horizontalLineToRelative(2f)
+            verticalLineToRelative(2f)
+            horizontalLineToRelative(-2f)
+            verticalLineTo(8f)
+            close()
+            moveTo(11f, 11f)
+            horizontalLineToRelative(2f)
+            verticalLineToRelative(2f)
+            horizontalLineToRelative(-2f)
+            verticalLineToRelative(-2f)
+            close()
+            moveTo(8f, 8f)
+            horizontalLineToRelative(2f)
+            verticalLineToRelative(2f)
+            horizontalLineTo(8f)
+            verticalLineTo(8f)
+            close()
+            moveTo(8f, 11f)
+            horizontalLineToRelative(2f)
+            verticalLineToRelative(2f)
+            horizontalLineTo(8f)
+            verticalLineToRelative(-2f)
+            close()
+            moveTo(7f, 13f)
+            horizontalLineTo(5f)
+            verticalLineToRelative(-2f)
+            horizontalLineToRelative(2f)
+            verticalLineToRelative(2f)
+            close()
+            moveTo(7f, 10f)
+            horizontalLineTo(5f)
+            verticalLineTo(8f)
+            horizontalLineToRelative(2f)
+            verticalLineToRelative(2f)
+            close()
+            moveTo(16f, 17f)
+            horizontalLineTo(8f)
+            verticalLineToRelative(-2f)
+            horizontalLineToRelative(8f)
+            verticalLineToRelative(2f)
+            close()
+            moveTo(16f, 13f)
+            horizontalLineToRelative(-2f)
+            verticalLineToRelative(-2f)
+            horizontalLineToRelative(2f)
+            verticalLineToRelative(2f)
+            close()
+            moveTo(16f, 10f)
+            horizontalLineToRelative(-2f)
+            verticalLineTo(8f)
+            horizontalLineToRelative(2f)
+            verticalLineToRelative(2f)
+            close()
+            moveTo(19f, 13f)
+            horizontalLineToRelative(-2f)
+            verticalLineToRelative(-2f)
+            horizontalLineToRelative(2f)
+            verticalLineToRelative(2f)
+            close()
+            moveTo(19f, 10f)
+            horizontalLineToRelative(-2f)
+            verticalLineTo(8f)
+            horizontalLineToRelative(2f)
+            verticalLineToRelative(2f)
+            close()
+        }
+    }.build()

@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import com.example.bitacoraautomotriz.data.OrdenServicio
 import com.example.bitacoraautomotriz.repository.OrdenServicioRepository
 import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
+import com.example.bitacoraautomotriz.ui.theme.Colores
 
 @Composable
 fun VerOrdenesScreen(
@@ -401,18 +402,11 @@ fun VerOrdenesScreen(
 
         BotonModulo3D(
             texto = "REGRESAR",
-
-            colorClaro =
-                Color(0xFFD5E1E6),
-
-            colorMedio =
-                Color(0xFF90A4AE),
-
-            colorOscuro =
-                Color(0xFF455A64),
-
-            onClick =
-                onRegresar
+            colorClaro = Colores.RegresarClaro,
+            colorMedio = Colores.RegresarMedio,
+            colorOscuro = Colores.RegresarOscuro,
+            onClick = onRegresar,
+            colorTexto = Color.White
         )
 
         Spacer(

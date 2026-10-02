@@ -1,4 +1,3 @@
-
 package com.example.bitacoraautomotriz.ui.inventario
 
 import androidx.compose.foundation.background
@@ -6,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
+import com.example.bitacoraautomotriz.ui.theme.Colores
 
 @Composable
 fun InventarioScreen(
@@ -32,7 +33,7 @@ fun InventarioScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF001B44))
+            .background(Colores.FondoPantalla)
             .verticalScroll(rememberScrollState())
             .padding(
                 start = 24.dp,
@@ -45,10 +46,11 @@ fun InventarioScreen(
     ) {
 
         Text(
-            text = "MÓDULO DE INVENTARIO",
-            fontSize = 29.sp,
+            text = "MÓDULO DE REPUESTOS DEL TALLER",
+            fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = Colores.TituloPrincipal, // ✅ Azul de títulos
+            modifier = Modifier.align(Alignment.CenterHorizontally)
         )
 
         Spacer(
@@ -56,35 +58,41 @@ fun InventarioScreen(
         )
 
         // =========================================
-        // NUEVO REPUESTO
+        // AGREGAR NUEVO REPUESTO
         // =========================================
 
         BotonModulo3D(
-            texto = "NUEVO REPUESTO",
+            texto = "AGREGAR NUEVO REPUESTO",
             colorClaro = Color(0xFFF3A7FF),
             colorMedio = Color(0xFFD83CFF),
             colorOscuro = Color(0xFF7B1599),
-            onClick = onNuevoRepuesto
+            onClick = onNuevoRepuesto,
+            modifier = Modifier.fillMaxWidth().height(58.dp),
+            tamanioTexto = 16,
+            colorTexto = Color.Black
         )
 
         Spacer(
-            modifier = Modifier.height(6.dp)
+            modifier = Modifier.height(16.dp)
         )
 
         // =========================================
-        // VER INVENTARIO
+        // VER REPUESTO
         // =========================================
 
         BotonModulo3D(
-            texto = "VER INVENTARIO",
+            texto = "VER REPUESTO",
             colorClaro = Color(0xFFF3A7FF),
             colorMedio = Color(0xFFD83CFF),
             colorOscuro = Color(0xFF7B1599),
-            onClick = onVerInventario
+            onClick = onVerInventario,
+            modifier = Modifier.fillMaxWidth().height(58.dp),
+            tamanioTexto = 16,
+            colorTexto = Color.Black
         )
 
         Spacer(
-            modifier = Modifier.height(6.dp)
+            modifier = Modifier.height(16.dp)
         )
 
         // =========================================
@@ -96,27 +104,33 @@ fun InventarioScreen(
             colorClaro = Color(0xFFF3A7FF),
             colorMedio = Color(0xFFD83CFF),
             colorOscuro = Color(0xFF7B1599),
-            onClick = onBuscarRepuesto
+            onClick = onBuscarRepuesto,
+            modifier = Modifier.fillMaxWidth().height(58.dp),
+            tamanioTexto = 16,
+            colorTexto = Color.Black
         )
 
         Spacer(
-            modifier = Modifier.height(6.dp)
+            modifier = Modifier.height(16.dp)
         )
 
         // =========================================
-        // BUSCAR REFACCIÓN EN MAPA
+        // BUSCAR REPUESTO EN MAPA
         // =========================================
 
         BotonModulo3D(
-            texto = "BUSCAR REFACCIÓN EN MAPA",
-            colorClaro = Color(0xFF80DEEA),
-            colorMedio = Color(0xFF00ACC1),
-            colorOscuro = Color(0xFF006064),
-            onClick = onBuscarRefaccionMapa
+            texto = "BUSCAR REPUESTO EN MAPA",
+            colorClaro = Color(0xFFF3A7FF),
+            colorMedio = Color(0xFFD83CFF),
+            colorOscuro = Color(0xFF7B1599),
+            onClick = onBuscarRefaccionMapa,
+            modifier = Modifier.fillMaxWidth().height(58.dp),
+            tamanioTexto = 16,
+            colorTexto = Color.Black
         )
 
         Spacer(
-            modifier = Modifier.height(6.dp)
+            modifier = Modifier.height(16.dp)
         )
 
         // =========================================
@@ -125,10 +139,13 @@ fun InventarioScreen(
 
         BotonModulo3D(
             texto = "REGRESAR",
-            colorClaro = Color(0xFFD5E1E6),
-            colorMedio = Color(0xFF90A4AE),
-            colorOscuro = Color(0xFF455A64),
-            onClick = onRegresar
+            colorClaro = Colores.RegresarClaro,
+            colorMedio = Colores.RegresarMedio,
+            colorOscuro = Colores.RegresarOscuro,
+            onClick = onRegresar,
+            modifier = Modifier.fillMaxWidth().height(58.dp),
+            tamanioTexto = 16,
+            colorTexto = Color.White
         )
 
         Spacer(
@@ -136,4 +153,3 @@ fun InventarioScreen(
         )
     }
 }
-

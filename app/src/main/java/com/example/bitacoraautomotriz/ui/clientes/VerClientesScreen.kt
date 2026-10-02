@@ -30,6 +30,7 @@ import com.example.bitacoraautomotriz.repository.ClienteRepository
 import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
 import com.example.bitacoraautomotriz.ui.theme.Colores
 import kotlinx.coroutines.launch
+import java.net.URLEncoder
 
 @Composable
 fun VerClientesScreen(
@@ -43,7 +44,11 @@ fun VerClientesScreen(
     val context = LocalContext.current
 
     LaunchedEffect(refreshTrigger) {
-        clientes = ClienteRepository.obtenerClientes().sortedByDescending { it.id }
+        clientes = try {
+            ClienteRepository.obtenerClientes(context).sortedByDescending { it.id }
+        } catch (_: Exception) {
+            emptyList()
+        }
     }
 
     Column(
@@ -119,19 +124,22 @@ fun VerClientesScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
                             BotonModulo3D(
                                 texto = "EDITAR",
                                 colorClaro = Color(0xFF90CAF9),
                                 colorMedio = Color(0xFF1976D2),
                                 colorOscuro = Color(0xFF0D47A1),
                                 onClick = { onEditarCliente(cliente.id) },
-                                modifier = Modifier.weight(1f).height(48.dp),
-                                tamanioTexto = 14,
-                                colorTexto = Color.White
+                                modifier = Modifier.fillMaxWidth().height(60.dp),
+                                tamanioTexto = 16,
+                                colorTexto = Color.Black
                             )
 
-                            // ✅ BOTÓN ELIMINAR CON ADVERTENCIA DE ELIMINACIÓN EN CASCADA
+                            // BOTÓN ELIMINAR CON ADVERTENCIA DE ELIMINACIÓN EN CASCADA
                             BotonModulo3D(
                                 texto = "ELIMINAR",
                                 colorClaro = Color(0xFFEF9A9A),
@@ -139,8 +147,7 @@ fun VerClientesScreen(
                                 colorOscuro = Color(0xFFB71C1C),
                                 onClick = {
                                     scope.launch {
-                                        // Verificamos si el cliente tiene autos registrados
-                                        val cantidadAutos = AutoRepository.contarAutosPorCliente(cliente.nombre)
+                                        val cantidadAutos = AutoRepository.contarAutosPorCliente(cliente.nombre, context)
 
                                         val mensajeAdvertencia = if (cantidadAutos > 0) {
                                             "¿Está seguro de eliminar al cliente \"${cliente.nombre}\"?\n\n⚠️ ADVERTENCIA: Esta acción eliminará TAMBIÉN:\n• $cantidadAutos auto(s) registrado(s)\n• Todos los registros de servicio asociados\n\nEsta acción NO se puede deshacer."
@@ -148,18 +155,15 @@ fun VerClientesScreen(
                                             "¿Está seguro de eliminar al cliente \"${cliente.nombre}\"?\n\nEste cliente no tiene autos registrados.\n\nEsta acción NO se puede deshacer."
                                         }
 
-                                        // Mostramos el diálogo de advertencia
                                         AlertDialog.Builder(context).apply {
                                             setTitle("⚠️ ELIMINACIÓN EN CASCADA")
                                             setMessage(mensajeAdvertencia)
                                             setPositiveButton("SÍ, ELIMINAR TODO") { _, _ ->
                                                 scope.launch {
                                                     try {
-                                                        ClienteRepository.eliminarCliente(cliente.id)
-                                                        refreshTrigger++ // Recarga la lista
-                                                    } catch (e: Exception) {
-                                                        // Manejo silencioso de error o podrías agregar un Toast aquí
-                                                    }
+                                                        ClienteRepository.eliminarCliente(cliente.id, context)
+                                                        refreshTrigger++
+                                                    } catch (_: Exception) { }
                                                 }
                                             }
                                             setNegativeButton("CANCELAR", null)
@@ -167,23 +171,23 @@ fun VerClientesScreen(
                                         }
                                     }
                                 },
-                                modifier = Modifier.weight(1f).height(48.dp),
-                                tamanioTexto = 14,
-                                colorTexto = Color.White
+                                modifier = Modifier.fillMaxWidth().height(60.dp),
+                                tamanioTexto = 16,
+                                colorTexto = Color.Black
                             )
 
                             BotonModulo3D(
-                                texto = "VER AUTOS",
+                                texto = "VER AUTOS CLIENTES",
                                 colorClaro = Color(0xFFB9F6CA),
                                 colorMedio = Color(0xFF00C853),
                                 colorOscuro = Color(0xFF00695C),
                                 onClick = {
-                                    val nombreCodificado = java.net.URLEncoder.encode(cliente.nombre, "UTF-8")
+                                    val nombreCodificado = URLEncoder.encode(cliente.nombre, "UTF-8")
                                     onVerAutos(cliente.id, nombreCodificado)
                                 },
-                                modifier = Modifier.weight(1f).height(48.dp),
-                                tamanioTexto = 14,
-                                colorTexto = Color.White
+                                modifier = Modifier.fillMaxWidth().height(60.dp),
+                                tamanioTexto = 16,
+                                colorTexto = Color.Black
                             )
                         }
                     }
@@ -193,10 +197,11 @@ fun VerClientesScreen(
         Spacer(modifier = Modifier.height(32.dp))
         BotonModulo3D(
             texto = "REGRESAR",
-            colorClaro = Color(0xFFD5E1E6),
-            colorMedio = Color(0xFF90A4AE),
-            colorOscuro = Color(0xFF455A64),
-            onClick = onRegresar
+            colorClaro = Colores.RegresarClaro,
+            colorMedio = Colores.RegresarMedio,
+            colorOscuro = Colores.RegresarOscuro,
+            onClick = onRegresar,
+            colorTexto = Color.White
         )
     }
 }

@@ -22,6 +22,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -119,6 +120,9 @@ fun BusquedaAutoScreen(
         BotonModulo3D(
             texto = "BUSCAR",
             icono = "🔍",
+            colorClaro = Color(0xFFB9F6CA),
+            colorMedio = Color(0xFF00C853),
+            colorOscuro = Color(0xFF00695C),
             onClick = {
                 teclado?.hide()
                 val texto = textoBusqueda.trim()
@@ -131,7 +135,9 @@ fun BusquedaAutoScreen(
                     busquedaRealizada = true
                 }
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().height(58.dp),
+            tamanioTexto = 16,
+            colorTexto = Color.Black
         )
 
         // RESULTADOS
@@ -176,8 +182,12 @@ fun BusquedaAutoScreen(
         BotonModulo3D(
             texto = "REGRESAR",
             icono = "🔙",
+            colorClaro = Colores.RegresarClaro,
+            colorMedio = Colores.RegresarMedio,
+            colorOscuro = Colores.RegresarOscuro,
             onClick = onRegresar,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colorTexto = Color.White
         )
     }
 }

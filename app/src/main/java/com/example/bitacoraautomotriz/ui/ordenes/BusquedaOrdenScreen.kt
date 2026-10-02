@@ -21,9 +21,12 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.bitacoraautomotriz.data.Cliente
 import com.example.bitacoraautomotriz.data.OrdenServicio
+import com.example.bitacoraautomotriz.repository.ClienteRepository
 import com.example.bitacoraautomotriz.repository.OrdenServicioRepository
 import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
+import com.example.bitacoraautomotriz.ui.theme.Colores
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -36,39 +39,53 @@ fun BuscarOrdenScreen(
     val focusManager = LocalFocusManager.current
     val context = LocalContext.current
 
-    var textoBusqueda by remember { mutableStateOf("") }
-    var ordenes by remember { mutableStateOf<List<OrdenServicio>>(emptyList()) }
-    var cargando by remember { mutableStateOf(false) }
-    var mostrarDialogoEliminar by remember { mutableStateOf<OrdenServicio?>(null) }
+    var textoBusqueda by remember { mutableStateOf(value = "") }
+    var ordenes by remember { mutableStateOf<List<OrdenServicio>>(value = emptyList()) }
+    var todosLosClientes by remember { mutableStateOf<List<Cliente>>(value = emptyList()) }
+    var cargando by remember { mutableStateOf(value = false) }
+    var mostrarDialogoEliminar by remember { mutableStateOf<OrdenServicio?>(value = null) }
 
     fun buscar() {
         cargando = true
         scope.launch {
-            val resultado = if (textoBusqueda.isNotBlank()) {
-                OrdenServicioRepository.buscarOrdenesPorTexto("%${textoBusqueda.uppercase()}%")
-            } else {
-                OrdenServicioRepository.obtenerOrdenes()
+            try {
+                val resultado = if (textoBusqueda.isNotBlank()) {
+                    OrdenServicioRepository.buscarOrdenesPorTexto("%${textoBusqueda.trim().uppercase()}%", context)
+                } else {
+                    OrdenServicioRepository.obtenerOrdenes(context)
+                }
+                ordenes = resultado
+            } catch (_: Exception) {
+                ordenes = emptyList()
+            } finally {
+                cargando = false
             }
-            ordenes = resultado
-            cargando = false
         }
     }
 
-    LaunchedEffect(Unit) { buscar() }
+    LaunchedEffect(Unit) {
+        try {
+            todosLosClientes = ClienteRepository.obtenerClientes(context)
+        } catch (_: Exception) {
+            todosLosClientes = emptyList()
+        }
+        buscar()
+    }
 
-    fun formatearFolio(id: Int): String = String.format("%05d", id)
+    fun formatearFolio(id: Int): String = String.format(Locale.US, "%05d", id)
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF001B44))
+            .background(Colores.FondoPantalla)
+            .statusBarsPadding()
             .padding(24.dp)
     ) {
         Text(
-            text = "COTIZACIÓN DE SERVICIO",
+            text = "COTIZACIONES EN PROCESO",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White,
+            color = Colores.TituloPrincipal,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
         Spacer(modifier = Modifier.height(32.dp))
@@ -78,8 +95,7 @@ fun BuscarOrdenScreen(
                 text = "BUSCAR POR CLIENTE, AUTO O PLACA",
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF90CAF9),
-                softWrap = false,
+                color = Colores.EtiquetaCampo,
                 modifier = Modifier.align(Alignment.CenterStart)
             )
         }
@@ -88,15 +104,19 @@ fun BuscarOrdenScreen(
         OutlinedTextField(
             value = textoBusqueda,
             onValueChange = { textoBusqueda = it.uppercase() },
-            textStyle = TextStyle(color = Color.Black, fontSize = 20.sp, fontWeight = FontWeight.Bold),
+            textStyle = TextStyle(color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold),
             placeholder = { Text("Escriba aquí...", fontSize = 18.sp, color = Color.Gray) },
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus(); buscar() }),
             colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color.White, unfocusedContainerColor = Color.White,
-                focusedTextColor = Color.Black, unfocusedTextColor = Color.Black,
-                focusedIndicatorColor = Color(0xFF00AEEF), unfocusedIndicatorColor = Color(0xFF607D8B),
-                cursorColor = Color.Black
+                focusedContainerColor = Colores.FondoSecundario,
+                unfocusedContainerColor = Colores.FondoSecundario,
+                disabledContainerColor = Colores.FondoSecundario,
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                focusedIndicatorColor = Colores.BordeBoton,
+                unfocusedIndicatorColor = Colores.BordeBoton.copy(alpha = 0.5f),
+                cursorColor = Color.White
             ),
             modifier = Modifier.fillMaxWidth().height(70.dp)
         )
@@ -104,14 +124,20 @@ fun BuscarOrdenScreen(
 
         BotonModulo3D(
             texto = "BUSCAR",
-            colorClaro = Color(0xFF7DFFB2), colorMedio = Color(0xFF00D96B), colorOscuro = Color(0xFF008844),
-            onClick = { focusManager.clearFocus(); buscar() }
+            icono = "🔍",
+            colorClaro = Color(0xFFD7B899),
+            colorMedio = Color(0xFF9B6B43),
+            colorOscuro = Color(0xFF5D3A1A),
+            onClick = { focusManager.clearFocus(); buscar() },
+            modifier = Modifier.fillMaxWidth().height(58.dp),
+            tamanioTexto = 16,
+            colorTexto = Color.Black
         )
         Spacer(modifier = Modifier.height(16.dp))
 
         if (cargando) {
             Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                Text("Buscando...", color = Color.White, fontSize = 18.sp)
+                CircularProgressIndicator(color = Color.White)
             }
         } else if (ordenes.isEmpty() && textoBusqueda.isNotBlank()) {
             Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
@@ -120,71 +146,95 @@ fun BuscarOrdenScreen(
         } else {
             LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 items(ordenes) { orden ->
+                    val clienteId = todosLosClientes.find { it.nombre.orEmpty().trim().equals(orden.cliente.orEmpty().trim(), ignoreCase = true) }?.id ?: 0
+                    val manoObra = if (orden.costoManoObra.isNaN() || orden.costoManoObra < 0) 0.0 else orden.costoManoObra
+                    val refacciones = if (orden.costoRefacciones.isNaN() || orden.costoRefacciones < 0) 0.0 else orden.costoRefacciones
+                    val iva = if (orden.iva.isNaN() || orden.iva < 0) 0.0 else orden.iva
+                    val total = if (orden.total.isNaN() || orden.total < 0) 0.0 else orden.total
+
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(14.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        colors = CardDefaults.cardColors(containerColor = Colores.FondoTarjeta),
                         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
                     ) {
-                        Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
-                            Text(text = "FOLIO: ${formatearFolio(orden.id)}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1976D2))
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(text = orden.cliente, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color(0xFF001B44))
-                            Text(text = orden.auto, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF17202A))
+                        Column(modifier = Modifier.fillMaxWidth().padding(18.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "FOLIO: ${formatearFolio(orden.id)}   |   ID: $clienteId",
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF7DFFB2),
+                                    maxLines = 1
+                                )
+                                Text(
+                                    text = orden.estado.orEmpty().uppercase(),
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = when (orden.estado) {
+                                        "TERMINADO", "ENTREGADO", "ACEPTADO" -> Color(0xFF7DFFB2)
+                                        "RECHAZADO" -> Color(0xFFFF5252)
+                                        else -> Color(0xFF90CAF9)
+                                    },
+                                    maxLines = 1
+                                )
+                            }
                             Spacer(modifier = Modifier.height(8.dp))
+                            Text(text = orden.cliente.orEmpty().uppercase(), fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            Text(text = orden.auto.orEmpty().uppercase(), fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            Spacer(modifier = Modifier.height(12.dp))
 
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
                                 Column {
-                                    Text(text = "FECHA DE COTIZACIÓN", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                    Text(text = "FECHA DE COTIZACIÓN", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                                     Spacer(modifier = Modifier.height(2.dp))
-                                    Text(text = "📅 ${orden.fecha}", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                    Text(text = "📅 ${orden.fecha.orEmpty()}", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
 
                                     if (orden.fechaEntrega.isNotBlank()) {
                                         Spacer(modifier = Modifier.height(4.dp))
-                                        Text(text = "📅 ${orden.fechaEntrega}", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                        Text(text = "📅 ${orden.fechaEntrega.orEmpty()}", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
                                     }
                                 }
-                                Text(
-                                    text = orden.estado,
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (orden.estado == "TERMINADO" || orden.estado == "ENTREGADO") Color(0xFF2E7D32) else Color(0xFFD32F2F)
-                                )
                             }
 
-                            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Color(0xFFE0E0E0))
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = Color(0xFF004D33))
 
-                            // ✅ SECCIÓN DE COSTOS CORREGIDA (Todas las llaves en su lugar)
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                                 Column {
-                                    Text(text = "Mano de Obra:", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFF607D8B))
-                                    Text(text = "$ ${String.format(Locale.US, "%.2f", orden.costoManoObra)}", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF17202A))
-                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(text = "Mano de Obra:", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                    Text(text = String.format(Locale.US, "$ %,.2f", manoObra), fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                    Spacer(modifier = Modifier.height(6.dp))
 
-                                    Text(text = "Refacciones:", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFF607D8B))
-                                    Text(text = "$ ${String.format(Locale.US, "%.2f", orden.costoRefacciones)}", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF17202A))
-                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(text = "Refacciones:", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                    Text(text = String.format(Locale.US, "$ %,.2f", refacciones), fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                    Spacer(modifier = Modifier.height(6.dp))
 
-                                    Text(text = "I.V.A. 16%", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFF607D8B))
-                                    Text(text = "$ ${String.format(Locale.US, "%.2f", orden.iva)}", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF17202A))
+                                    Text(text = "I.V.A. 16%", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                    Text(text = String.format(Locale.US, "$ %,.2f", iva), fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
                                 }
 
                                 Column(horizontalAlignment = Alignment.End) {
-                                    Text(text = "TOTAL", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF001B44))
-                                    Text(text = "$ ${String.format(Locale.US, "%.2f", orden.total)}", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Color(0xFFD32F2F))
+                                    Text(text = "TOTAL", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                    Text(text = String.format(Locale.US, "$ %,.2f", total), fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(18.dp))
 
-                            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                                 BotonModulo3D(
-                                    texto = "VER COTIZACIÓN",
+                                    texto = "ENVIAR REPORTE AL CLIENTE",
                                     colorClaro = Color(0xFFD7B899),
                                     colorMedio = Color(0xFF9B6B43),
                                     colorOscuro = Color(0xFF5D3A1A),
                                     onClick = { onEditarOrden(orden.id) },
-                                    modifier = Modifier.fillMaxWidth().height(60.dp)
+                                    modifier = Modifier.fillMaxWidth().height(58.dp),
+                                    tamanioTexto = 14,
+                                    colorTexto = Color.Black
                                 )
 
                                 BotonModulo3D(
@@ -193,7 +243,9 @@ fun BuscarOrdenScreen(
                                     colorMedio = Color(0xFFE53935),
                                     colorOscuro = Color(0xFFB71C1C),
                                     onClick = { mostrarDialogoEliminar = orden },
-                                    modifier = Modifier.fillMaxWidth().height(60.dp)
+                                    modifier = Modifier.fillMaxWidth().height(58.dp),
+                                    tamanioTexto = 16,
+                                    colorTexto = Color.Black
                                 )
                             }
                         }
@@ -205,8 +257,12 @@ fun BuscarOrdenScreen(
         Spacer(modifier = Modifier.height(16.dp))
         BotonModulo3D(
             texto = "REGRESAR",
-            colorClaro = Color(0xFFD5E1E6), colorMedio = Color(0xFF90A4AE), colorOscuro = Color(0xFF455A64),
-            onClick = onRegresar
+            colorClaro = Colores.RegresarClaro,
+            colorMedio = Colores.RegresarMedio,
+            colorOscuro = Colores.RegresarOscuro,
+            onClick = onRegresar,
+            modifier = Modifier.fillMaxWidth().height(58.dp),
+            colorTexto = Color.White
         )
         Spacer(modifier = Modifier.height(8.dp))
     }
@@ -219,8 +275,12 @@ fun BuscarOrdenScreen(
             confirmButton = {
                 TextButton(onClick = {
                     scope.launch {
-                        OrdenServicioRepository.eliminarOrden(orden)
-                        Toast.makeText(context, "Cotización eliminada", Toast.LENGTH_SHORT).show()
+                        try {
+                            OrdenServicioRepository.eliminarOrden(orden, context)
+                            Toast.makeText(context, "Cotización eliminada", Toast.LENGTH_SHORT).show()
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                        }
                         mostrarDialogoEliminar = null
                         buscar()
                     }

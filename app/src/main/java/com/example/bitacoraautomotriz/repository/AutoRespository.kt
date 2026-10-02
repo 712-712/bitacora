@@ -7,64 +7,66 @@ import com.example.bitacoraautomotriz.data.ClienteDatabase
 
 object AutoRepository {
 
-    private lateinit var dao: AutoDao
+    private var db: ClienteDatabase? = null
 
-    // ✅ 1. Inicialización de la base de datos
     fun inicializar(context: Context) {
-        dao = ClienteDatabase.obtenerDatabase(context).autoDao()
+        db = ClienteDatabase.obtenerDatabase(context.applicationContext)
     }
 
-    // ✅ 2. Función "guardarAuto" que llama a "insertarAuto" del DAO
-    suspend fun guardarAuto(auto: Auto) {
-        dao.insertarAuto(auto)
+    private fun obtenerDao(context: Context? = null): AutoDao? {
+        if (db != null) return db?.autoDao()
+        if (context != null) {
+            db = ClienteDatabase.obtenerDatabase(context.applicationContext)
+            return db?.autoDao()
+        }
+        return null
     }
 
-    suspend fun actualizarAuto(auto: Auto) {
-        dao.actualizarAuto(auto)
+    suspend fun guardarAuto(auto: Auto, context: Context? = null) {
+        obtenerDao(context)?.insertarAuto(auto)
     }
 
-    // ✅ 3. El DAO espera el objeto Auto completo, NO un Int
-    suspend fun eliminarAuto(auto: Auto) {
-        dao.eliminarAuto(auto)
+    suspend fun actualizarAuto(auto: Auto, context: Context? = null) {
+        obtenerDao(context)?.actualizarAuto(auto)
     }
 
-    suspend fun obtenerAutos(): List<Auto> {
-        return dao.obtenerAutos()
+    suspend fun eliminarAuto(auto: Auto, context: Context? = null) {
+        obtenerDao(context)?.eliminarAuto(auto)
     }
 
-    suspend fun obtenerAutoPorId(id: Int): Auto? {
-        return dao.obtenerAutoPorId(id)
+    suspend fun obtenerAutos(context: Context? = null): List<Auto> {
+        return obtenerDao(context)?.obtenerAutos() ?: emptyList()
     }
 
-    // ✅ 4. El DAO espera un String (nombreCliente), NO un Int (clienteId)
-    suspend fun obtenerAutosPorCliente(nombreCliente: String): List<Auto> {
-        return dao.obtenerAutosPorCliente(nombreCliente)
+    suspend fun obtenerAutoPorId(id: Int, context: Context? = null): Auto? {
+        return obtenerDao(context)?.obtenerAutoPorId(id)
     }
 
-    suspend fun buscarAutos(termino: String): List<Auto> {
-        return dao.buscarAutos(termino)
+    suspend fun obtenerAutosPorCliente(nombreCliente: String, context: Context? = null): List<Auto> {
+        return obtenerDao(context)?.obtenerAutosPorCliente(nombreCliente) ?: emptyList()
     }
 
-    suspend fun obtenerAutoPorVin(vin: String): Auto? {
-        return dao.obtenerAutoPorVin(vin)
+    suspend fun buscarAutos(termino: String, context: Context? = null): List<Auto> {
+        return obtenerDao(context)?.buscarAutos(termino) ?: emptyList()
     }
 
-    // ✅ 5. LA NUEVA FUNCIÓN PARA EVITAR DUPLICADOS DE PLACA
-    suspend fun obtenerAutoPorPlaca(placa: String): Auto? {
-        return dao.obtenerAutoPorPlaca(placa)
+    suspend fun obtenerAutoPorVin(vin: String, context: Context? = null): Auto? {
+        return obtenerDao(context)?.obtenerAutoPorVin(vin)
     }
 
-    suspend fun eliminarAutosPorCliente(nombreCliente: String) {
-        dao.eliminarAutosPorCliente(nombreCliente)
+    suspend fun obtenerAutoPorPlaca(placa: String, context: Context? = null): Auto? {
+        return obtenerDao(context)?.obtenerAutoPorPlaca(placa)
     }
 
-    // ✅ 6. FUNCIÓN PARA CONTAR AUTOS DE UN CLIENTE (Para la advertencia en cascada)
-    suspend fun contarAutosPorCliente(nombreCliente: String): Int {
+    suspend fun eliminarAutosPorCliente(nombreCliente: String, context: Context? = null) {
+        obtenerDao(context)?.eliminarAutosPorCliente(nombreCliente)
+    }
+
+    suspend fun contarAutosPorCliente(nombreCliente: String, context: Context? = null): Int {
         return try {
-            dao.contarAutosPorCliente(nombreCliente)
-        } catch (e: Exception) {
-            0 // Si hay error, asumimos 0 autos
+            obtenerDao(context)?.contarAutosPorCliente(nombreCliente) ?: 0
+        } catch (_: Exception) {
+            0
         }
     }
-
-} // <--- ESTA ES LA ÚNICA LLAVE DE CIERRE DEL OBJECT
+}

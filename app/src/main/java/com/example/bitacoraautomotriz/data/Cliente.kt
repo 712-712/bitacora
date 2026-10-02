@@ -12,5 +12,14 @@ data class Cliente(
     val nombre: String,
     val telefono: String,
     val correo: String,
-    val direccion: String
+    val direccion: String,
+
+    // DATOS DE FACTURACIÓN SAT
+    val rfc: String = "",
+    val razonSocial: String = "",
+    val codigoPostal: String = "",
+    val regimenFiscalClave: String = "",
+    val regimenFiscalDesc: String = "",
+    val usoCfdiClave: String = "",
+    val usoCfdiDesc: String = ""
 )

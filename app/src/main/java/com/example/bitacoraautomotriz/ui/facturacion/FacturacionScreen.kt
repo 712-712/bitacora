@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
+import com.example.bitacoraautomotriz.ui.theme.Colores
 
 @Composable
 fun FacturacionScreen(
@@ -59,8 +60,11 @@ fun FacturacionScreen(
             colorClaro = Color(0xFF8FFFFF),
             colorMedio = Color(0xFF00DDEB),
             colorOscuro = Color(0xFF007F88),
-            onClick = onNuevaFactura
+            onClick = onNuevaFactura,
+            colorTexto = Color.Black
         )
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         // VER FACTURAS
         BotonModulo3D(
@@ -68,8 +72,11 @@ fun FacturacionScreen(
             colorClaro = Color(0xFF8FFFFF),
             colorMedio = Color(0xFF00DDEB),
             colorOscuro = Color(0xFF007F88),
-            onClick = onVerFacturas
+            onClick = onVerFacturas,
+            colorTexto = Color.Black
         )
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         // BUSCAR FACTURA
         BotonModulo3D(
@@ -77,17 +84,20 @@ fun FacturacionScreen(
             colorClaro = Color(0xFF8FFFFF),
             colorMedio = Color(0xFF00DDEB),
             colorOscuro = Color(0xFF007F88),
-            onClick = onBuscarFactura
+            onClick = onBuscarFactura,
+            colorTexto = Color.Black
         )
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         // REGRESAR
         BotonModulo3D(
             texto = "REGRESAR",
-            colorClaro = Color(0xFFD5E1E6),
-            colorMedio = Color(0xFF90A4AE),
-            colorOscuro = Color(0xFF455A64),
-            onClick = onRegresar
+            colorClaro = Colores.RegresarClaro,
+            colorMedio = Colores.RegresarMedio,
+            colorOscuro = Colores.RegresarOscuro,
+            onClick = onRegresar,
+            colorTexto = Color.White
         )
     }
 }
-

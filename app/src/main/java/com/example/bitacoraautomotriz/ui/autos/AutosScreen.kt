@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -55,38 +56,54 @@ fun AutosScreen(
         BotonModulo3D(
             texto = "NUEVO AUTO",
             icono = "🚗",
+            colorClaro = Color(0xFFB9F6CA),
+            colorMedio = Color(0xFF00C853),
+            colorOscuro = Color(0xFF00695C),
             onClick = onNuevoAuto,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colorTexto = Color.Black
         )
 
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // BUSCAR AUTO
         BotonModulo3D(
             texto = "BUSCAR AUTO",
             icono = "🔍",
+            colorClaro = Color(0xFFB9F6CA),
+            colorMedio = Color(0xFF00C853),
+            colorOscuro = Color(0xFF00695C),
             onClick = onBuscarAuto,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colorTexto = Color.Black
         )
 
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // ESCANEAR VIN
         BotonModulo3D(
             texto = "ESCANEAR VIN",
             icono = "📷",
+            colorClaro = Color(0xFFB9F6CA),
+            colorMedio = Color(0xFF00C853),
+            colorOscuro = Color(0xFF00695C),
             onClick = onEscanearVin,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colorTexto = Color.Black
         )
 
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // REGRESAR
         BotonModulo3D(
             texto = "REGRESAR",
             icono = "🔙",
+            colorClaro = Colores.RegresarClaro,
+            colorMedio = Colores.RegresarMedio,
+            colorOscuro = Colores.RegresarOscuro,
             onClick = onRegresar,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colorTexto = Color.White
         )
 
         Spacer(modifier = Modifier.height(12.dp))

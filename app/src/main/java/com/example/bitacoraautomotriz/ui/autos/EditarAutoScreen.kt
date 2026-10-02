@@ -26,6 +26,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -325,23 +326,31 @@ fun EditarAutoScreen(
             BotonModulo3D(
                 texto = if (guardando) "GUARDANDO..." else "GUARDAR CAMBIOS",
                 icono = "💾",
+                colorClaro = Color(0xFFB9F6CA),
+                colorMedio = Color(0xFF00C853),
+                colorOscuro = Color(0xFF00695C),
                 onClick = {
                     focusManager.clearFocus()
                     if (!guardando) guardar()
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colorTexto = Color.Black
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             BotonModulo3D(
                 texto = "REGRESAR",
                 icono = "🔙",
+                colorClaro = Colores.RegresarClaro,
+                colorMedio = Colores.RegresarMedio,
+                colorOscuro = Colores.RegresarOscuro,
                 onClick = {
                     focusManager.clearFocus()
                     onRegresar()
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colorTexto = Color.White
             )
 
             // ✅ Espacio grande final para que el scroll tenga recorrido suficiente

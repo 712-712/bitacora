@@ -219,19 +219,29 @@ fun TarjetaAuto(
             // BOTONES
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 BotonModulo3D(
                     texto = "EDITAR AUTO",
                     icono = "✏️",
+                    colorClaro = Color(0xFFB9F6CA),
+                    colorMedio = Color(0xFF00C853),
+                    colorOscuro = Color(0xFF00695C),
                     onClick = { onEditar(auto) },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().height(58.dp),
+                    tamanioTexto = 16,
+                    colorTexto = Color.Black
                 )
                 BotonModulo3D(
                     texto = "ELIMINAR AUTO",
                     icono = "🗑️",
+                    colorClaro = Color(0xFFEF9A9A),
+                    colorMedio = Color(0xFFE53935),
+                    colorOscuro = Color(0xFFB71C1C),
                     onClick = { mostrarConfirmacionEliminar = true },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().height(58.dp),
+                    tamanioTexto = 16,
+                    colorTexto = Color.Black
                 )
             }
         }

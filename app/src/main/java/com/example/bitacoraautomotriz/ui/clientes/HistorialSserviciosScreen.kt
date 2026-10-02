@@ -38,17 +38,17 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun HistorialServiciosScreen(
-    onRegresar: () -> Unit
+    onRegresar: () -> Unit,
 ) {
-    var telefono by remember { mutableStateOf("") }
-    var ordenes by remember { mutableStateOf(emptyList<OrdenServicio>()) }
-    var mensaje by remember { mutableStateOf("") }
-    var buscando by remember { mutableStateOf(false) }
+    var textoBusqueda by remember { mutableStateOf(value = "") }
+    var ordenes by remember { mutableStateOf<List<OrdenServicio>>(value = emptyList()) }
+    var mensaje by remember { mutableStateOf(value = "") }
+    var buscando by remember { mutableStateOf(value = false) }
     val scope = rememberCoroutineScope()
 
     fun buscarHistorial() {
-        if (telefono.isBlank()) {
-            mensaje = "INGRESE SU NÚMERO DE TELÉFONO"
+        if (textoBusqueda.isBlank()) {
+            mensaje = "INGRESE LA PLACA, VIN, NOMBRE, AUTO O TELÉFONO"
             ordenes = emptyList()
             return
         }
@@ -58,21 +58,38 @@ fun HistorialServiciosScreen(
         ordenes = emptyList()
 
         scope.launch {
-            val cliente = ClienteRepository.obtenerClientePorTelefono(telefono.trim())
+            try {
+                val query = textoBusqueda.trim().uppercase()
+                val todasLasOrdenes = OrdenServicioRepository.obtenerOrdenes()
 
-            if (cliente == null) {
-                mensaje = "NO SE ENCONTRÓ UN CLIENTE CON ESE TELÉFONO"
+                // Buscar coincidencias por Cliente, Auto (Marca/Modelo/Placa/VIN) o ID de Orden
+                val ordenesEncontradas = todasLasOrdenes.filter { orden ->
+                    orden.cliente.uppercase().contains(query) ||
+                            orden.auto.uppercase().contains(query) ||
+                            orden.id.toString().contains(query) ||
+                            orden.fallaReportada.uppercase().contains(query)
+                }.toMutableList()
+
+                // Si no encontró directamente, buscar si es un teléfono de cliente
+                if (ordenesEncontradas.isEmpty()) {
+                    val cliente = ClienteRepository.obtenerClientePorTelefono(query)
+                    if (cliente != null) {
+                        val porCliente = OrdenServicioRepository.obtenerOrdenesPorCliente(cliente.nombre)
+                        ordenesEncontradas.addAll(porCliente)
+                    }
+                }
+
+                ordenes = ordenesEncontradas
+
+                if (ordenes.isEmpty()) {
+                    mensaje = "NO SE ENCONTRARON SERVICIOS REGISTRADOS CON ESOS DATOS"
+                }
+
                 buscando = false
-                return@launch
+            } catch (_: Exception) {
+                mensaje = "ERROR AL CONSULTAR EL HISTORIAL DE SERVICIOS"
+                buscando = false
             }
-
-            ordenes = OrdenServicioRepository.obtenerOrdenesPorCliente(cliente.nombre)
-
-            if (ordenes.isEmpty()) {
-                mensaje = "NO HAY SERVICIOS REGISTRADOS PARA ESTE CLIENTE"
-            }
-
-            buscando = false
         }
     }
 
@@ -101,19 +118,30 @@ fun HistorialServiciosScreen(
         Spacer(modifier = Modifier.height(10.dp))
 
         Text(
-            text = "Consulte sus servicios anteriores",
-            fontSize = 18.sp,
+            text = "Consulte el historial de servicios anteriores",
+            fontSize = 17.sp,
             fontWeight = FontWeight.Bold,
             color = Colores.EtiquetaCampo
         )
 
         Spacer(modifier = Modifier.height(28.dp))
 
-        // TELÉFONO
+        // TEXTO ETIQUETA ENCIMA DEL CAMPO DE BÚSQUEDA
+        Text(
+            text = "BUSCAR POR PLACA, VIN, NOMBRE, AUTO O TELÉFONO:",
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Bold,
+            color = Colores.EtiquetaCampo,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 6.dp)
+        )
+
+        // CAMPO DE BÚSQUEDA
         OutlinedTextField(
-            value = telefono,
+            value = textoBusqueda,
             onValueChange = {
-                telefono = it
+                textoBusqueda = it
                 mensaje = ""
                 ordenes = emptyList()
             },
@@ -125,18 +153,10 @@ fun HistorialServiciosScreen(
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold
             ),
-            label = {
-                Text(
-                    text = "TELÉFONO",
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Colores.EtiquetaCampo
-                )
-            },
             placeholder = {
                 Text(
-                    text = "Ingrese su número de teléfono",
-                    fontSize = 17.sp,
+                    text = "Ej: ABC-1234, VIN, Juan Pérez...",
+                    fontSize = 16.sp,
                     color = Colores.EtiquetaCampo.copy(alpha = 0.6f)
                 )
             },
@@ -159,10 +179,14 @@ fun HistorialServiciosScreen(
 
         Spacer(modifier = Modifier.height(18.dp))
 
-        // BOTÓN BUSCAR
+        // BOTÓN BUSCAR HISTORIAL (COLOR CAFÉ)
         BotonModulo3D(
             texto = if (buscando) "BUSCANDO..." else "BUSCAR HISTORIAL",
             icono = "🔍",
+            colorClaro = Color(0xFFD7B899),
+            colorMedio = Color(0xFF9B6B43),
+            colorOscuro = Color(0xFF5D3A1A),
+            colorTexto = Color.Black,
             onClick = { if (!buscando) buscarHistorial() },
             modifier = Modifier.fillMaxWidth()
         )
@@ -183,7 +207,7 @@ fun HistorialServiciosScreen(
         // HISTORIAL
         if (ordenes.isNotEmpty()) {
             Text(
-                text = "SERVICIOS REGISTRADOS",
+                text = "SERVICIOS ENCONTRADOS",
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
                 color = Colores.TituloPrincipal
@@ -206,10 +230,18 @@ fun HistorialServiciosScreen(
                             .padding(22.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        // CLIENTE
+                        Text(
+                            text = "CLIENTE: ${orden.cliente.uppercase()}",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Colores.EtiquetaCampo
+                        )
+
                         // VEHÍCULO
                         Text(
                             text = orden.auto,
-                            fontSize = 23.sp,
+                            fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
                             color = Colores.TextoTarjeta
                         )
@@ -225,7 +257,7 @@ fun HistorialServiciosScreen(
 
                         // FECHA
                         Text(
-                            text = "FECHA: ${orden.fecha}",
+                            text = "FECHA DE INGRESO: ${orden.fecha}",
                             fontSize = 17.sp,
                             fontWeight = FontWeight.Bold,
                             color = Colores.TextoTarjeta
@@ -304,7 +336,7 @@ fun HistorialServiciosScreen(
                         // FECHA DE ENTREGA
                         if (orden.fechaEntrega.isNotBlank()) {
                             Text(
-                                text = "ENTREGA: ${orden.fechaEntrega}",
+                                text = "ENTREGA ESTIMADA: ${orden.fechaEntrega}",
                                 fontSize = 17.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Colores.TextoTarjeta
@@ -317,10 +349,14 @@ fun HistorialServiciosScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // REGRESAR
+        // REGRESAR (GRIS)
         BotonModulo3D(
             texto = "REGRESAR",
             icono = "🔙",
+            colorClaro = Colores.RegresarClaro,
+            colorMedio = Colores.RegresarMedio,
+            colorOscuro = Colores.RegresarOscuro,
+            colorTexto = Color.White,
             onClick = onRegresar,
             modifier = Modifier.fillMaxWidth()
         )

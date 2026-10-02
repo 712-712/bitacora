@@ -7,11 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,31 +27,41 @@ import kotlinx.coroutines.launch
 fun VerAutosScreen(
     onAgregarAuto: () -> Unit,
     onEditarAuto: (Int) -> Unit,
-    onRegresar: () -> Unit
+    onRegresar: () -> Unit,
 ) {
     val context = LocalContext.current
-    var autos by remember { mutableStateOf(emptyList<Auto>()) }
-    var busqueda by remember { mutableStateOf("") }
-    var refreshTrigger by remember { mutableStateOf(0) }
     val scope = rememberCoroutineScope()
 
+    var autos by remember { mutableStateOf<List<Auto>>(value = emptyList()) }
+    var busqueda by remember { mutableStateOf(value = "") }
+    var refreshTrigger by remember { mutableStateOf(value = 0) }
+    var cargando by remember { mutableStateOf(value = true) }
+
     LaunchedEffect(refreshTrigger) {
-        autos = AutoRepository.obtenerAutos().sortedByDescending { it.id }
+        try {
+            autos = AutoRepository.obtenerAutos(context).sortedByDescending { it.id }
+        } catch (_: Exception) {
+            autos = emptyList()
+        } finally {
+            cargando = false
+        }
     }
 
-    val autosFiltrados = autos.filter {
-        it.placa.contains(busqueda.uppercase(), ignoreCase = true) ||
-                it.marca.contains(busqueda.uppercase(), ignoreCase = true) ||
-                it.modelo.contains(busqueda.uppercase(), ignoreCase = true) ||
-                it.cliente.contains(busqueda.uppercase(), ignoreCase = true)
+    val query = busqueda.uppercase().trim()
+    val autosFiltrados = autos.filter { auto ->
+        auto.placa.orEmpty().uppercase().contains(query, ignoreCase = true) ||
+                auto.marca.orEmpty().uppercase().contains(query, ignoreCase = true) ||
+                auto.modelo.orEmpty().uppercase().contains(query, ignoreCase = true) ||
+                auto.cliente.orEmpty().uppercase().contains(query, ignoreCase = true)
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Colores.FondoPantalla)
+            .statusBarsPadding()
             .verticalScroll(rememberScrollState())
-            .padding(start = 24.dp, end = 24.dp, top = 48.dp, bottom = 24.dp),
+            .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
@@ -71,14 +77,15 @@ fun VerAutosScreen(
             colorClaro = Color(0xFFB9F6CA),
             colorMedio = Color(0xFF00C853),
             colorOscuro = Color(0xFF00695C),
-            onClick = onAgregarAuto
+            onClick = onAgregarAuto,
+            modifier = Modifier.fillMaxWidth().height(58.dp),
+            colorTexto = Color.Black
         )
         Spacer(modifier = Modifier.height(24.dp))
 
-        // ✅ ETIQUETA ARRIBA con color de título (Azul claro)
         Text(
             text = "PLACA, MARCA, MODELO O CLIENTE:",
-            fontSize = 14.sp,
+            fontSize = 15.sp,
             fontWeight = FontWeight.Bold,
             color = Colores.TituloPrincipal,
             modifier = Modifier
@@ -86,7 +93,6 @@ fun VerAutosScreen(
                 .padding(start = 4.dp, bottom = 4.dp)
         )
 
-        // ✅ CAMPO DE BÚSQUEDA LIMPIO
         OutlinedTextField(
             value = busqueda,
             onValueChange = { busqueda = it.uppercase() },
@@ -98,10 +104,11 @@ fun VerAutosScreen(
                     color = Color.Gray.copy(alpha = 0.6f)
                 )
             },
-            singleLine = true, // ✅ Evita saltos de línea al presionar Enter
+            singleLine = true,
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = Colores.FondoSecundario,
                 unfocusedContainerColor = Colores.FondoSecundario,
+                disabledContainerColor = Colores.FondoSecundario,
                 focusedTextColor = Color.White,
                 unfocusedTextColor = Color.White,
                 focusedIndicatorColor = Colores.BordeBoton,
@@ -113,9 +120,18 @@ fun VerAutosScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        if (autosFiltrados.isEmpty()) {
+        if (cargando) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color.White)
+            }
+        } else if (autosFiltrados.isEmpty()) {
             Text(
-                text = "NO SE ENCONTRARON AUTOS",
+                text = if (autos.isEmpty()) "NO HAY AUTOS REGISTRADOS" else "NO SE ENCONTRARON AUTOS",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = Colores.TextoGlobal
@@ -130,20 +146,20 @@ fun VerAutosScreen(
                 ) {
                     Column(modifier = Modifier.fillMaxWidth().padding(19.dp)) {
                         Text(
-                            text = "${auto.marca} ${auto.modelo} (${auto.anio})",
+                            text = "${auto.marca.orEmpty()} ${auto.modelo.orEmpty()} (${auto.anio})",
                             fontSize = 19.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.Black
                         )
                         Text(
-                            text = "Placa: ${auto.placa}",
-                            fontSize = 19.sp,
+                            text = "Placa: ${auto.placa.orEmpty()}",
+                            fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.Black
                         )
                         Text(
-                            text = "Cliente: ${auto.cliente}",
-                            fontSize = 19.sp,
+                            text = "Cliente: ${auto.cliente.orEmpty()}",
+                            fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.Black
                         )
@@ -159,9 +175,9 @@ fun VerAutosScreen(
                                 colorMedio = Color(0xFF1976D2),
                                 colorOscuro = Color(0xFF0D47A1),
                                 onClick = { onEditarAuto(auto.id) },
-                                modifier = Modifier.weight(1f).height(48.dp),
-                                tamanioTexto = 14,
-                                colorTexto = Color.White
+                                modifier = Modifier.weight(1f).height(54.dp),
+                                tamanioTexto = 15,
+                                colorTexto = Color.Black
                             )
 
                             BotonModulo3D(
@@ -171,7 +187,7 @@ fun VerAutosScreen(
                                 colorOscuro = Color(0xFFB71C1C),
                                 onClick = {
                                     scope.launch {
-                                        val mensajeAdvertencia = "¿Está seguro de eliminar el auto:\n\"${auto.marca} ${auto.modelo} (${auto.placa})\"?\n\n⚠️ ADVERTENCIA: Esta acción es irreversible y podría afectar los registros de servicio (órdenes) asociados a este vehículo.\n\nEsta acción NO se puede deshacer."
+                                        val mensajeAdvertencia = "¿Está seguro de eliminar el auto:\n\"${auto.marca} ${auto.modelo} (${auto.placa})\"?\n\n⚠️ ADVERTENCIA: Esta acción es irreversible.\n\nEsta acción NO se puede deshacer."
 
                                         AlertDialog.Builder(context).apply {
                                             setTitle("⚠️ ELIMINAR AUTO")
@@ -179,7 +195,7 @@ fun VerAutosScreen(
                                             setPositiveButton("SÍ, ELIMINAR") { _, _ ->
                                                 scope.launch {
                                                     try {
-                                                        AutoRepository.eliminarAuto(auto)
+                                                        AutoRepository.eliminarAuto(auto, context)
                                                         refreshTrigger++
                                                         Toast.makeText(context, "✅ Auto eliminado correctamente", Toast.LENGTH_SHORT).show()
                                                     } catch (e: Exception) {
@@ -192,9 +208,9 @@ fun VerAutosScreen(
                                         }
                                     }
                                 },
-                                modifier = Modifier.weight(1f).height(48.dp),
-                                tamanioTexto = 14,
-                                colorTexto = Color.White
+                                modifier = Modifier.weight(1f).height(54.dp),
+                                tamanioTexto = 15,
+                                colorTexto = Color.Black
                             )
                         }
                     }
@@ -206,10 +222,14 @@ fun VerAutosScreen(
 
         BotonModulo3D(
             texto = "REGRESAR",
-            colorClaro = Color(0xFFD5E1E6),
-            colorMedio = Color(0xFF90A4AE),
-            colorOscuro = Color(0xFF455A64),
-            onClick = onRegresar
+            colorClaro = Colores.RegresarClaro,
+            colorMedio = Colores.RegresarMedio,
+            colorOscuro = Colores.RegresarOscuro,
+            onClick = onRegresar,
+            modifier = Modifier.fillMaxWidth().height(58.dp),
+            colorTexto = Color.White
         )
+
+        Spacer(modifier = Modifier.height(12.dp))
     }
 }

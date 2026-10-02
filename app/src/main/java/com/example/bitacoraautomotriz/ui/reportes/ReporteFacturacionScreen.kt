@@ -1,179 +1,183 @@
 package com.example.bitacoraautomotriz.ui.reportes
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.bitacoraautomotriz.data.Factura
 import com.example.bitacoraautomotriz.repository.FacturaRepository
 import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
+import com.example.bitacoraautomotriz.ui.theme.Colores
+import java.util.Locale
 
 @Composable
 fun ReporteFacturacionScreen(
-    onRegresar: () -> Unit
+    onRegresar: () -> Unit,
 ) {
-
-    var facturas by remember {
-        mutableStateOf(emptyList<Factura>())
-    }
+    val context = LocalContext.current
+    var facturas by remember { mutableStateOf<List<Factura>>(value = emptyList()) }
+    var cargando by remember { mutableStateOf(value = true) }
 
     LaunchedEffect(Unit) {
-        facturas = FacturaRepository.obtenerFacturas()
+        try {
+            facturas = FacturaRepository.obtenerFacturas(context)
+        } catch (_: Exception) {
+            facturas = emptyList()
+        } finally {
+            cargando = false
+        }
     }
 
-    val totalFacturado = facturas.sumOf { it.total }
+    val totalFacturado = facturas.sumOf { if (it.total.isNaN() || it.total < 0) 0.0 else it.total }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF001B44))
+            .background(Colores.FondoPantalla)
+            .statusBarsPadding()
             .verticalScroll(rememberScrollState())
             .padding(
                 start = 24.dp,
                 end = 24.dp,
-                top = 48.dp,
-                bottom = 24.dp
+                top = 24.dp,
+                bottom = 28.dp
             ),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
-
         Text(
             text = "REPORTE DE FACTURACIÓN",
             fontSize = 26.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = Colores.TituloPrincipal
         )
 
-        Spacer(
-            modifier = Modifier.height(20.dp)
-        )
+        Spacer(modifier = Modifier.height(20.dp))
 
-        Text(
-            text = "Total de facturas: ${facturas.size}",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
-        )
-
-        Spacer(
-            modifier = Modifier.height(12.dp)
-        )
-
-        Text(
-            text = "Total facturado: $" + " %.2f".format(totalFacturado),
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
-        )
-
-        Spacer(
-            modifier = Modifier.height(20.dp)
-        )
-
-        if (facturas.isEmpty()) {
-
+        if (cargando) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color.White)
+            }
+        } else if (facturas.isEmpty()) {
             Text(
-                text = "No hay facturas registradas.",
+                text = "NO HAY FACTURAS REGISTRADAS",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )
-
         } else {
+            Text(
+                text = "Total de facturas: ${facturas.size}",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = String.format(Locale.US, "Total facturado: $ %,.2f", totalFacturado),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFFF5252) // ✅ Cambiado a Rojo destacado
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
 
             facturas.forEach { factura ->
+                val subtotal = if (factura.subtotal.isNaN() || factura.subtotal < 0) 0.0 else factura.subtotal
+                val iva = if (factura.iva.isNaN() || factura.iva < 0) 0.0 else factura.iva
+                val total = if (factura.total.isNaN() || factura.total < 0) 0.0 else factura.total
 
-                Column(
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(
-                            color = Color.White,
-                            shape = RoundedCornerShape(12.dp)
-                        )
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                        .padding(bottom = 12.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Colores.FondoTarjeta),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = "FOLIO: #${factura.numero.ifBlank { "N/A" }}",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
 
-                    Text(
-                        text = "Número: ${factura.numero}",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    )
+                        Text(
+                            text = "CLIENTE: ${factura.cliente.uppercase()}",
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
 
-                    Text(
-                        text = "Cliente: ${factura.cliente}",
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    )
+                        Text(
+                            text = "FECHA: ${factura.fecha}",
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
 
-                    Text(
-                        text = "Fecha: ${factura.fecha}",
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    )
+                        Text(
+                            text = String.format(Locale.US, "SUBTOTAL: $ %,.2f", subtotal),
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
 
-                    Text(
-                        text = "Subtotal: $" + " %.2f".format(factura.subtotal),
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    )
+                        Text(
+                            text = String.format(Locale.US, "I.V.A.: $ %,.2f", iva),
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
 
-                    Text(
-                        text = "IVA: $" + " %.2f".format(factura.iva),
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    )
-
-                    Text(
-                        text = "Total: $" + " %.2f".format(factura.total),
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    )
+                        Text(
+                            text = String.format(Locale.US, "TOTAL: $ %,.2f", total),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFFF5252) // ✅ Cambiado a Rojo destacado
+                        )
+                    }
                 }
-
-                Spacer(
-                    modifier = Modifier.height(12.dp)
-                )
             }
         }
 
-        Spacer(
-            modifier = Modifier.height(20.dp)
-        )
+        Spacer(modifier = Modifier.height(20.dp))
 
         BotonModulo3D(
             texto = "REGRESAR",
-            colorClaro = Color(0xFFD5E1E6),
-            colorMedio = Color(0xFF90A4AE),
-            colorOscuro = Color(0xFF455A64),
-            onClick = onRegresar
+            icono = "🔙",
+            colorClaro = Colores.RegresarClaro,
+            colorMedio = Colores.RegresarMedio,
+            colorOscuro = Colores.RegresarOscuro,
+            onClick = onRegresar,
+            modifier = Modifier.fillMaxWidth().height(58.dp),
+            tamanioTexto = 16,
+            colorTexto = Color.White
         )
+
+        Spacer(modifier = Modifier.height(12.dp))
     }
 }

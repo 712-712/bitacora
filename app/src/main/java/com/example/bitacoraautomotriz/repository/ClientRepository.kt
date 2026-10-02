@@ -7,35 +7,42 @@ import com.example.bitacoraautomotriz.data.ClienteDatabase
 
 object ClienteRepository {
 
-    private lateinit var dao: ClienteDao
+    private var db: ClienteDatabase? = null
 
-    // ✅ ESTA ES LA FUNCIÓN QUE FALTABA (Arregla el error de MainActivity)
     fun inicializar(context: Context) {
-        dao = ClienteDatabase.obtenerDatabase(context).clienteDao()
+        db = ClienteDatabase.obtenerDatabase(context.applicationContext)
     }
 
-    suspend fun guardarCliente(cliente: Cliente) {
-        dao.insertarCliente(cliente)
+    private fun obtenerDao(context: Context? = null): ClienteDao? {
+        if (db != null) return db?.clienteDao()
+        if (context != null) {
+            db = ClienteDatabase.obtenerDatabase(context.applicationContext)
+            return db?.clienteDao()
+        }
+        return null
     }
 
-    suspend fun obtenerClientes(): List<Cliente> {
-        return dao.obtenerClientes()
+    suspend fun guardarCliente(cliente: Cliente, context: Context? = null) {
+        obtenerDao(context)?.insertarCliente(cliente)
     }
 
-    suspend fun obtenerClientePorId(id: Int): Cliente? {
-        return dao.obtenerClientePorId(id)
+    suspend fun obtenerClientes(context: Context? = null): List<Cliente> {
+        return obtenerDao(context)?.obtenerClientes() ?: emptyList()
     }
 
-    suspend fun eliminarCliente(id: Int) {
-        dao.eliminarCliente(id)
+    suspend fun obtenerClientePorId(id: Int, context: Context? = null): Cliente? {
+        return obtenerDao(context)?.obtenerClientePorId(id)
     }
 
-    suspend fun actualizarCliente(cliente: Cliente) {
-        dao.actualizarCliente(cliente)
+    suspend fun eliminarCliente(id: Int, context: Context? = null) {
+        obtenerDao(context)?.eliminarCliente(id)
     }
 
-    // ✅ LA NUEVA FUNCIÓN PARA EVITAR DUPLICADOS
-    suspend fun obtenerClientePorTelefono(telefono: String): Cliente? {
-        return dao.obtenerClientePorTelefono(telefono)
+    suspend fun actualizarCliente(cliente: Cliente, context: Context? = null) {
+        obtenerDao(context)?.actualizarCliente(cliente)
+    }
+
+    suspend fun obtenerClientePorTelefono(telefono: String, context: Context? = null): Cliente? {
+        return obtenerDao(context)?.obtenerClientePorTelefono(telefono)
     }
 }

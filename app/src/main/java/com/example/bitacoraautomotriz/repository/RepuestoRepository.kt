@@ -3,20 +3,30 @@ package com.example.bitacoraautomotriz.repository
 import android.content.Context
 import com.example.bitacoraautomotriz.data.ClienteDatabase
 import com.example.bitacoraautomotriz.data.Repuesto
+import com.example.bitacoraautomotriz.data.RepuestoDao
 
 object RepuestoRepository {
 
-    private lateinit var database: ClienteDatabase
+    private var db: ClienteDatabase? = null
 
     fun inicializar(context: Context) {
-        database = ClienteDatabase.obtenerDatabase(context)
+        db = ClienteDatabase.obtenerDatabase(context.applicationContext)
     }
 
-    suspend fun guardarRepuesto(repuesto: Repuesto) {
-        database.repuestoDao().insertarRepuesto(repuesto)
+    private fun obtenerDao(context: Context? = null): RepuestoDao? {
+        if (db != null) return db?.repuestoDao()
+        if (context != null) {
+            db = ClienteDatabase.obtenerDatabase(context.applicationContext)
+            return db?.repuestoDao()
+        }
+        return null
     }
 
-    suspend fun obtenerRepuestos(): List<Repuesto> {
-        return database.repuestoDao().obtenerRepuestos()
+    suspend fun guardarRepuesto(repuesto: Repuesto, context: Context? = null) {
+        obtenerDao(context)?.insertarRepuesto(repuesto)
+    }
+
+    suspend fun obtenerRepuestos(context: Context? = null): List<Repuesto> {
+        return obtenerDao(context)?.obtenerRepuestos() ?: emptyList()
     }
 }

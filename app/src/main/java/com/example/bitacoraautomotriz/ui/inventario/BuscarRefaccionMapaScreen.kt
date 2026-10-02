@@ -13,73 +13,42 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
+import com.example.bitacoraautomotriz.ui.theme.Colores
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
 import org.json.JSONObject
-import org.osmdroid.config.Configuration
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory
-import org.osmdroid.util.GeoPoint
-import org.osmdroid.views.MapView
-import org.osmdroid.views.overlay.Marker
 import java.io.File
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
-import java.util.Locale
-
-// ======================================================
-// COLORES
-// ======================================================
-
-val AzulPrincipalMapa = Color(0xFF1565C0)
-
-val VerdeClaroMapa = Color(0xFF66BB6A)
-val VerdeMedioMapa = Color(0xFF43A047)
-val VerdeOscuroMapa = Color(0xFF2E7D32)
-
-val GrisClaroMapa = Color(0xFFBDBDBD)
-val GrisMedioMapa = Color(0xFF757575)
-val GrisOscuroMapa = Color(0xFF424242)
 
 // ======================================================
 // MODELO
@@ -103,34 +72,28 @@ fun distanciaEntreCoordenadas(
     lat2: Double,
     lon2: Double
 ): Double {
-
     val resultados = FloatArray(1)
-
-    Location.distanceBetween(
-        lat1,
-        lon1,
-        lat2,
-        lon2,
-        resultados
-    )
-
+    Location.distanceBetween(lat1, lon1, lat2, lon2, resultados)
     return resultados[0].toDouble()
 }
 
 // ======================================================
-// OBTENER UBICACIÓN
+// OBTENER UBICACIÓN ACTUAL
 // ======================================================
 
 fun obtenerUbicacionActual(
     context: Context,
     onUbicacion: (Location?) -> Unit
 ) {
-
     val tienePermiso =
         ContextCompat.checkSelfPermission(
             context,
             Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
+        ) == PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
 
     if (!tienePermiso) {
         onUbicacion(null)
@@ -138,172 +101,78 @@ fun obtenerUbicacionActual(
     }
 
     val locationManager =
-        context.getSystemService(
-            Context.LOCATION_SERVICE
-        ) as LocationManager
-
-    // ----------------------------------------------
-    // PRIMERO BUSCAMOS UNA UBICACIÓN YA CONOCIDA
-    // ----------------------------------------------
+        context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
     var mejorUbicacion: Location? = null
-
-    val proveedores = listOf(
-        LocationManager.GPS_PROVIDER,
-        LocationManager.NETWORK_PROVIDER
-    )
+    val proveedores = listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)
 
     for (proveedor in proveedores) {
-
         try {
-
-            val ubicacion =
-                locationManager.getLastKnownLocation(
-                    proveedor
-                )
-
+            val ubicacion = locationManager.getLastKnownLocation(proveedor)
             if (ubicacion != null) {
-
-                if (
-                    mejorUbicacion == null ||
-                    ubicacion.accuracy <
-                    mejorUbicacion!!.accuracy
-                ) {
+                if (mejorUbicacion == null || ubicacion.accuracy < mejorUbicacion.accuracy) {
                     mejorUbicacion = ubicacion
                 }
             }
-
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 
-    // ----------------------------------------------
-    // SI YA TENEMOS UBICACIÓN, LA USAMOS
-    // ----------------------------------------------
-
     if (mejorUbicacion != null) {
-
         onUbicacion(mejorUbicacion)
-
         return
     }
 
-    // ----------------------------------------------
-    // SI NO TENEMOS UBICACIÓN, PEDIMOS UNA NUEVA
-    // ----------------------------------------------
-
     var ubicacionEntregada = false
-
-    val listener =
-        object : LocationListener {
-
-            override fun onLocationChanged(
-                location: Location
-            ) {
-
-                if (ubicacionEntregada) {
-                    return
-                }
-
-                ubicacionEntregada = true
-
-                try {
-                    locationManager.removeUpdates(this)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-
-                onUbicacion(location)
-            }
-        }
-
-    try {
-
-        var proveedorActivo = false
-
-        // GPS
-
-        if (
-            locationManager.isProviderEnabled(
-                LocationManager.GPS_PROVIDER
-            )
-        ) {
-
-            proveedorActivo = true
-
-            locationManager.requestLocationUpdates(
-                LocationManager.GPS_PROVIDER,
-                1000L,
-                1f,
-                listener
-            )
-        }
-
-        // RED
-
-        if (
-            locationManager.isProviderEnabled(
-                LocationManager.NETWORK_PROVIDER
-            )
-        ) {
-
-            proveedorActivo = true
-
-            locationManager.requestLocationUpdates(
-                LocationManager.NETWORK_PROVIDER,
-                1000L,
-                1f,
-                listener
-            )
-        }
-
-        // ------------------------------------------
-        // SI NO HAY NINGÚN PROVEEDOR ACTIVO
-        // ------------------------------------------
-
-        if (!proveedorActivo) {
-
-            onUbicacion(null)
-
-            return
-        }
-
-        // ------------------------------------------
-        // ESPERAMOS MÁXIMO 8 SEGUNDOS
-        // ------------------------------------------
-
-        Thread {
-
+    val listener = object : LocationListener {
+        override fun onLocationChanged(location: Location) {
+            if (ubicacionEntregada) return
+            ubicacionEntregada = true
             try {
-
-                Thread.sleep(8000)
-
-                if (!ubicacionEntregada) {
-
-                    ubicacionEntregada = true
-
-                    try {
-                        locationManager.removeUpdates(
-                            listener
-                        )
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-
-                    onUbicacion(null)
-                }
-
+                locationManager.removeUpdates(this)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
+            onUbicacion(location)
+        }
+    }
 
+    try {
+        var proveedorActivo = false
+        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            proveedorActivo = true
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 1f, listener)
+        }
+        if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+            proveedorActivo = true
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000L, 1f, listener)
+        }
+
+        if (!proveedorActivo) {
+            onUbicacion(null)
+            return
+        }
+
+        Thread {
+            try {
+                Thread.sleep(8000)
+                if (!ubicacionEntregada) {
+                    ubicacionEntregada = true
+                    try {
+                        locationManager.removeUpdates(listener)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                    onUbicacion(null)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }.start()
 
     } catch (e: SecurityException) {
-
         e.printStackTrace()
-
         onUbicacion(null)
     }
 }
@@ -313,28 +182,185 @@ fun obtenerUbicacionActual(
 // ======================================================
 
 fun crearArchivoImagenTemporal(context: Context): Uri {
-
     val carpeta = File(context.cacheDir, "fotos")
-
     if (!carpeta.exists()) {
         carpeta.mkdirs()
     }
-
-    val archivo = File(
-        carpeta,
-        "foto_${System.currentTimeMillis()}.jpg"
-    )
-
-    return FileProvider.getUriForFile(
-        context,
-        "${context.packageName}.fileprovider",
-        archivo
-    )
+    val archivo = File(carpeta, "foto_${System.currentTimeMillis()}.jpg")
+    return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", archivo)
 }
 
 // ======================================================
-// BUSCAR REFACCIONES
+// BÚSQUEDA NOMINATIM Y OVERPASS (RESTRICTA A 5 KM)
 // ======================================================
+
+suspend fun consultarNominatim(
+    queryTexto: String,
+    latUsuario: Double,
+    lonUsuario: Double
+): List<LugarRepuesto> = withContext(Dispatchers.IO) {
+    val resultado = mutableListOf<LugarRepuesto>()
+    try {
+        val q = if (queryTexto.isBlank()) "refaccionaria taller autopartes" else queryTexto.trim()
+        val queryEncoded = URLEncoder.encode(q, "UTF-8")
+
+        val viewboxDelta = 0.045
+        val minLon = lonUsuario - viewboxDelta
+        val maxLon = lonUsuario + viewboxDelta
+        val minLat = latUsuario - viewboxDelta
+        val maxLat = latUsuario + viewboxDelta
+
+        val urlString = "https://nominatim.openstreetmap.org/search?q=$queryEncoded&format=json&addressdetails=1&limit=30&bounded=1&viewbox=$minLon,$maxLat,$maxLon,$minLat"
+        val url = URL(urlString)
+        val conexion = url.openConnection() as HttpURLConnection
+        conexion.requestMethod = "GET"
+        conexion.connectTimeout = 8000
+        conexion.readTimeout = 10000
+        conexion.setRequestProperty("User-Agent", "BitacoraAutomotriz/1.0 (Android App)")
+
+        if (conexion.responseCode in 200..299) {
+            val respuesta = conexion.inputStream.bufferedReader().use { it.readText() }
+            val array = JSONArray(respuesta)
+
+            for (i in 0 until array.length()) {
+                val obj = array.getJSONObject(i)
+                val lat = obj.getDouble("lat")
+                val lon = obj.getDouble("lon")
+                val displayName = obj.optString("display_name", "")
+                val addressObj = obj.optJSONObject("address")
+
+                val name = obj.optString("name", "")
+                val nombre = when {
+                    name.isNotBlank() -> name.uppercase()
+                    displayName.isNotBlank() -> displayName.split(",").firstOrNull()?.uppercase() ?: "REFACCIONARIA / TALLER"
+                    else -> "REFACCIONARIA / TALLER"
+                }
+
+                val road = addressObj?.optString("road") ?: ""
+                val houseNumber = addressObj?.optString("house_number") ?: ""
+                val neighbourhood = addressObj?.optString("neighbourhood") ?: ""
+                val suburb = addressObj?.optString("suburb") ?: neighbourhood
+                val cityTown = addressObj?.optString("town") ?: ""
+                val city = addressObj?.optString("city") ?: cityTown
+
+                val direccion = when {
+                    road.isNotBlank() && houseNumber.isNotBlank() && suburb.isNotBlank() -> "$road #$houseNumber, Col. $suburb"
+                    road.isNotBlank() && houseNumber.isNotBlank() -> "$road #$houseNumber"
+                    road.isNotBlank() && suburb.isNotBlank() -> "$road, Col. $suburb"
+                    road.isNotBlank() -> road
+                    city.isNotBlank() -> city
+                    displayName.isNotBlank() -> displayName
+                    else -> "UBICACIÓN REGISTRADA"
+                }
+
+                val distancia = distanciaEntreCoordenadas(latUsuario, lonUsuario, lat, lon)
+
+                if (distancia <= 5000.0) {
+                    resultado.add(
+                        LugarRepuesto(
+                            nombre = nombre,
+                            lat = lat,
+                            lon = lon,
+                            direccion = direccion,
+                            distanciaMetros = distancia
+                        )
+                    )
+                }
+            }
+        }
+        conexion.disconnect()
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+    resultado
+}
+
+suspend fun consultarOverpass(
+    query: String,
+    latUsuario: Double,
+    lonUsuario: Double
+): List<LugarRepuesto> =
+    withContext(Dispatchers.IO) {
+        val resultado = mutableListOf<LugarRepuesto>()
+        try {
+            val url = URL("https://overpass-api.de/api/interpreter")
+            val conexion = url.openConnection() as HttpURLConnection
+            conexion.requestMethod = "POST"
+            conexion.doOutput = true
+            conexion.connectTimeout = 8000
+            conexion.readTimeout = 12000
+            conexion.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+
+            OutputStreamWriter(conexion.outputStream).use { writer ->
+                writer.write("data=" + URLEncoder.encode(query, "UTF-8"))
+            }
+
+            if (conexion.responseCode !in 200..299) {
+                conexion.disconnect()
+                return@withContext emptyList()
+            }
+
+            val respuesta = conexion.inputStream.bufferedReader().use { it.readText() }
+            conexion.disconnect()
+
+            val json = JSONObject(respuesta)
+            val elementos = json.optJSONArray("elements") ?: return@withContext emptyList()
+
+            for (i in 0 until elementos.length()) {
+                val elem = elementos.getJSONObject(i)
+                val tags = elem.optJSONObject("tags")
+                val nombre = tags?.optString("name", "REFACCIONARIA / TALLER") ?: "REFACCIONARIA / TALLER"
+
+                val coords = obtenerCoordenadasElemento(elem) ?: continue
+                val lat = coords.first
+                val lon = coords.second
+
+                val calle = tags?.optString("addr:street", "") ?: ""
+                val numero = tags?.optString("addr:housenumber", "") ?: ""
+                val ciudad = tags?.optString("addr:city", "") ?: ""
+                val direccion = when {
+                    calle.isNotBlank() && numero.isNotBlank() && ciudad.isNotBlank() -> "$calle $numero, $ciudad"
+                    calle.isNotBlank() && numero.isNotBlank() -> "$calle $numero"
+                    calle.isNotBlank() -> calle
+                    ciudad.isNotBlank() -> ciudad
+                    else -> "DIRECCIÓN CERCANA"
+                }
+
+                val distancia = distanciaEntreCoordenadas(latUsuario, lonUsuario, lat, lon)
+
+                if (distancia <= 5000.0) {
+                    resultado.add(
+                        LugarRepuesto(
+                            nombre = nombre.uppercase(),
+                            lat = lat,
+                            lon = lon,
+                            direccion = direccion,
+                            distanciaMetros = distancia
+                        )
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        resultado.distinctBy { "${it.nombre}_${it.lat}_${it.lon}" }.sortedBy { it.distanciaMetros }
+    }
+
+fun obtenerCoordenadasElemento(elemento: JSONObject): Pair<Double, Double>? {
+    return try {
+        if (elemento.has("lat") && elemento.has("lon")) {
+            Pair(elemento.getDouble("lat"), elemento.getDouble("lon"))
+        } else if (elemento.has("center")) {
+            val center = elemento.getJSONObject("center")
+            Pair(center.getDouble("lat"), center.getDouble("lon"))
+        } else {
+            null
+        }
+    } catch (e: Exception) {
+        null
+    }
+}
 
 suspend fun buscarRepuestosCercanos(
     lat: Double,
@@ -343,1273 +369,232 @@ suspend fun buscarRepuestosCercanos(
     radioMetros: Int = 5000
 ): List<LugarRepuesto> =
     withContext(Dispatchers.IO) {
+        val textoLimpio = textoBusqueda.trim()
 
-        val texto =
-            textoBusqueda
-                .trim()
-                .replace("\"", "")
-                .replace("\\", "")
+        val resultadosNominatim = consultarNominatim(textoLimpio, lat, lon)
+            .filter { it.distanciaMetros <= radioMetros }
 
-        val query =
-            if (texto.isBlank()) {
+        if (resultadosNominatim.isNotEmpty()) {
+            return@withContext resultadosNominatim.sortedBy { it.distanciaMetros }
+        }
 
-                """
-                [out:json][timeout:30];
-
-                (
-                  nwr["shop"="car_parts"]
-                  (around:$radioMetros,$lat,$lon);
-
-                  nwr["shop"="car_repair"]
-                  (around:$radioMetros,$lat,$lon);
-                );
-
-                out center;
-                """.trimIndent()
-
-            } else {
-
-                """
-                [out:json][timeout:30];
-
-                (
-                  nwr["shop"="car_parts"]
-                  ["name"~"$texto",i]
-                  (around:$radioMetros,$lat,$lon);
-
-                  nwr["shop"="car_parts"]
-                  ["description"~"$texto",i]
-                  (around:$radioMetros,$lat,$lon);
-
-                  nwr["shop"="car_repair"]
-                  ["name"~"$texto",i]
-                  (around:$radioMetros,$lat,$lon);
-
-                  nwr["shop"="car_repair"]
-                  ["description"~"$texto",i]
-                  (around:$radioMetros,$lat,$lon);
-                );
-
-                out center;
-                """.trimIndent()
-            }
-
-        consultarOverpass(
-            query = query,
-            latUsuario = lat,
-            lonUsuario = lon
-        )
-    }
-
-// ======================================================
-// BUSCAR TODOS LOS NEGOCIOS
-// ======================================================
-
-suspend fun buscarTodosLosNegociosCercanos(
-    lat: Double,
-    lon: Double,
-    radioMetros: Int = 5000
-): List<LugarRepuesto> =
-    withContext(Dispatchers.IO) {
-
-        val query = """
-
-            [out:json][timeout:30];
-
-            (
-              nwr["shop"="car_parts"]
-              (around:$radioMetros,$lat,$lon);
-
-              nwr["shop"="car_repair"]
-              (around:$radioMetros,$lat,$lon);
-            );
-
-            out center;
-
+        val queryOverpass = """
+        [out:json][timeout:12];
+        (
+          nwr["shop"="car_parts"](around:$radioMetros,$lat,$lon);
+          nwr["shop"="car_repair"](around:$radioMetros,$lat,$lon);
+          nwr["shop"="auto_parts"](around:$radioMetros,$lat,$lon);
+          nwr["amenity"="car_repair"](around:$radioMetros,$lat,$lon);
+        );
+        out center;
         """.trimIndent()
 
-        consultarOverpass(
-            query = query,
-            latUsuario = lat,
-            lonUsuario = lon
-        )
-    }
+        val resultadosOverpass = consultarOverpass(queryOverpass, lat, lon)
+            .filter { it.distanciaMetros <= radioMetros }
 
-// ======================================================
-// CONSULTA OVERPASS
-// ======================================================
-
-suspend fun consultarOverpass(
-    query: String,
-    latUsuario: Double,
-    lonUsuario: Double
-): List<LugarRepuesto> =
-    withContext(Dispatchers.IO) {
-
-        val resultado =
-            mutableListOf<LugarRepuesto>()
-
-        try {
-
-            val url =
-                URL(
-                    "https://overpass-api.de/api/interpreter"
-                )
-
-            val conexion =
-                url.openConnection()
-                        as HttpURLConnection
-
-            conexion.requestMethod = "POST"
-
-            conexion.doOutput = true
-
-            conexion.connectTimeout = 15000
-            conexion.readTimeout = 30000
-
-            conexion.setRequestProperty(
-                "Content-Type",
-                "application/x-www-form-urlencoded"
-            )
-
-            OutputStreamWriter(
-                conexion.outputStream
-            ).use { writer ->
-
-                writer.write(
-                    "data=" +
-                            URLEncoder.encode(
-                                query,
-                                "UTF-8"
-                            )
-                )
+        if (resultadosOverpass.isNotEmpty()) {
+            val filtrados = if (textoLimpio.isBlank()) {
+                resultadosOverpass
+            } else {
+                resultadosOverpass.filter {
+                    it.nombre.contains(textoLimpio, ignoreCase = true) || it.direccion.contains(textoLimpio, ignoreCase = true)
+                }
             }
-
-            val codigoRespuesta =
-                conexion.responseCode
-
-            if (
-                codigoRespuesta !in 200..299
-            ) {
-
-                conexion.disconnect()
-
-                return@withContext emptyList()
-            }
-
-            val respuesta =
-                conexion.inputStream
-                    .bufferedReader()
-                    .use {
-                        it.readText()
-                    }
-
-            conexion.disconnect()
-
-            val json =
-                JSONObject(respuesta)
-
-            val elementos =
-                json.optJSONArray(
-                    "elements"
-                )
-                    ?: return@withContext emptyList()
-
-            for (
-            i in 0 until elementos.length()
-            ) {
-
-                val elemento =
-                    elementos.getJSONObject(i)
-
-                val coordenadas =
-                    obtenerCoordenadasElemento(
-                        elemento
-                    )
-                        ?: continue
-
-                val lat =
-                    coordenadas.first
-
-                val lon =
-                    coordenadas.second
-
-                val tags =
-                    elemento.optJSONObject(
-                        "tags"
-                    )
-
-                val nombre =
-                    tags?.optString(
-                        "name",
-                        ""
-                    ) ?: ""
-
-                val nombreFinal =
-                    if (
-                        nombre.isBlank()
-                    ) {
-                        "REFACCIONARIA / TALLER"
-                    } else {
-                        nombre
-                    }
-
-                val calle =
-                    tags?.optString(
-                        "addr:street",
-                        ""
-                    ) ?: ""
-
-                val numero =
-                    tags?.optString(
-                        "addr:housenumber",
-                        ""
-                    ) ?: ""
-
-                val ciudad =
-                    tags?.optString(
-                        "addr:city",
-                        ""
-                    ) ?: ""
-
-                val direccion =
-                    when {
-
-                        calle.isNotBlank() &&
-                                numero.isNotBlank() &&
-                                ciudad.isNotBlank() ->
-
-                            "$calle $numero, $ciudad"
-
-                        calle.isNotBlank() &&
-                                numero.isNotBlank() ->
-
-                            "$calle $numero"
-
-                        calle.isNotBlank() ->
-                            calle
-
-                        ciudad.isNotBlank() ->
-                            ciudad
-
-                        else ->
-                            "DIRECCIÓN NO DISPONIBLE"
-                    }
-
-                val distancia =
-                    distanciaEntreCoordenadas(
-                        latUsuario,
-                        lonUsuario,
-                        lat,
-                        lon
-                    )
-
-                resultado.add(
-                    LugarRepuesto(
-                        nombre =
-                            nombreFinal,
-                        lat =
-                            lat,
-                        lon =
-                            lon,
-                        direccion =
-                            direccion,
-                        distanciaMetros =
-                            distancia
-                    )
-                )
-            }
-
-        } catch (e: Exception) {
-
-            e.printStackTrace()
+            if (filtrados.isNotEmpty()) return@withContext filtrados.sortedBy { it.distanciaMetros }
+            return@withContext resultadosOverpass.sortedBy { it.distanciaMetros }
         }
 
-        resultado
-            .distinctBy {
-                "${it.nombre}_${it.lat}_${it.lon}"
-            }
-            .sortedBy {
-                it.distanciaMetros
-            }
+        emptyList()
     }
 
 // ======================================================
-// COORDENADAS
-// ======================================================
-
-fun obtenerCoordenadasElemento(
-    elemento: JSONObject
-): Pair<Double, Double>? {
-
-    return try {
-
-        if (
-            elemento.has("lat") &&
-            elemento.has("lon")
-        ) {
-
-            Pair(
-                elemento.getDouble("lat"),
-                elemento.getDouble("lon")
-            )
-
-        } else if (
-            elemento.has("center")
-        ) {
-
-            val center =
-                elemento.getJSONObject(
-                    "center"
-                )
-
-            Pair(
-                center.getDouble("lat"),
-                center.getDouble("lon")
-            )
-
-        } else {
-
-            null
-        }
-
-    } catch (e: Exception) {
-
-        null
-    }
-}
-
-// ======================================================
-// PANTALLA
+// PANTALLA DE BÚSQUEDA
 // ======================================================
 
 @Composable
 fun BuscarRefaccionMapaScreen(
+    onBuscarResultados: (String) -> Unit = {},
     onRegresar: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
-    val context =
-        LocalContext.current
+    var textoBusqueda by remember { mutableStateOf("") }
+    var fotoUri by remember { mutableStateOf<Uri?>(null) }
+    var fotoBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
-    val scope =
-        rememberCoroutineScope()
-
-    var permisoConcedido by remember {
-
-        mutableStateOf(
-
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) ==
-                    PackageManager.PERMISSION_GRANTED
-        )
-    }
-
-    var ubicacionUsuario by remember {
-        mutableStateOf<Location?>(null)
-    }
-
-    var lugares by remember {
-        mutableStateOf<List<LugarRepuesto>>(
-            emptyList()
-        )
-    }
-
-    var cargando by remember {
-        mutableStateOf(false)
-    }
-
-    var mensaje by remember {
-        mutableStateOf("")
-    }
-
-    var textoBusqueda by remember {
-        mutableStateOf("")
-    }
-
-    var fotoUri by remember {
-        mutableStateOf<Uri?>(null)
-    }
-
-    var fotoBitmap by remember {
-        mutableStateOf<Bitmap?>(null)
-    }
-
-    val lanzadorPermiso =
-        rememberLauncherForActivityResult(
-            contract =
-                ActivityResultContracts.RequestPermission()
-        ) { concedido ->
-
-            permisoConcedido =
-                concedido
-
-            if (concedido) {
-
-                mensaje =
-                    "UBICACIÓN ACTIVADA. PRESIONA BUSCAR."
-
-            } else {
-
-                mensaje =
-                    "SE NECESITA EL PERMISO DE UBICACIÓN."
-            }
-        }
-
-    val lanzadorCamara =
-        rememberLauncherForActivityResult(
-            contract =
-                ActivityResultContracts.TakePicture()
-        ) { exito ->
-
-            if (exito && fotoUri != null) {
-
-                try {
-
-                    val stream =
-                        context.contentResolver
-                            .openInputStream(fotoUri!!)
-
-                    fotoBitmap =
-                        BitmapFactory.decodeStream(stream)
-
-                    stream?.close()
-
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }
-        }
-
-    val lanzadorPermisoCamara =
-        rememberLauncherForActivityResult(
-            contract =
-                ActivityResultContracts.RequestPermission()
-        ) { concedido ->
-
-            if (concedido) {
-
-                val uri =
-                    crearArchivoImagenTemporal(context)
-
-                fotoUri = uri
-
-                lanzadorCamara.launch(uri)
-            }
-        }
-
-    // ==================================================
-    // PERMISO AL ENTRAR
-    // ==================================================
-
-    LaunchedEffect(Unit) {
-
-        if (!permisoConcedido) {
-
-            lanzadorPermiso.launch(
-                Manifest.permission.ACCESS_FINE_LOCATION
-            )
-
-        } else {
-
-            obtenerUbicacionActual(
-                context
-            ) { ubicacion ->
-
-                ubicacionUsuario =
-                    ubicacion
-
-                if (
-                    ubicacion == null
-                ) {
-
-                    mensaje =
-                        "PRESIONA BUSCAR PARA OBTENER TU UBICACIÓN."
-                }
+    val lanzadorCamara = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { exito ->
+        if (exito && fotoUri != null) {
+            try {
+                val stream = context.contentResolver.openInputStream(fotoUri!!)
+                fotoBitmap = BitmapFactory.decodeStream(stream)
+                stream?.close()
+                onBuscarResultados("REFACCIÓN")
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }
 
-    // ==================================================
-    // PANTALLA
-    // ==================================================
+    val lanzadorPermisoCamara = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { concedido ->
+        if (concedido) {
+            val uri = crearArchivoImagenTemporal(context)
+            fotoUri = uri
+            lanzadorCamara.launch(uri)
+        }
+    }
 
     Column(
-
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .background(
-                    AzulPrincipalMapa
-                )
-                .padding(12.dp),
-
-        verticalArrangement =
-            Arrangement.Top
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Colores.FondoPantalla)
+            .statusBarsPadding()
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top
     ) {
+        Text(
+            text = "BUSCAR REFACCIONES, REPUESTOS Y TALLERES",
+            fontSize = 21.sp,
+            fontWeight = FontWeight.Bold,
+            color = Colores.TituloPrincipal,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
 
-        // ----------------------------------------------
-        // TÍTULO
-        // ----------------------------------------------
+        Spacer(modifier = Modifier.height(10.dp))
 
         Text(
-
-            text =
-                "REFACCIONARIAS Y TALLERES CERCA DE TI",
-
-            fontSize =
-                22.sp,
-
-            fontWeight =
-                FontWeight.Bold,
-
-            color =
-                Color.White,
-
-            modifier =
-                Modifier.fillMaxWidth()
+            text = "Encuentre refaccionarias y talleres cercanos",
+            fontSize = 17.sp,
+            fontWeight = FontWeight.Bold,
+            color = Colores.EtiquetaCampo,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(
-            modifier =
-                Modifier.height(12.dp)
-        )
-
-        // ----------------------------------------------
-        // CAMPO DE BÚSQUEDA
-        // ----------------------------------------------
+        Spacer(modifier = Modifier.height(30.dp))
 
         OutlinedTextField(
-
-            value =
-                textoBusqueda,
-
-            onValueChange = {
-                textoBusqueda = it
-            },
-
+            value = textoBusqueda,
+            onValueChange = { textoBusqueda = it },
             label = {
-
                 Text(
-
-                    text =
-                        "¿QUÉ REFACCIÓN BUSCAS?",
-
-                    fontSize =
-                        16.sp,
-
-                    fontWeight =
-                        FontWeight.Bold
+                    text = "¿QUÉ REFACCIÓN BUSCAS?",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Colores.EtiquetaCampo
                 )
             },
-
             placeholder = {
-
                 Text(
-
-                    text =
-                        "Ejemplo: BUJÍAS, ACEITE, FILTROS",
-
-                    fontSize =
-                        15.sp,
-
-                    fontWeight =
-                        FontWeight.Bold
+                    text = "Ejemplo: BUJÍAS, ACEITE, FRENOS",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Colores.EtiquetaCampo.copy(alpha = 0.6f)
                 )
             },
-
-            singleLine =
-                true,
-
-            shape =
-                RoundedCornerShape(12.dp),
-
-            textStyle =
-                TextStyle(
-
-                    fontSize =
-                        18.sp,
-
-                    fontWeight =
-                        FontWeight.Bold
-                ),
-
-            colors =
-                TextFieldDefaults.colors(
-
-                    focusedContainerColor =
-                        Color.White,
-
-                    unfocusedContainerColor =
-                        Color.White,
-
-                    disabledContainerColor =
-                        Color.White,
-
-                    focusedTextColor =
-                        Color.Black,
-
-                    unfocusedTextColor =
-                        Color.Black,
-
-                    focusedLabelColor =
-                        Color.Black,
-
-                    unfocusedLabelColor =
-                        Color.Black,
-
-                    cursorColor =
-                        Color.Black,
-
-                    focusedIndicatorColor =
-                        Color.Black,
-
-                    unfocusedIndicatorColor =
-                        Color.Black
-                ),
-
-            modifier =
-                Modifier.fillMaxWidth()
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(
+                onSearch = {
+                    focusManager.clearFocus()
+                    keyboardController?.hide()
+                    onBuscarResultados(textoBusqueda)
+                }
+            ),
+            singleLine = true,
+            shape = RoundedCornerShape(12.dp),
+            textStyle = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White),
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = Colores.FondoSecundario,
+                unfocusedContainerColor = Colores.FondoSecundario,
+                disabledContainerColor = Colores.FondoSecundario,
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                focusedLabelColor = Colores.TituloPrincipal,
+                unfocusedLabelColor = Colores.EtiquetaCampo,
+                cursorColor = Color.White,
+                focusedIndicatorColor = Colores.BordeBoton,
+                unfocusedIndicatorColor = Colores.BordeBoton.copy(alpha = 0.5f)
+            ),
+            modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(
-            modifier =
-                Modifier.height(10.dp)
-        )
+        Spacer(modifier = Modifier.height(20.dp))
 
-        // ----------------------------------------------
-        // BOTÓN BUSCAR
-        // ----------------------------------------------
-
+        // BOTÓN DIRECTO AL MAPA
         BotonModulo3D(
-
-            texto =
-                "🔎  BUSCAR REFACCIÓN CERCA DE MÍ",
-
-            colorClaro =
-                VerdeClaroMapa,
-
-            colorMedio =
-                VerdeMedioMapa,
-
-            colorOscuro =
-                VerdeOscuroMapa,
-
+            texto = "BUSCAR REPUESTO EN MAPA",
+            icono = "🗺️",
+            colorClaro = Color(0xFFF3A7FF),
+            colorMedio = Color(0xFFD83CFF),
+            colorOscuro = Color(0xFF7B1599),
             onClick = {
-
-                // MOSTRAR INMEDIATAMENTE QUE EL BOTÓN FUNCIONÓ
-
-                cargando =
-                    true
-
-                lugares =
-                    emptyList()
-
-                mensaje =
-                    "OBTENIENDO TU UBICACIÓN..."
-
-                // --------------------------------------
-                // PERMISO
-                // --------------------------------------
-
-                if (!permisoConcedido) {
-
-                    cargando =
-                        false
-
-                    mensaje =
-                        "ACTIVANDO PERMISO DE UBICACIÓN..."
-
-                    lanzadorPermiso.launch(
-                        Manifest.permission.ACCESS_FINE_LOCATION
-                    )
-
-                    return@BotonModulo3D
-                }
-
-                // --------------------------------------
-                // OBTENER UBICACIÓN
-                // --------------------------------------
-
-                obtenerUbicacionActual(
-                    context
-                ) { ubicacion ->
-
-                    if (
-                        ubicacion == null
-                    ) {
-
-                        cargando =
-                            false
-
-                        mensaje =
-                            "NO SE PUDO OBTENER TU UBICACIÓN. VERIFICA LA UBICACIÓN DEL EMULADOR."
-
-                        return@obtenerUbicacionActual
-                    }
-
-                    ubicacionUsuario =
-                        ubicacion
-
-                    mensaje =
-                        "BUSCANDO REFACCIONES CERCA DE TI..."
-
-                    // ----------------------------------
-                    // BUSCAR EN INTERNET
-                    // ----------------------------------
-
-                    scope.launch {
-
-                        try {
-
-                            val texto =
-                                textoBusqueda.trim()
-
-                            var resultados =
-                                buscarRepuestosCercanos(
-
-                                    lat =
-                                        ubicacion.latitude,
-
-                                    lon =
-                                        ubicacion.longitude,
-
-                                    textoBusqueda =
-                                        texto,
-
-                                    radioMetros =
-                                        5000
-                                )
-
-                            // --------------------------------
-                            // SI NO HAY COINCIDENCIAS,
-                            // MOSTRAR NEGOCIOS CERCANOS
-                            // --------------------------------
-
-                            if (
-                                resultados.isEmpty()
-                            ) {
-
-                                mensaje =
-                                    "BUSCANDO NEGOCIOS CERCANOS..."
-
-                                resultados =
-                                    buscarTodosLosNegociosCercanos(
-
-                                        lat =
-                                            ubicacion.latitude,
-
-                                        lon =
-                                            ubicacion.longitude,
-
-                                        radioMetros =
-                                            5000
-                                    )
-
-                                if (
-                                    texto.isNotBlank() &&
-                                    resultados.isNotEmpty()
-                                ) {
-
-                                    mensaje =
-                                        "NO SE PUDO CONFIRMAR \"$texto\". SE MUESTRAN NEGOCIOS CERCANOS."
-                                }
-                            }
-
-                            lugares =
-                                resultados
-
-                            // --------------------------------
-                            // MENSAJES FINALES
-                            // --------------------------------
-
-                            if (
-                                resultados.isEmpty()
-                            ) {
-
-                                mensaje =
-                                    "NO SE ENCONTRARON REFACCIONARIAS O TALLERES EN UN RADIO DE 5 KM."
-
-                            } else if (
-                                texto.isBlank()
-                            ) {
-
-                                mensaje =
-                                    "SE ENCONTRARON ${resultados.size} NEGOCIOS CERCANOS."
-
-                            } else if (
-                                !mensaje.contains(
-                                    "NO SE PUDO CONFIRMAR"
-                                )
-                            ) {
-
-                                mensaje =
-                                    "SE ENCONTRARON ${resultados.size} NEGOCIOS CERCANOS."
-                            }
-
-                            cargando =
-                                false
-
-                        } catch (e: Exception) {
-
-                            e.printStackTrace()
-
-                            lugares =
-                                emptyList()
-
-                            cargando =
-                                false
-
-                            mensaje =
-                                "NO SE PUDO REALIZAR LA BÚSQUEDA. VERIFICA TU CONEXIÓN A INTERNET."
-                        }
-                    }
-                }
+                focusManager.clearFocus()
+                keyboardController?.hide()
+                onBuscarResultados(textoBusqueda)
             },
-
-            modifier =
-                Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().height(58.dp),
+            tamanioTexto = 16,
+            colorTexto = Color.Black
         )
 
-        // =================================================
-        // ESPACIO ANTES DEL MAPA (bajado un poco más)
-        // =================================================
-
-        Spacer(
-            modifier =
-                Modifier.height(80.dp)
-        )
-
-        // =================================================
-        // MAPA
-        // =================================================
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(260.dp)
-                .padding(top = 8.dp)
-        ) {
-
-            AndroidView(
-
-                modifier =
-                    Modifier.fillMaxSize(),
-
-                factory = { ctx ->
-
-                    val config =
-                        Configuration.getInstance()
-
-                    config.userAgentValue =
-                        "BitacoraAutomotriz-App/1.0"
-
-                    config.osmdroidBasePath =
-                        ctx.cacheDir
-
-                    config.osmdroidTileCache =
-                        java.io.File(
-                            ctx.cacheDir,
-                            "osmdroid_tiles"
-                        )
-
-                    MapView(ctx).apply {
-
-                        setTileSource(
-                            TileSourceFactory.MAPNIK
-                        )
-
-                        setMultiTouchControls(
-                            true
-                        )
-
-                        controller.setZoom(
-                            14.0
-                        )
-                    }
-                },
-
-                update = { mapView ->
-
-                    mapView.overlays.clear()
-
-                    val centro =
-                        ubicacionUsuario?.let {
-
-                            GeoPoint(
-                                it.latitude,
-                                it.longitude
-                            )
-
-                        } ?: GeoPoint(
-                            19.4326,
-                            -99.1332
-                        )
-
-                    mapView.controller.setCenter(
-                        centro
-                    )
-
-                    // --------------------------------
-                    // MARCADOR DEL USUARIO
-                    // --------------------------------
-
-                    if (
-                        ubicacionUsuario != null
-                    ) {
-
-                        val marcadorYo =
-                            Marker(mapView)
-
-                        marcadorYo.position =
-                            centro
-
-                        marcadorYo.title =
-                            "TÚ ESTÁS AQUÍ"
-
-                        mapView.overlays.add(
-                            marcadorYo
-                        )
-                    }
-
-                    // --------------------------------
-                    // MARCADORES DE NEGOCIOS
-                    // --------------------------------
-
-                    lugares.forEach { lugar ->
-
-                        val marcador =
-                            Marker(mapView)
-
-                        marcador.position =
-                            GeoPoint(
-                                lugar.lat,
-                                lugar.lon
-                            )
-
-                        marcador.title =
-                            lugar.nombre
-
-                        marcador.snippet =
-                            lugar.direccion
-
-                        mapView.overlays.add(
-                            marcador
-                        )
-                    }
-
-                    mapView.invalidate()
-                }
-            )
-        }
-
-        // =================================================
-        // FOTO DEL AUTO O REFACCIÓN
-        // =================================================
+        Spacer(modifier = Modifier.height(16.dp))
 
         BotonModulo3D(
-
-            texto =
-                "📷  TOMAR FOTO DEL AUTO O REFACCIÓN",
-
-            colorClaro =
-                VerdeClaroMapa,
-
-            colorMedio =
-                VerdeMedioMapa,
-
-            colorOscuro =
-                VerdeOscuroMapa,
-
+            texto = "TOMAR FOTO DEL AUTO O REFACCIÓN",
+            icono = "📷",
+            colorClaro = Color(0xFFF3A7FF),
+            colorMedio = Color(0xFFD83CFF),
+            colorOscuro = Color(0xFF7B1599),
             onClick = {
-
-                val tienePermisoCamara =
-                    ContextCompat.checkSelfPermission(
-                        context,
-                        Manifest.permission.CAMERA
-                    ) == PackageManager.PERMISSION_GRANTED
-
+                val tienePermisoCamara = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
                 if (tienePermisoCamara) {
-
-                    val uri =
-                        crearArchivoImagenTemporal(context)
-
+                    val uri = crearArchivoImagenTemporal(context)
                     fotoUri = uri
-
                     lanzadorCamara.launch(uri)
-
                 } else {
-
-                    lanzadorPermisoCamara.launch(
-                        Manifest.permission.CAMERA
-                    )
+                    lanzadorPermisoCamara.launch(Manifest.permission.CAMERA)
                 }
             },
-
-            modifier =
-                Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().height(58.dp),
+            tamanioTexto = 16,
+            colorTexto = Color.Black
         )
 
         if (fotoBitmap != null) {
-
+            Spacer(modifier = Modifier.height(16.dp))
             Image(
-                bitmap =
-                    fotoBitmap!!.asImageBitmap(),
-
-                contentDescription =
-                    "Foto tomada",
-
-                contentScale =
-                    ContentScale.Crop,
-
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .height(180.dp)
+                bitmap = fotoBitmap!!.asImageBitmap(),
+                contentDescription = "Foto tomada",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(12.dp))
             )
         }
 
-        Spacer(
-            modifier =
-                Modifier.height(8.dp)
-        )
-
-        // =================================================
-        // RESULTADOS / MENSAJE
-        // =================================================
-
-        if (cargando) {
-
-            Box(
-
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-
-                contentAlignment =
-                    Alignment.Center
-            ) {
-
-                Column(
-
-                    horizontalAlignment =
-                        Alignment.CenterHorizontally
-                ) {
-
-                    CircularProgressIndicator(
-                        color =
-                            Color.White
-                    )
-
-                    Spacer(
-                        modifier =
-                            Modifier.height(10.dp)
-                    )
-
-                    Text(
-
-                        text =
-                            mensaje,
-
-                        color =
-                            Color.White,
-
-                        fontSize =
-                            18.sp,
-
-                        fontWeight =
-                            FontWeight.Bold
-                    )
-                }
-            }
-
-        } else {
-
-            if (
-                mensaje.isNotEmpty()
-            ) {
-
-                Text(
-
-                    text =
-                        mensaje,
-
-                    color =
-                        Color.White,
-
-                    fontSize =
-                        17.sp,
-
-                    fontWeight =
-                        FontWeight.Bold,
-
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(
-                                horizontal = 4.dp
-                            )
-                )
-
-                Spacer(
-                    modifier =
-                        Modifier.height(6.dp)
-                )
-            }
-
-            if (
-                lugares.isNotEmpty()
-            ) {
-
-                LazyColumn(
-
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                ) {
-
-                    items(
-                        items =
-                            lugares
-                    ) { lugar ->
-
-                        Card(
-
-                            modifier =
-                                Modifier
-                                    .fillMaxWidth()
-                                    .padding(
-                                        vertical = 4.dp
-                                    ),
-
-                            shape =
-                                RoundedCornerShape(
-                                    12.dp
-                                ),
-
-                            colors =
-                                CardDefaults
-                                    .cardColors(
-                                        containerColor =
-                                            Color.White
-                                    )
-                        ) {
-
-                            Column(
-
-                                modifier =
-                                    Modifier.padding(
-                                        14.dp
-                                    )
-                            ) {
-
-                                Text(
-
-                                    text =
-                                        lugar.nombre,
-
-                                    color =
-                                        Color.Black,
-
-                                    fontSize =
-                                        19.sp,
-
-                                    fontWeight =
-                                        FontWeight.Bold
-                                )
-
-                                Spacer(
-                                    modifier =
-                                        Modifier.height(4.dp)
-                                )
-
-                                Text(
-
-                                    text =
-                                        lugar.direccion,
-
-                                    color =
-                                        Color.Black,
-
-                                    fontSize =
-                                        16.sp,
-
-                                    fontWeight =
-                                        FontWeight.Bold
-                                )
-
-                                Spacer(
-                                    modifier =
-                                        Modifier.height(4.dp)
-                                )
-
-                                Text(
-
-                                    text =
-                                        String.format(
-
-                                            Locale.US,
-
-                                            "%.1f KM DE DISTANCIA",
-
-                                            lugar.distanciaMetros /
-                                                    1000
-                                        ),
-
-                                    color =
-                                        AzulPrincipalMapa,
-
-                                    fontSize =
-                                        16.sp,
-
-                                    fontWeight =
-                                        FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
-                }
-
-            } else {
-
-                Spacer(
-                    modifier =
-                        Modifier.weight(1f)
-                )
-            }
-        }
-
-        Spacer(
-            modifier =
-                Modifier.height(6.dp)
-        )
-
-        // =================================================
-        // REGRESAR
-        // =================================================
+        Spacer(modifier = Modifier.height(40.dp))
 
         BotonModulo3D(
-
-            texto =
-                "←  REGRESAR",
-
-            colorClaro =
-                GrisClaroMapa,
-
-            colorMedio =
-                GrisMedioMapa,
-
-            colorOscuro =
-                GrisOscuroMapa,
-
-            onClick =
-                onRegresar,
-
-            modifier =
-                Modifier.fillMaxWidth()
+            texto = "REGRESAR",
+            icono = "🔙",
+            colorClaro = Colores.RegresarClaro,
+            colorMedio = Colores.RegresarMedio,
+            colorOscuro = Colores.RegresarOscuro,
+            onClick = onRegresar,
+            modifier = Modifier.fillMaxWidth().height(58.dp),
+            tamanioTexto = 16,
+            colorTexto = Color.White
         )
+
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }

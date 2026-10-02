@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
+import com.example.bitacoraautomotriz.ui.theme.Colores
 
 @Composable
 fun ReportesScreen(
@@ -61,56 +62,75 @@ fun ReportesScreen(
             colorClaro = Color(0xFFADB8FF),
             colorMedio = Color(0xFF5C70FF),
             colorOscuro = Color(0xFF29399E),
-            onClick = onReporteClientes
+            onClick = onReporteClientes,
+            colorTexto = Color.Black
         )
+
+        Spacer(modifier = Modifier.height(14.dp))
 
         BotonModulo3D(
             texto = "REPORTE DE AUTOS",
             colorClaro = Color(0xFFADB8FF),
             colorMedio = Color(0xFF5C70FF),
             colorOscuro = Color(0xFF29399E),
-            onClick = onReporteAutos
+            onClick = onReporteAutos,
+            colorTexto = Color.Black
         )
+
+        Spacer(modifier = Modifier.height(14.dp))
 
         BotonModulo3D(
             texto = "REPORTE DE ÓRDENES",
             colorClaro = Color(0xFFADB8FF),
             colorMedio = Color(0xFF5C70FF),
             colorOscuro = Color(0xFF29399E),
-            onClick = onReporteOrdenes
+            onClick = onReporteOrdenes,
+            colorTexto = Color.Black
         )
+
+        Spacer(modifier = Modifier.height(14.dp))
 
         BotonModulo3D(
             texto = "REPORTE DE INVENTARIO",
             colorClaro = Color(0xFFADB8FF),
             colorMedio = Color(0xFF5C70FF),
             colorOscuro = Color(0xFF29399E),
-            onClick = onReporteInventario
+            onClick = onReporteInventario,
+            colorTexto = Color.Black
         )
+
+        Spacer(modifier = Modifier.height(14.dp))
 
         BotonModulo3D(
             texto = "REPORTE DE GASTOS",
             colorClaro = Color(0xFFADB8FF),
             colorMedio = Color(0xFF5C70FF),
             colorOscuro = Color(0xFF29399E),
-            onClick = onReporteGastos
+            onClick = onReporteGastos,
+            colorTexto = Color.Black
         )
+
+        Spacer(modifier = Modifier.height(14.dp))
 
         BotonModulo3D(
             texto = "REPORTE DE FACTURACIÓN",
             colorClaro = Color(0xFFADB8FF),
             colorMedio = Color(0xFF5C70FF),
             colorOscuro = Color(0xFF29399E),
-            onClick = onReporteFacturacion
+            onClick = onReporteFacturacion,
+            colorTexto = Color.Black
         )
+
+        Spacer(modifier = Modifier.height(18.dp))
 
         // REGRESAR
         BotonModulo3D(
             texto = "REGRESAR",
-            colorClaro = Color(0xFFD5E1E6),
-            colorMedio = Color(0xFF90A4AE),
-            colorOscuro = Color(0xFF455A64),
-            onClick = onRegresar
+            colorClaro = Colores.RegresarClaro,
+            colorMedio = Colores.RegresarMedio,
+            colorOscuro = Colores.RegresarOscuro,
+            onClick = onRegresar,
+            colorTexto = Color.White
         )
     }
 }

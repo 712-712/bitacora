@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -23,6 +24,7 @@ import com.example.bitacoraautomotriz.ui.theme.Colores
 @Composable
 fun AreaClienteScreen(
     onDatosClienteAutos: () -> Unit,
+    onDatosFacturacion: () -> Unit,
     onEstadoReparacion: () -> Unit,
     onCitaEntrega: () -> Unit,
     onHistorial: () -> Unit,
@@ -64,40 +66,72 @@ fun AreaClienteScreen(
         Spacer(modifier = Modifier.height(28.dp))
 
         // =========================================
-        // DATOS CLIENTE Y AUTOS
+        // MIS AUTOS
         // =========================================
         BotonModulo3D(
-            texto = "DATOS CLIENTE Y AUTOS",
-            icono = "👤",
+            texto = "MIS AUTOS",
+            icono = "🚗",
+            colorClaro = Color(0xFFD7B899),
+            colorMedio = Color(0xFF9B6B43),
+            colorOscuro = Color(0xFF5D3A1A),
             onClick = onDatosClienteAutos,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().height(58.dp),
+            tamanioTexto = 16,
+            colorTexto = Color.Black
         )
 
-        Spacer(modifier = Modifier.height(7.dp))
+        Spacer(modifier = Modifier.height(14.dp))
 
         // =========================================
-        // ESTADO DE REPARACIÓN
+        // MIS DATOS DE FACTURACIÓN
         // =========================================
         BotonModulo3D(
-            texto = "ESTADO DE REPARACIÓN",
+            texto = "MIS DATOS DE FACTURACIÓN",
+            icono = "📄",
+            colorClaro = Color(0xFFD7B899),
+            colorMedio = Color(0xFF9B6B43),
+            colorOscuro = Color(0xFF5D3A1A),
+            onClick = onDatosFacturacion,
+            modifier = Modifier.fillMaxWidth().height(58.dp),
+            tamanioTexto = 16,
+            colorTexto = Color.Black
+        )
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // =========================================
+        // ESTADO DE MI REPARACIÓN
+        // =========================================
+        BotonModulo3D(
+            texto = "ESTADO DE MI REPARACIÓN",
             icono = "🔧",
+            colorClaro = Color(0xFFD7B899),
+            colorMedio = Color(0xFF9B6B43),
+            colorOscuro = Color(0xFF5D3A1A),
             onClick = onEstadoReparacion,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().height(58.dp),
+            tamanioTexto = 16,
+            colorTexto = Color.Black
         )
 
-        Spacer(modifier = Modifier.height(7.dp))
+        Spacer(modifier = Modifier.height(14.dp))
 
         // =========================================
-        // CITA DE ENTREGA
+        // CITA DE INGRESO AL TALLER
         // =========================================
         BotonModulo3D(
-            texto = "CITA DE ENTREGA",
+            texto = "CITA DE INGRESO AL TALLER",
             icono = "📅",
+            colorClaro = Color(0xFFD7B899),
+            colorMedio = Color(0xFF9B6B43),
+            colorOscuro = Color(0xFF5D3A1A),
             onClick = onCitaEntrega,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().height(58.dp),
+            tamanioTexto = 16,
+            colorTexto = Color.Black
         )
 
-        Spacer(modifier = Modifier.height(7.dp))
+        Spacer(modifier = Modifier.height(14.dp))
 
         // =========================================
         // HISTORIAL
@@ -105,20 +139,30 @@ fun AreaClienteScreen(
         BotonModulo3D(
             texto = "HISTORIAL",
             icono = "📜",
+            colorClaro = Color(0xFFD7B899),
+            colorMedio = Color(0xFF9B6B43),
+            colorOscuro = Color(0xFF5D3A1A),
             onClick = onHistorial,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().height(58.dp),
+            tamanioTexto = 16,
+            colorTexto = Color.Black
         )
 
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         // =========================================
-        // REGRESAR
+        // SALIR DE LA APP (Gris)
         // =========================================
         BotonModulo3D(
             texto = "SALIR DE LA APP",
             icono = "🚪",
+            colorClaro = Colores.RegresarClaro,
+            colorMedio = Colores.RegresarMedio,
+            colorOscuro = Colores.RegresarOscuro,
             onClick = onRegresar,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().height(58.dp),
+            tamanioTexto = 16,
+            colorTexto = Color.White
         )
 
         Spacer(modifier = Modifier.height(12.dp))

@@ -10,6 +10,6 @@ interface FacturaDao {
     @Insert
     suspend fun insertarFactura(factura: Factura)
 
-    @Query("SELECT * FROM facturas")
+    @Query("SELECT * FROM facturas ORDER BY id DESC")
     suspend fun obtenerFacturas(): List<Factura>
 }

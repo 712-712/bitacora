@@ -23,6 +23,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -236,8 +237,12 @@ fun EditarClienteScreen(
             BotonModulo3D(
                 texto = if (guardando) "GUARDANDO..." else "GUARDAR CAMBIOS",
                 icono = "💾",
+                colorClaro = Color(0xFF80D8FF),
+                colorMedio = Color(0xFF00B8D4),
+                colorOscuro = Color(0xFF006064),
                 onClick = { if (!guardando) guardar() },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colorTexto = Color.Black
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -246,8 +251,12 @@ fun EditarClienteScreen(
         BotonModulo3D(
             texto = "REGRESAR",
             icono = "🔙",
+            colorClaro = Colores.RegresarClaro,
+            colorMedio = Colores.RegresarMedio,
+            colorOscuro = Colores.RegresarOscuro,
             onClick = onRegresar,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colorTexto = Color.White
         )
     }
 }

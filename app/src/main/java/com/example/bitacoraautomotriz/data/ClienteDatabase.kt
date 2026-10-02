@@ -15,7 +15,7 @@ import androidx.room.RoomDatabase
         Gasto::class,
         Factura::class
     ],
-    version = 7,
+    version = 8,
     exportSchema = false
 )
 abstract class ClienteDatabase : RoomDatabase() {
