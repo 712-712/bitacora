@@ -122,7 +122,7 @@ private fun WelcomeContent(
     }
     var menuExpanded by remember { mutableStateOf(false) }
 
-    val urlDescarga = "https://github.com/712-712/bitacora/releases"
+    val urlDescarga = "https://drive.google.com/file/d/1ctoBtvfA9OJRrVqwkOyahB7W4OMODktW/view?usp=drive_link"
     val qrBitmap = remember(urlDescarga) { generarQrBitmapRealConAltaCorreccion(urlDescarga, 450, 450) }
 
     Box(
