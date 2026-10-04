@@ -1,23 +1,21 @@
 package com.example.bitacoraautomotriz.ui.areacliente
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.bitacoraautomotriz.repository.AlertaMantenimiento
+import com.example.bitacoraautomotriz.repository.FirebaseSyncManager
 import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
 import com.example.bitacoraautomotriz.ui.theme.Colores
 
@@ -30,46 +28,96 @@ fun AreaClienteScreen(
     onHistorial: () -> Unit,
     onRegresar: () -> Unit
 ) {
+    var alertasEnTiempoReal by remember { mutableStateOf<List<AlertaMantenimiento>>(emptyList()) }
+
+    LaunchedEffect(Unit) {
+        try {
+            FirebaseSyncManager.escucharAlertasEnTiempoReal { lista ->
+                alertasEnTiempoReal = lista
+            }
+        } catch (_: Exception) {}
+    }
+
+    val ultimaAlerta = alertasEnTiempoReal.lastOrNull()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Colores.FondoPantalla)
+            .statusBarsPadding()
             .verticalScroll(rememberScrollState())
             .padding(
                 start = 24.dp,
                 end = 24.dp,
-                top = 42.dp,
+                top = 24.dp,
                 bottom = 28.dp
             ),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
-        // =========================================
-        // TÍTULO
-        // =========================================
+        // TÍTULO DE LA PANTALLA
         Text(
             text = "ÁREA DEL CLIENTE",
-            fontSize = 29.sp,
+            fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             color = Colores.TituloPrincipal
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
         Text(
             text = "Consulta y seguimiento de su vehículo",
-            fontSize = 17.sp,
+            fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
-            color = Colores.EtiquetaCampo
+            color = Colores.EtiquetaCampo,
+            textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(28.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
-        // =========================================
-        // MIS AUTOS
-        // =========================================
+        // TARJETA M3 DE ALERTA DE MANTENIMIENTO RECIBIDA EN TIEMPO REAL DESDE EL TALLER
+        if (ultimaAlerta != null && ultimaAlerta.mensaje.isNotBlank()) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 20.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFB51F1F)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            ) {
+                Column(modifier = Modifier.padding(18.dp)) {
+                    Text(
+                        text = "🔔 ALERTA DE REVISIÓN Y MANTENIMIENTO",
+                        color = Color.White,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = ultimaAlerta.mensaje,
+                        color = Color.White,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.height(14.dp))
+                    BotonModulo3D(
+                        texto = "📅 AGENDAR CITA DE INGRESO",
+                        icono = "📅",
+                        colorClaro = Color(0xFFB9F6CA),
+                        colorMedio = Color(0xFF00C853),
+                        colorOscuro = Color(0xFF00695C),
+                        colorTexto = Color.Black,
+                        onClick = onCitaEntrega,
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        tamanioTexto = 14
+                    )
+                }
+            }
+        }
+
+        // 1. MIS AUTOS
         BotonModulo3D(
-            texto = "MIS AUTOS",
+            texto = "MIS AUTOS / AGREGAR MI AUTO",
             icono = "🚗",
             colorClaro = Color(0xFFD7B899),
             colorMedio = Color(0xFF9B6B43),
@@ -82,9 +130,7 @@ fun AreaClienteScreen(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // =========================================
-        // MIS DATOS DE FACTURACIÓN
-        // =========================================
+        // 2. MIS DATOS DE FACTURACIÓN
         BotonModulo3D(
             texto = "MIS DATOS DE FACTURACIÓN",
             icono = "📄",
@@ -99,9 +145,7 @@ fun AreaClienteScreen(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // =========================================
-        // ESTADO DE MI REPARACIÓN
-        // =========================================
+        // 3. ESTADO DE MI REPARACIÓN
         BotonModulo3D(
             texto = "ESTADO DE MI REPARACIÓN",
             icono = "🔧",
@@ -116,9 +160,7 @@ fun AreaClienteScreen(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // =========================================
-        // CITA DE INGRESO AL TALLER
-        // =========================================
+        // 4. CITA DE INGRESO AL TALLER
         BotonModulo3D(
             texto = "CITA DE INGRESO AL TALLER",
             icono = "📅",
@@ -133,9 +175,7 @@ fun AreaClienteScreen(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // =========================================
-        // HISTORIAL
-        // =========================================
+        // 5. HISTORIAL
         BotonModulo3D(
             texto = "HISTORIAL",
             icono = "📜",
@@ -150,9 +190,7 @@ fun AreaClienteScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // =========================================
         // SALIR DE LA APP (Gris)
-        // =========================================
         BotonModulo3D(
             texto = "SALIR DE LA APP",
             icono = "🚪",

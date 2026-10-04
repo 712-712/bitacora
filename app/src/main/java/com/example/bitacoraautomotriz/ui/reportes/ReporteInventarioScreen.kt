@@ -18,6 +18,8 @@ import com.example.bitacoraautomotriz.data.Repuesto
 import com.example.bitacoraautomotriz.repository.RepuestoRepository
 import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
 import com.example.bitacoraautomotriz.ui.theme.Colores
+import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Locale
 
 @Composable
@@ -36,6 +38,19 @@ fun ReporteInventarioScreen(
         } finally {
             cargando = false
         }
+    }
+
+    // OBTENER MES Y AÑO VIGENTE DEL CALENDARIO CON DÍAS EXACTOS (01 AL 28, 29, 30 O 31)
+    val calHoy = remember { Calendar.getInstance() }
+    val mesActual = calHoy.get(Calendar.MONTH) // 0..11
+    val anioActual = calHoy.get(Calendar.YEAR)
+    val diasEnMes = calHoy.getActualMaximum(Calendar.DAY_OF_MONTH) // 28, 29, 30 o 31
+    val nombreMes = remember { SimpleDateFormat("MMMM", Locale.forLanguageTag("es-ES")).format(calHoy.time) }
+
+    val totalInversionInventario = repuestos.sumOf {
+        val qty = it.cantidad.coerceAtLeast(0)
+        val prc = if (it.precio.isNaN() || it.precio < 0) 0.0 else it.precio
+        qty * prc
     }
 
     Column(
@@ -60,7 +75,52 @@ fun ReporteInventarioScreen(
             color = Colores.TituloPrincipal
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // TARJETA ROJA CON LA INVERSIÓN TOTAL EN INVENTARIO
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(14.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFB51F1F)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(18.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "INVERSIÓN TOTAL EN INVENTARIO",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "${nombreMes.uppercase()} $anioActual",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFF3A7FF)
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "Período del 01/${"%02d".format(mesActual + 1)}/$anioActual al $diasEnMes/${"%02d".format(mesActual + 1)}/$anioActual",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.White.copy(alpha = 0.9f)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = String.format(Locale.US, "$ %,.2f", totalInversionInventario),
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
 
         if (cargando) {
             Box(
@@ -79,12 +139,10 @@ fun ReporteInventarioScreen(
                 color = Color.White
             )
         } else {
-            Text(
-                text = "Total de repuestos: ${repuestos.size}",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
+            Row {
+                Text(text = "Total de repuestos: ", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text(text = "${repuestos.size}", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -107,55 +165,45 @@ fun ReporteInventarioScreen(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Text(
-                            text = "NOMBRE: ${repuesto.nombre.uppercase()}",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
+                        Row {
+                            Text(text = "NOMBRE: ", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(text = repuesto.nombre.uppercase(), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
 
-                        Text(
-                            text = "MARCA: ${repuesto.marca.uppercase()}",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
+                        Row {
+                            Text(text = "MARCA: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(text = repuesto.marca.uppercase(), fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
 
-                        Text(
-                            text = "CATEGORÍA: ${repuesto.categoria.uppercase()}",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
+                        Row {
+                            Text(text = "CATEGORÍA: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(text = repuesto.categoria.uppercase(), fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
 
-                        Text(
-                            text = "CANTIDAD: $cantidad",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
+                        Row {
+                            Text(text = "CANTIDAD: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(text = "$cantidad", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
+                        }
 
-                        Text(
-                            text = String.format(
-                                Locale.US,
-                                "PRECIO UNITARIO: $ %,.2f",
-                                precio
-                            ),
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
+                        Row {
+                            Text(text = "PRECIO UNITARIO: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(
+                                text = String.format(Locale.US, "$ %,.2f", precio),
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFFF5252)
+                            )
+                        }
 
-                        Text(
-                            text = String.format(
-                                Locale.US,
-                                "TOTAL: $ %,.2f",
-                                total
-                            ),
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFFF5252)
-                        )
+                        Row {
+                            Text(text = "TOTAL: ", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(
+                                text = String.format(Locale.US, "$ %,.2f", total),
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFFF5252)
+                            )
+                        }
                     }
                 }
             }
@@ -165,6 +213,7 @@ fun ReporteInventarioScreen(
 
         BotonModulo3D(
             texto = "REGRESAR",
+            icono = "🔙",
             colorClaro = Colores.RegresarClaro,
             colorMedio = Colores.RegresarMedio,
             colorOscuro = Colores.RegresarOscuro,

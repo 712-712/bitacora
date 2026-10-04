@@ -24,6 +24,7 @@ object OrdenServicioRepository {
 
     suspend fun guardarOrden(orden: OrdenServicio, context: Context? = null) {
         obtenerDao(context)?.insertarOrden(orden)
+        try { FirebaseSyncManager.subirOrdenAFirebase(orden) } catch (_: Exception) {}
     }
 
     suspend fun obtenerOrdenes(context: Context? = null): List<OrdenServicio> {
@@ -40,6 +41,7 @@ object OrdenServicioRepository {
 
     suspend fun actualizarOrden(orden: OrdenServicio, context: Context? = null) {
         obtenerDao(context)?.actualizarOrden(orden)
+        try { FirebaseSyncManager.subirOrdenAFirebase(orden) } catch (_: Exception) {}
     }
 
     suspend fun eliminarOrden(orden: OrdenServicio, context: Context? = null) {
@@ -47,7 +49,14 @@ object OrdenServicioRepository {
     }
 
     suspend fun actualizarEstadoYAvance(id: Int, estado: String, porcentajeAvance: Int, fechaEntrega: String, context: Context? = null) {
-        obtenerDao(context)?.actualizarEstadoYAvance(id, estado, porcentajeAvance, fechaEntrega)
+        val dao = obtenerDao(context)
+        dao?.actualizarEstadoYAvance(id, estado, porcentajeAvance, fechaEntrega)
+        try {
+            val ordenModificada = dao?.obtenerOrdenPorId(id)
+            if (ordenModificada != null) {
+                FirebaseSyncManager.subirOrdenAFirebase(ordenModificada)
+            }
+        } catch (_: Exception) {}
     }
 
     suspend fun obtenerOrdenPorId(id: Int, context: Context? = null): OrdenServicio? {
@@ -62,5 +71,6 @@ object OrdenServicioRepository {
             estado = if (aceptada) "EN REPARACIÓN" else "RECHAZADA POR CLIENTE"
         )
         dao.actualizarOrden(ordenActualizada)
+        try { FirebaseSyncManager.subirOrdenAFirebase(ordenActualizada) } catch (_: Exception) {}
     }
 }

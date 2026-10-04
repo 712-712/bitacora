@@ -18,6 +18,8 @@ import com.example.bitacoraautomotriz.data.Gasto
 import com.example.bitacoraautomotriz.repository.GastoRepository
 import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
 import com.example.bitacoraautomotriz.ui.theme.Colores
+import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Locale
 
 @Composable
@@ -38,7 +40,26 @@ fun ReporteGastosScreen(
         }
     }
 
-    val totalGeneralGastos = gastos.sumOf { if (it.monto.isNaN() || it.monto < 0) 0.0 else it.monto }
+    // OBTENER MES Y AÑO VIGENTE DEL CALENDARIO CON DÍAS EXACTOS (01 AL 28, 29, 30 O 31)
+    val calHoy = remember { Calendar.getInstance() }
+    val mesActual = calHoy.get(Calendar.MONTH) // 0..11
+    val anioActual = calHoy.get(Calendar.YEAR)
+    val diasEnMes = calHoy.getActualMaximum(Calendar.DAY_OF_MONTH) // 28, 29, 30 o 31
+    val nombreMes = remember { SimpleDateFormat("MMMM", Locale.forLanguageTag("es-ES")).format(calHoy.time) }
+
+    // FILTRAR GASTOS DEL MES VIGENTE
+    val gastosDelMes = gastos.filter { g ->
+        try {
+            val partes = g.fecha.split("/")
+            if (partes.size == 3) {
+                val m = partes[1].toIntOrNull()
+                val y = partes[2].toIntOrNull()
+                m == (mesActual + 1) && y == anioActual
+            } else false
+        } catch (_: Exception) { false }
+    }
+
+    val totalGastosMes = gastosDelMes.sumOf { if (it.monto.isNaN() || it.monto < 0) 0.0 else it.monto }
 
     Column(
         modifier = Modifier
@@ -55,15 +76,59 @@ fun ReporteGastosScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
-
         Text(
             text = "REPORTE DE GASTOS",
-            fontSize = 24.sp,
+            fontSize = 26.sp,
             fontWeight = FontWeight.Bold,
             color = Colores.TituloPrincipal
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // TARJETA ROJA CON EL TOTAL GENERAL DE GASTOS DEL MES VIGENTE
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(14.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFB51F1F)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(18.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "TOTAL GENERAL DE GASTOS",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "${nombreMes.uppercase()} $anioActual",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFFF9999)
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "Período del 01/${"%02d".format(mesActual + 1)}/$anioActual al $diasEnMes/${"%02d".format(mesActual + 1)}/$anioActual",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.White.copy(alpha = 0.9f)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = String.format(Locale.US, "$ %,.2f", totalGastosMes),
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
 
         if (cargando) {
             Box(
@@ -82,27 +147,12 @@ fun ReporteGastosScreen(
                 color = Color.White
             )
         } else {
-            Text(
-                text = "Total de gastos registrados: ${gastos.size}",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
+            Row {
+                Text(text = "Total de gastos registrados: ", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text(text = "${gastos.size}", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
+            }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = String.format(
-                    Locale.US,
-                    "Monto total: $ %,.2f",
-                    totalGeneralGastos
-                ),
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFFFF5252)
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             gastos.forEach { gasto ->
                 val total = if (gasto.monto.isNaN() || gasto.monto < 0) 0.0 else gasto.monto
@@ -123,43 +173,40 @@ fun ReporteGastosScreen(
                             .padding(18.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Text(
-                            text = gasto.concepto.orEmpty().uppercase(),
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                        Text(
-                            text = "CATEGORÍA: ${gasto.categoria.orEmpty().uppercase()}",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
-                        Text(
-                            text = "FECHA: ${gasto.fecha.orEmpty()}",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
+                        Row {
+                            Text(text = "CONCEPTO: ", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(text = gasto.concepto.orEmpty().uppercase(), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
+
+                        Row {
+                            Text(text = "CATEGORÍA: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(text = gasto.categoria.orEmpty().uppercase(), fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
+
+                        Row {
+                            Text(text = "FECHA: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(text = gasto.fecha.orEmpty(), fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
+
                         if (gasto.descripcion.orEmpty().isNotBlank()) {
-                            Text(
-                                text = "DESCRIPCIÓN: ${gasto.descripcion.orEmpty()}",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.Black
-                            )
+                            Row {
+                                Text(text = "DESCRIPCIÓN: ", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(text = gasto.descripcion.orEmpty().uppercase(), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
                         }
 
                         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color(0xFF004D33))
 
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             Text(text = "PRECIO / BASE:", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                            Text(text = String.format(Locale.US, "$ %,.2f", precioBase), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            Text(text = String.format(Locale.US, "$ %,.2f", precioBase), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
                         }
+
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             Text(text = "I.V.A. (16%):", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                            Text(text = String.format(Locale.US, "$ %,.2f", iva), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            Text(text = String.format(Locale.US, "$ %,.2f", iva), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
                         }
+
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             Text(text = "TOTAL DEL GASTO:", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                             Text(text = String.format(Locale.US, "$ %,.2f", total), fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))

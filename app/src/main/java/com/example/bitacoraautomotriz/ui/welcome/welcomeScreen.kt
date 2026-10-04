@@ -1,46 +1,24 @@
 package com.example.bitacoraautomotriz.ui.welcome
 
+import android.graphics.Bitmap
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -51,17 +29,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.os.LocaleListCompat
 import com.example.bitacoraautomotriz.R
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.EncodeHintType
+import com.google.zxing.MultiFormatWriter
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import kotlinx.coroutines.delay
 
-// =========================================
-// IDIOMAS SOPORTADOS
-// Los NOMBRES de los idiomas (Español, English...) se dejan escritos así
-// a propósito: son "endónimos" (el nombre que cada idioma usa para sí
-// mismo) y normalmente NO se traducen, ni siquiera en apps grandes.
-//
-// Lo que SÍ cambia con el idioma es el contenido de la app, que ahora
-// viene de res/values*/strings.xml en vez de un mapa en Kotlin.
-// =========================================
 data class AppLanguage(val code: String, val displayName: String, val flag: String)
 
 val supportedLanguages = listOf(
@@ -73,12 +46,36 @@ val supportedLanguages = listOf(
     AppLanguage("it", "Italiano", "🇮🇹"),
 )
 
-/**
- * Pantalla de bienvenida completa:
- * 1) Splash de ~2 s con la imagen del Ford a pantalla completa.
- * 2) Panel con selector de idioma REAL (cambia toda la app, no solo esta
- *    pantalla) + secciones TALLER / CLIENTE.
- */
+// GENERADOR DE CÓDIGO QR REAL ESTÁNDAR CON ALTA CORRECCIÓN DE ERRORES (LEVEL H)
+fun generarQrBitmapRealConAltaCorreccion(contenido: String, ancho: Int = 450, alto: Int = 450): Bitmap? {
+    return try {
+        val hints = mapOf(
+            EncodeHintType.MARGIN to 1,
+            EncodeHintType.CHARACTER_SET to "UTF-8",
+            EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.H
+        )
+        val bitMatrix = MultiFormatWriter().encode(
+            contenido,
+            BarcodeFormat.QR_CODE,
+            ancho,
+            alto,
+            hints
+        )
+        val w = bitMatrix.width
+        val h = bitMatrix.height
+        val pixels = IntArray(w * h)
+        for (y in 0 until h) {
+            val offset = y * w
+            for (x in 0 until w) {
+                pixels[offset + x] = if (bitMatrix.get(x, y)) android.graphics.Color.BLACK else android.graphics.Color.WHITE
+            }
+        }
+        Bitmap.createBitmap(pixels, w, h, Bitmap.Config.ARGB_8888)
+    } catch (e: Exception) {
+        null
+    }
+}
+
 @Composable
 fun WelcomeScreen(
     onTallerClick: () -> Unit,
@@ -118,14 +115,15 @@ private fun WelcomeContent(
     onTallerClick: () -> Unit,
     onClienteClick: () -> Unit,
 ) {
-    // Idioma actualmente aplicado a la app (lo lee de AppCompatDelegate al
-    // entrar, para que el botón muestre el idioma correcto tras reabrir la app).
     var selectedLanguage by remember {
         val currentTag = AppCompatDelegate.getApplicationLocales().toLanguageTags()
         val match = supportedLanguages.find { currentTag.startsWith(it.code) }
         mutableStateOf(match ?: supportedLanguages[0])
     }
     var menuExpanded by remember { mutableStateOf(false) }
+
+    val urlDescarga = "https://github.com/712-712/bitacora/releases"
+    val qrBitmap = remember(urlDescarga) { generarQrBitmapRealConAltaCorreccion(urlDescarga, 450, 450) }
 
     Box(
         modifier = Modifier
@@ -143,7 +141,7 @@ private fun WelcomeContent(
                 .padding(horizontal = 18.dp, vertical = 12.dp)
         ) {
 
-            // ---------- Selector de idioma REAL (cambia toda la app) ----------
+            // ---------- Selector de idioma REAL ----------
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
                 Surface(
                     onClick = { menuExpanded = true },
@@ -188,8 +186,6 @@ private fun WelcomeContent(
                             onClick = {
                                 selectedLanguage = lang
                                 menuExpanded = false
-                                // 🔑 Esto es lo que cambia el idioma de TODA la app,
-                                // no solo de esta pantalla.
                                 AppCompatDelegate.setApplicationLocales(
                                     LocaleListCompat.forLanguageTags(lang.code)
                                 )
@@ -230,7 +226,7 @@ private fun WelcomeContent(
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // ---------- Sección TALLER (mitad superior) ----------
+            // ---------- Sección TALLER (Compacta y Elegante) ----------
             SectionCard(
                 labelIcon = Icons.Default.Build,
                 label = stringResource(id = R.string.taller),
@@ -239,24 +235,63 @@ private fun WelcomeContent(
                 accentColorDark = Color(0xFF0D47A1),
                 onClick = onTallerClick,
                 modifier = Modifier
-                    .weight(1f)
                     .fillMaxWidth()
+                    .height(250.dp)
             )
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // ---------- Sección CLIENTE (mitad inferior) ----------
-            SectionCard(
-                labelIcon = Icons.Default.Person,
-                label = stringResource(id = R.string.cliente),
-                buttonLabel = stringResource(id = R.string.ingresar),
-                accentColor = Color(0xFF43A047),
-                accentColorDark = Color(0xFF1B5E20),
-                onClick = onClienteClick,
+            // ---------- CÓDIGO QR GIGANTE Y CENTRADO PARA EL CLIENTE (SIN EMOJIS NI TEXTO SOBRANTE) ----------
+            Box(
                 modifier = Modifier
-                    .weight(1f)
                     .fillMaxWidth()
-            )
+                    .weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                Surface(
+                    onClick = onClienteClick,
+                    shape = RoundedCornerShape(22.dp),
+                    color = Color.White,
+                    shadowElevation = 12.dp,
+                    border = BorderStroke(2.dp, Color(0xFF43A047))
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.padding(14.dp)
+                    ) {
+                        if (qrBitmap != null) {
+                            Image(
+                                bitmap = qrBitmap.asImageBitmap(),
+                                contentDescription = "Código QR App Cliente",
+                                modifier = Modifier.size(175.dp)
+                            )
+
+                            // EMBLEMA FORD MODELO A EN EL CENTRO EXACTO DEL CÓDIGO QR
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = Color.White,
+                                border = BorderStroke(1.5.dp, Color.Black),
+                                shadowElevation = 4.dp,
+                                modifier = Modifier.size(42.dp)
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.ford_model_a_feliz),
+                                    contentDescription = "Logo Ford 1928",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.padding(2.dp)
+                                )
+                            }
+                        } else {
+                            Box(
+                                modifier = Modifier.size(175.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(color = Color.Black)
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -276,7 +311,6 @@ private fun SectionCard(
             .clip(RoundedCornerShape(28.dp))
             .border(2.dp, accentColor, RoundedCornerShape(28.dp))
     ) {
-        // ---------- Foto del auto (sin overlay, se ve completa) ----------
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
             Image(
                 painter = painterResource(id = R.drawable.ford_model_a_feliz),
@@ -286,7 +320,6 @@ private fun SectionCard(
             )
         }
 
-        // ---------- Franja inferior: ícono + texto + botón ----------
         Row(
             modifier = Modifier
                 .fillMaxWidth()

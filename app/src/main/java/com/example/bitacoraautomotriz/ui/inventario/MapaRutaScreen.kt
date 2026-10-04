@@ -3,8 +3,8 @@ package com.example.bitacoraautomotriz.ui.inventario
 import android.content.Intent
 import android.location.Location
 import android.net.Uri
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import android.view.ViewGroup
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -25,6 +25,13 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
 import com.example.bitacoraautomotriz.ui.theme.Colores
 import kotlinx.coroutines.launch
+import org.osmdroid.config.Configuration
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.util.Locale
 
 @Composable
@@ -66,27 +73,23 @@ fun MapaRutaScreen(
         }
     }
 
-    val latDestinoFinal = lugarSeleccionado?.lat ?: if (latDestino != 0.0) latDestino else (ubicacionActual?.latitude ?: 19.4326)
-    val lonDestinoFinal = lugarSeleccionado?.lon ?: if (lonDestino != 0.0) lonDestino else (ubicacionActual?.longitude ?: -99.1332)
+    val latCenter = lugarSeleccionado?.lat ?: if (latDestino != 0.0) latDestino else (ubicacionActual?.latitude ?: 19.4326)
+    val lonCenter = lugarSeleccionado?.lon ?: if (lonDestino != 0.0) lonDestino else (ubicacionActual?.longitude ?: -99.1332)
     val nombreDestinoFinal = lugarSeleccionado?.nombre ?: nombreDestino.ifBlank { "REFACCIONARIA / TALLER CERCANO" }
     val direccionDestinoFinal = lugarSeleccionado?.direccion ?: direccionDestino
 
-    fun abrirGoogleMapsNavegacion() {
+    fun abrirNavegacionGpsGoogleMaps() {
         try {
-            val gmmIntentUri = Uri.parse("google.navigation:q=$latDestinoFinal,$lonDestinoFinal")
+            val busquedaFinal = if (queryBusqueda.isBlank()) "refaccionaria taller" else "refaccionaria ${queryBusqueda.trim()}"
+            val queryEncoded = URLEncoder.encode(busquedaFinal, StandardCharsets.UTF_8.toString())
+            val gmmIntentUri = Uri.parse("geo:$latCenter,$lonCenter?q=$queryEncoded&z=14")
             val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri).apply {
                 setPackage("com.google.android.apps.maps")
             }
             context.startActivity(mapIntent)
         } catch (_: Exception) {
-            val urlWeb = "https://www.google.com/maps/search/?api=1&query=${Uri.encode(queryBusqueda)}"
-            val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse(urlWeb))
-            context.startActivity(webIntent)
+            Toast.makeText(context, "Abriendo mapa web...", Toast.LENGTH_SHORT).show()
         }
-    }
-
-    val urlMapaActual = remember(latDestinoFinal, lonDestinoFinal) {
-        "https://maps.google.com/maps?q=$latDestinoFinal,$lonDestinoFinal&z=15&output=embed"
     }
 
     Column(
@@ -94,13 +97,15 @@ fun MapaRutaScreen(
             .fillMaxSize()
             .background(Colores.FondoPantalla)
             .statusBarsPadding()
-            .padding(20.dp),
+            .navigationBarsPadding()
+            .padding(18.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
+        // ENCABEZADO
         Text(
-            text = "MAPA DE BÚSQUEDA CERCANA",
-            fontSize = 22.sp,
+            text = "MAPA INTERACTIVO DE BÚSQUEDA",
+            fontSize = 21.sp,
             fontWeight = FontWeight.Bold,
             color = Colores.TituloPrincipal,
             textAlign = TextAlign.Center
@@ -110,7 +115,7 @@ fun MapaRutaScreen(
 
         Text(
             text = if (queryBusqueda.isBlank()) "Refaccionarias y Talleres en 5 km" else "Buscando: \"$queryBusqueda\"",
-            fontSize = 16.sp,
+            fontSize = 15.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White,
             textAlign = TextAlign.Center
@@ -120,30 +125,15 @@ fun MapaRutaScreen(
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = "📍 $nombreDestinoFinal${if (direccionDestinoFinal.isNotBlank()) " - $direccionDestinoFinal" else ""}",
-                fontSize = 14.sp,
+                fontSize = 13.sp,
                 color = Colores.EtiquetaCampo,
                 textAlign = TextAlign.Center
             )
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
-        // BOTÓN ACCIÓN GOOGLE MAPS
-        BotonModulo3D(
-            texto = "ABRIR NAVEGACIÓN EN GOOGLE MAPS",
-            icono = "🗺️",
-            colorClaro = Color(0xFF80D8FF),
-            colorMedio = Color(0xFF00B8D4),
-            colorOscuro = Color(0xFF006064),
-            onClick = { abrirGoogleMapsNavegacion() },
-            modifier = Modifier.fillMaxWidth().height(52.dp),
-            tamanioTexto = 15,
-            colorTexto = Color.Black
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // VISTA MAPA INTERACTIVO GOOGLE MAPS (CARGA ESTABLE)
+        // VISTA NATIVA MAPA INTERNO DENTRO DE LA APP (OSMDROID)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -152,52 +142,77 @@ fun MapaRutaScreen(
                 .background(Colores.FondoSecundario),
             contentAlignment = Alignment.Center
         ) {
-            AndroidView(
-                modifier = Modifier.fillMaxSize(),
-                factory = { ctx ->
-                    WebView(ctx).apply {
-                        settings.javaScriptEnabled = true
-                        settings.domStorageEnabled = true
-                        webViewClient = WebViewClient()
-                        loadUrl(urlMapaActual)
+            if (cargando) {
+                CircularProgressIndicator(color = Color.White)
+            } else {
+                AndroidView(
+                    modifier = Modifier.fillMaxSize(),
+                    factory = { ctx ->
+                        Configuration.getInstance().load(ctx, ctx.getSharedPreferences("osmdroid", 0))
+                        MapView(ctx).apply {
+                            setTileSource(TileSourceFactory.MAPNIK)
+                            setMultiTouchControls(true)
+                            controller.setZoom(15.0)
+                            controller.setCenter(GeoPoint(latCenter, lonCenter))
+
+                            layoutParams = ViewGroup.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.MATCH_PARENT
+                            )
+
+                            // AGREGAR PIN DE MI UBICACIÓN EN AZUL
+                            ubicacionActual?.let { loc ->
+                                val miPin = Marker(this).apply {
+                                    position = GeoPoint(loc.latitude, loc.longitude)
+                                    title = "MI UBICACIÓN ACTUAL"
+                                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                                }
+                                overlays.add(miPin)
+                            }
+
+                            // AGREGAR PINES DE NEGOCIOS REALES ENCONTRADOS EN 5 KM
+                            lugaresCercanos.forEach { lugar ->
+                                val pinNegocio = Marker(this).apply {
+                                    position = GeoPoint(lugar.lat, lugar.lon)
+                                    title = lugar.nombre
+                                    snippet = lugar.direccion
+                                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                                    setOnMarkerClickListener { _, _ ->
+                                        lugarSeleccionado = lugar
+                                        showInfoWindow()
+                                        true
+                                    }
+                                }
+                                overlays.add(pinNegocio)
+                            }
+
+                            invalidate()
+                        }
+                    },
+                    update = { mapView ->
+                        mapView.controller.setCenter(GeoPoint(latCenter, lonCenter))
+                        mapView.invalidate()
                     }
-                },
-                update = { webView ->
-                    if (webView.url != urlMapaActual) {
-                        webView.loadUrl(urlMapaActual)
-                    }
-                }
-            )
+                )
+            }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
-        // LISTA DE NEGOCIOS REALES ENCONTRADOS DENTRO DE 5 KM
-        if (cargando) {
-            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(32.dp))
-        } else if (lugaresCercanos.isNotEmpty()) {
-            Text(
-                text = "NEGOCIOS ENCONTRADOS EN 5 KM:",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
-                color = Colores.EtiquetaCampo,
-                modifier = Modifier.align(Alignment.Start)
-            )
-
-            Spacer(modifier = Modifier.height(6.dp))
-
+        // LISTA DE OPCIONES ENCONTRADAS
+        if (lugaresCercanos.isNotEmpty()) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(max = 140.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    .heightIn(max = 120.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 items(lugaresCercanos) { lugar ->
                     val seleccionado = lugar == lugarSeleccionado
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp)),
+                            .clip(RoundedCornerShape(8.dp)),
                         colors = CardDefaults.cardColors(
                             containerColor = if (seleccionado) Color(0xFF006064) else Colores.FondoTarjeta
                         ),
@@ -206,7 +221,7 @@ fun MapaRutaScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(12.dp),
+                                .padding(10.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -214,38 +229,53 @@ fun MapaRutaScreen(
                                 Text(
                                     text = lugar.nombre,
                                     color = Color.White,
-                                    fontSize = 16.sp,
+                                    fontSize = 15.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
                                     text = "📍 ${lugar.direccion}",
                                     color = Color.White.copy(alpha = 0.8f),
-                                    fontSize = 13.sp
+                                    fontSize = 12.sp
                                 )
                             }
                             Text(
                                 text = String.format(Locale.US, "%.1f km", lugar.distanciaMetros / 1000),
                                 color = Color(0xFF7DFFB2),
-                                fontSize = 15.sp,
+                                fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         }
                     }
                 }
             }
+            Spacer(modifier = Modifier.height(10.dp))
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
-
+        // BOTÓN 1: NAVEGACIÓN GPS EN GOOGLE MAPS (OPCIONAL)
         BotonModulo3D(
-            texto = "REGRESAR",
+            texto = "ABRIR NAVEGACIÓN EN GOOGLE MAPS",
+            icono = "🗺️",
+            colorClaro = Color(0xFF80D8FF),
+            colorMedio = Color(0xFF00B8D4),
+            colorOscuro = Color(0xFF006064),
+            onClick = { abrirNavegacionGpsGoogleMaps() },
+            modifier = Modifier.fillMaxWidth().height(52.dp),
+            tamanioTexto = 14,
+            colorTexto = Color.Black
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // BOTÓN 2: REGRESAR AL MENÚ PRINCIPAL DENTRO DE LA APP (GIGANTE Y ACCESIBLE)
+        BotonModulo3D(
+            texto = "REGRESAR AL MENÚ",
             icono = "🔙",
             colorClaro = Colores.RegresarClaro,
             colorMedio = Colores.RegresarMedio,
             colorOscuro = Colores.RegresarOscuro,
             onClick = onRegresar,
-            modifier = Modifier.fillMaxWidth().height(54.dp),
-            tamanioTexto = 15,
+            modifier = Modifier.fillMaxWidth().height(68.dp),
+            tamanioTexto = 18,
             colorTexto = Color.White
         )
     }

@@ -1,6 +1,10 @@
 package com.example.bitacoraautomotriz.ui.reportes
 
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -12,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.bitacoraautomotriz.data.Cliente
@@ -26,6 +31,28 @@ fun ReporteClientesScreen(
     val context = LocalContext.current
     var clientes by remember { mutableStateOf<List<Cliente>>(value = emptyList()) }
     var cargando by remember { mutableStateOf(value = true) }
+
+    fun abrirCorreo(correoDestino: String) {
+        val intent = Intent(Intent.ACTION_SENDTO).apply {
+            data = Uri.parse("mailto:$correoDestino")
+        }
+        try {
+            context.startActivity(intent)
+        } catch (_: Exception) {
+            Toast.makeText(context, "No se encontró una aplicación de correo", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun abrirTelefono(telefonoDestino: String) {
+        val intent = Intent(Intent.ACTION_DIAL).apply {
+            data = Uri.parse("tel:$telefonoDestino")
+        }
+        try {
+            context.startActivity(intent)
+        } catch (_: Exception) {
+            Toast.makeText(context, "No se pudo abrir el marcados telefónico", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     LaunchedEffect(Unit) {
         try {
@@ -78,12 +105,10 @@ fun ReporteClientesScreen(
                 color = Color.White
             )
         } else {
-            Text(
-                text = "Total de clientes: ${clientes.size}",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
+            Row {
+                Text(text = "Total de clientes: ", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text(text = "${clientes.size}", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -102,36 +127,47 @@ fun ReporteClientesScreen(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Text(
-                            text = "NOMBRE: ${cliente.nombre.uppercase()}",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
+                        Row {
+                            Text(text = "ID: ", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(text = "${cliente.id}", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
 
-                        Text(
-                            text = "TELÉFONO: ${cliente.telefono}",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
+                        Row {
+                            Text(text = "NOMBRE: ", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(text = cliente.nombre.uppercase(), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
 
-                        if (cliente.correo.isNotBlank()) {
+                        Row {
+                            Text(text = "TELÉFONO: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                             Text(
-                                text = "CORREO: ${cliente.correo}",
+                                text = cliente.telefono,
                                 fontSize = 17.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.Black
+                                color = Color(0xFF0033FF), // ✅ Azul tradicional de link clicable
+                                textDecoration = TextDecoration.Underline,
+                                modifier = Modifier.clickable { abrirTelefono(cliente.telefono) }
                             )
                         }
 
+                        if (cliente.correo.isNotBlank()) {
+                            Row {
+                                Text(text = "CORREO: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(
+                                    text = cliente.correo,
+                                    fontSize = 17.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF0033FF), // ✅ Azul tradicional de link clicable
+                                    textDecoration = TextDecoration.Underline,
+                                    modifier = Modifier.clickable { abrirCorreo(cliente.correo) }
+                                )
+                            }
+                        }
+
                         if (cliente.direccion.isNotBlank()) {
-                            Text(
-                                text = "DIRECCIÓN: ${cliente.direccion.uppercase()}",
-                                fontSize = 17.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.Black
-                            )
+                            Row {
+                                Text(text = "DIRECCIÓN: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(text = cliente.direccion.uppercase(), fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
                         }
                     }
                 }
@@ -142,6 +178,7 @@ fun ReporteClientesScreen(
 
         BotonModulo3D(
             texto = "REGRESAR",
+            icono = "🔙",
             colorClaro = Colores.RegresarClaro,
             colorMedio = Colores.RegresarMedio,
             colorOscuro = Colores.RegresarOscuro,

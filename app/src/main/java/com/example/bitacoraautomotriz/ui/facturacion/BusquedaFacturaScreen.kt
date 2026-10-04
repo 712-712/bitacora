@@ -162,7 +162,7 @@ fun BusquedaFacturaScreen(
                             verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Text(
-                                text = "FOLIO: #${factura.numero.ifBlank { "SIN NÚMERO" }}",
+                                text = "FOLIO: # ${factura.numero.ifBlank { "SIN NÚMERO" }}",
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White

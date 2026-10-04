@@ -472,18 +472,18 @@ fun MisDatosFacturacionScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // BOTONES DE TAMAÑO MEDIANO (EDITAR, GUARDAR, ENVIAR) EN COLOR CAFÉ
+        // BOTONES DE TAMAÑO MEDIANO (EDITAR EN AZUL, GUARDAR EN CAFÉ, ENVIAR EN VERDE)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // BOTÓN EDITAR
+            // BOTÓN EDITAR (AZUL)
             BotonModulo3D(
                 texto = "EDITAR",
                 icono = "✏️",
-                colorClaro = Color(0xFFD7B899),
-                colorMedio = Color(0xFF9B6B43),
-                colorOscuro = Color(0xFF5D3A1A),
+                colorClaro = Color(0xFF80D8FF),
+                colorMedio = Color(0xFF00B8D4),
+                colorOscuro = Color(0xFF006064),
                 colorTexto = Color.Black,
                 onClick = {
                     editando = true
@@ -495,7 +495,7 @@ fun MisDatosFacturacionScreen(
                 tamanioTexto = 13
             )
 
-            // BOTÓN GUARDAR
+            // BOTÓN GUARDAR (CAFÉ)
             BotonModulo3D(
                 texto = "GUARDAR",
                 icono = "💾",
@@ -512,13 +512,13 @@ fun MisDatosFacturacionScreen(
                 tamanioTexto = 13
             )
 
-            // BOTÓN ENVIAR (GUARDA Y ABRE LA APP DE CORREO DIRECTO)
+            // BOTÓN ENVIAR (VERDE)
             BotonModulo3D(
                 texto = "ENVIAR",
                 icono = "📧",
-                colorClaro = Color(0xFFD7B899),
-                colorMedio = Color(0xFF9B6B43),
-                colorOscuro = Color(0xFF5D3A1A),
+                colorClaro = Color(0xFFB9F6CA),
+                colorMedio = Color(0xFF00C853),
+                colorOscuro = Color(0xFF00695C),
                 colorTexto = Color.Black,
                 onClick = {
                     guardarDatos()

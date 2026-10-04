@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -70,16 +71,16 @@ fun BusquedaGastoScreen(
         }
     }
 
-    // BÚSQUEDA POR CONCEPTO, CATEGORÍA, FECHA Y DESCRIPCIÓN
+    // BÚSQUEDA POR CONCEPTO, CATEGORÍA, FECHA Y DESCRIPCIÓN EN MAYÚSCULAS
     val resultados = if (textoBusqueda.isBlank()) {
         todosLosGastos
     } else {
-        val query = textoBusqueda.trim()
+        val query = textoBusqueda.trim().uppercase()
         todosLosGastos.filter { gasto ->
-            gasto.concepto.contains(query, ignoreCase = true) ||
-                    gasto.categoria.contains(query, ignoreCase = true) ||
+            gasto.concepto.uppercase().contains(query, ignoreCase = true) ||
+                    gasto.categoria.uppercase().contains(query, ignoreCase = true) ||
                     gasto.fecha.contains(query, ignoreCase = true) ||
-                    gasto.descripcion.contains(query, ignoreCase = true)
+                    gasto.descripcion.uppercase().contains(query, ignoreCase = true)
         }
     }
 
@@ -113,10 +114,10 @@ fun BusquedaGastoScreen(
 
         OutlinedTextField(
             value = textoBusqueda,
-            onValueChange = { textoBusqueda = it },
+            onValueChange = { textoBusqueda = it.uppercase() },
             textStyle = TextStyle(color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold),
             placeholder = { Text("Escriba para buscar...", fontSize = 18.sp, color = Colores.EtiquetaCampo.copy(alpha = 0.6f)) },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(
                 onSearch = { focusManager.clearFocus() },
                 onDone = { focusManager.clearFocus() }
@@ -204,9 +205,10 @@ fun BusquedaGastoScreen(
                                 Text(text = "CONCEPTO", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Colores.EtiquetaCampo)
                                 OutlinedTextField(
                                     value = editConcepto,
-                                    onValueChange = { editConcepto = it },
+                                    onValueChange = { editConcepto = it.uppercase() },
                                     textStyle = TextStyle(color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold),
                                     singleLine = true,
+                                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters),
                                     shape = RoundedCornerShape(10.dp),
                                     colors = coloresCampoTexto,
                                     modifier = Modifier.fillMaxWidth()
@@ -215,9 +217,10 @@ fun BusquedaGastoScreen(
                                 Text(text = "CATEGORÍA", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Colores.EtiquetaCampo)
                                 OutlinedTextField(
                                     value = editCategoria,
-                                    onValueChange = { editCategoria = it },
+                                    onValueChange = { editCategoria = it.uppercase() },
                                     textStyle = TextStyle(color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold),
                                     singleLine = true,
+                                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters),
                                     shape = RoundedCornerShape(10.dp),
                                     colors = coloresCampoTexto,
                                     modifier = Modifier.fillMaxWidth()
@@ -244,7 +247,7 @@ fun BusquedaGastoScreen(
                                 Text(text = "PRECIO / BASE ($)", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Colores.EtiquetaCampo)
                                 OutlinedTextField(
                                     value = editPrecio,
-                                    onValueChange = { editPrecio = it },
+                                    onValueChange = { editPrecio = it.replace(",", ".") },
                                     textStyle = TextStyle(color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold),
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                                     prefix = { Text("$ ", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold) },
@@ -254,7 +257,7 @@ fun BusquedaGastoScreen(
                                     modifier = Modifier.fillMaxWidth()
                                 )
 
-                                val pVal = editPrecio.toDoubleOrNull() ?: 0.0
+                                val pVal = editPrecio.replace(",", ".").toDoubleOrNull() ?: 0.0
                                 val ivaVal = pVal * 0.16
                                 val totalVal = pVal + ivaVal
 
@@ -272,8 +275,9 @@ fun BusquedaGastoScreen(
                                 Text(text = "DESCRIPCIÓN", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Colores.EtiquetaCampo)
                                 OutlinedTextField(
                                     value = editDescripcion,
-                                    onValueChange = { editDescripcion = it },
+                                    onValueChange = { editDescripcion = it.uppercase() },
                                     textStyle = TextStyle(color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold),
+                                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters),
                                     shape = RoundedCornerShape(10.dp),
                                     colors = coloresCampoTexto,
                                     modifier = Modifier.fillMaxWidth()
@@ -291,14 +295,14 @@ fun BusquedaGastoScreen(
                                         colorMedio = Color(0xFFFF4141),
                                         colorOscuro = Color(0xFFB51F1F),
                                         onClick = {
-                                            val p = editPrecio.toDoubleOrNull() ?: 0.0
+                                            val p = editPrecio.replace(",", ".").toDoubleOrNull() ?: 0.0
                                             val tot = p * 1.16
                                             val gastoActualizado = gasto.copy(
-                                                concepto = editConcepto,
-                                                categoria = editCategoria,
+                                                concepto = editConcepto.uppercase(),
+                                                categoria = editCategoria.uppercase(),
                                                 fecha = editFecha,
                                                 monto = tot,
-                                                descripcion = editDescripcion
+                                                descripcion = editDescripcion.uppercase()
                                             )
                                             scope.launch {
                                                 GastoRepository.actualizarGasto(gastoActualizado, context)
@@ -343,7 +347,7 @@ fun BusquedaGastoScreen(
                                 )
                                 if (gasto.descripcion.isNotBlank()) {
                                     Text(
-                                        text = "DESCRIPCIÓN: ${gasto.descripcion}",
+                                        text = "DESCRIPCIÓN: ${gasto.descripcion.uppercase()}",
                                         fontSize = 16.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Color.Black
@@ -372,11 +376,11 @@ fun BusquedaGastoScreen(
                                     colorOscuro = Color(0xFFB51F1F),
                                     onClick = {
                                         editandoId = gasto.id
-                                        editConcepto = gasto.concepto
-                                        editCategoria = gasto.categoria
+                                        editConcepto = gasto.concepto.uppercase()
+                                        editCategoria = gasto.categoria.uppercase()
                                         editFecha = gasto.fecha
                                         editPrecio = String.format(Locale.US, "%.2f", gasto.monto / 1.16)
-                                        editDescripcion = gasto.descripcion
+                                        editDescripcion = gasto.descripcion.uppercase()
                                     },
                                     modifier = Modifier.fillMaxWidth().height(46.dp),
                                     tamanioTexto = 14,
@@ -393,6 +397,7 @@ fun BusquedaGastoScreen(
 
         BotonModulo3D(
             texto = "REGRESAR",
+            icono = "🔙",
             colorClaro = Colores.RegresarClaro,
             colorMedio = Colores.RegresarMedio,
             colorOscuro = Colores.RegresarOscuro,

@@ -308,13 +308,15 @@ fun NuevaOrdenScreen(
                     }
                 }
             } else if (autoSeleccionado == null) {
-                Row(
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    horizontalAlignment = Alignment.Start
                 ) {
                     Text(text = "CLIENTE: ${clienteSeleccionado!!.nombre.uppercase()}", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    TextButton(onClick = { clienteSeleccionado = null }) { Text("CAMBIAR", color = Color(0xFFFF5252), fontWeight = FontWeight.Bold) }
+                    Spacer(modifier = Modifier.height(2.dp))
+                    TextButton(onClick = { clienteSeleccionado = null }, contentPadding = PaddingValues(0.dp)) {
+                        Text("CAMBIAR", color = Color(0xFFFF5252), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -348,13 +350,15 @@ fun NuevaOrdenScreen(
                     }
                 }
             } else {
-                Row(
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    horizontalAlignment = Alignment.Start
                 ) {
                     Text(text = "VEHÍCULO SELECCIONADO", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    TextButton(onClick = { autoSeleccionado = null }) { Text("CAMBIAR AUTO", color = Color(0xFFFF5252), fontWeight = FontWeight.Bold) }
+                    Spacer(modifier = Modifier.height(2.dp))
+                    TextButton(onClick = { autoSeleccionado = null }, contentPadding = PaddingValues(0.dp)) {
+                        Text("CAMBIAR AUTO", color = Color(0xFFFF5252), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
 

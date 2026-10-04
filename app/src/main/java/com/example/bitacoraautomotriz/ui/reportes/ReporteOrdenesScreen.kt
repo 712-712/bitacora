@@ -78,16 +78,20 @@ fun ReporteOrdenesServicioScreen(
                 color = Color.White
             )
         } else {
-            Text(
-                text = "Total de órdenes: ${ordenes.size}",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
+            Row {
+                Text(text = "Total de órdenes: ", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text(text = "${ordenes.size}", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
+            }
 
             Spacer(modifier = Modifier.height(20.dp))
 
             ordenes.forEach { orden ->
+                val colorEstado = when (orden.estado.uppercase()) {
+                    "ACEPTADO", "TERMINADO", "ENTREGADO" -> Color(0xFF7DFFB2)
+                    "RECHAZADO" -> Color(0xFFFF5252)
+                    else -> Color(0xFF90CAF9) // ✅ EN ESPERA EN AZUL
+                }
+
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -102,49 +106,37 @@ fun ReporteOrdenesServicioScreen(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Text(
-                            text = "ORDEN DE SERVICIO #${orden.id}",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-
-                        Text(
-                            text = "CLIENTE: ${orden.cliente.uppercase()}",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
-
-                        Text(
-                            text = "AUTO: ${orden.auto.uppercase()}",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
-
-                        Text(
-                            text = "FECHA: ${orden.fecha}",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
-
-                        if (orden.trabajoRealizado.isNotBlank()) {
-                            Text(
-                                text = "TRABAJO: ${orden.trabajoRealizado}",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.Black
-                            )
+                        Row {
+                            Text(text = "ORDEN DE SERVICIO # ", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(text = "${orden.id}", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         }
 
-                        Text(
-                            text = "ESTADO: ${orden.estado.uppercase()}",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFF57C00)
-                        )
+                        Row {
+                            Text(text = "CLIENTE: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(text = orden.cliente.uppercase(), fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
+
+                        Row {
+                            Text(text = "AUTO: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(text = orden.auto.uppercase(), fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
+
+                        Row {
+                            Text(text = "FECHA: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(text = orden.fecha, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
+
+                        if (orden.trabajoRealizado.isNotBlank()) {
+                            Row {
+                                Text(text = "TRABAJO: ", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(text = orden.trabajoRealizado.uppercase(), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+                        }
+
+                        Row {
+                            Text(text = "ESTADO: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(text = orden.estado.uppercase(), fontSize = 17.sp, fontWeight = FontWeight.Bold, color = colorEstado)
+                        }
                     }
                 }
             }
@@ -154,6 +146,7 @@ fun ReporteOrdenesServicioScreen(
 
         BotonModulo3D(
             texto = "REGRESAR",
+            icono = "🔙",
             colorClaro = Colores.RegresarClaro,
             colorMedio = Colores.RegresarMedio,
             colorOscuro = Colores.RegresarOscuro,

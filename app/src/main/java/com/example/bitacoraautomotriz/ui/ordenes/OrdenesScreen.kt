@@ -17,6 +17,7 @@ import com.example.bitacoraautomotriz.ui.theme.Colores
 fun OrdenesScreen(
     onNuevaOrden: () -> Unit,
     onBuscarOrden: () -> Unit,
+    onProgramarAlerta: () -> Unit = {},
     onRegresar: () -> Unit
 ) {
     Column(
@@ -31,31 +32,20 @@ fun OrdenesScreen(
             text = "MÓDULO DE COTIZACIONES",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
-            color = Colores.TituloPrincipal, // ✅ Azul de títulos
+            color = Colores.TituloPrincipal,
             softWrap = false,
             maxLines = 1,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.height(36.dp))
 
         BotonModulo3D(
-            texto = "NUEVA ORDEN DE COTIZACION",
+            texto = "NUEVA ORDEN DE COTIZACIÓN",
+            icono = "📄",
             colorClaro = Color(0xFFD7B899),
             colorMedio = Color(0xFF9B6B43),
             colorOscuro = Color(0xFF5D3A1A),
             onClick = { onNuevaOrden() },
-            tamanioTexto = 18,
-            colorTexto = Color.Black
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        BotonModulo3D(
-            texto = "SEGUIMIENTO DE COTIZACIONES",
-            colorClaro = Color(0xFFD7B899),
-            colorMedio = Color(0xFF9B6B43),
-            colorOscuro = Color(0xFF5D3A1A),
-            onClick = { onBuscarOrden() },
             tamanioTexto = 17,
             colorTexto = Color.Black
         )
@@ -63,12 +53,39 @@ fun OrdenesScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         BotonModulo3D(
-            texto = "REGRESAR",
-            colorClaro = Color(0xFFD5E1E6),
-            colorMedio = Color(0xFF90A4AE),
-            colorOscuro = Color(0xFF455A64),
-            onClick = onRegresar,
+            texto = "SEGUIMIENTO DE COTIZACIONES",
+            icono = "🔍",
+            colorClaro = Color(0xFFD7B899),
+            colorMedio = Color(0xFF9B6B43),
+            colorOscuro = Color(0xFF5D3A1A),
+            onClick = { onBuscarOrden() },
+            tamanioTexto = 16,
             colorTexto = Color.Black
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        BotonModulo3D(
+            texto = "PROGRAMAR ALERTA DE REVISIÓN",
+            icono = "🔔",
+            colorClaro = Color(0xFFD7B899),
+            colorMedio = Color(0xFF9B6B43),
+            colorOscuro = Color(0xFF5D3A1A),
+            onClick = { onProgramarAlerta() },
+            tamanioTexto = 15,
+            colorTexto = Color.Black
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        BotonModulo3D(
+            texto = "REGRESAR",
+            icono = "🔙",
+            colorClaro = Colores.RegresarClaro,
+            colorMedio = Colores.RegresarMedio,
+            colorOscuro = Colores.RegresarOscuro,
+            onClick = onRegresar,
+            colorTexto = Color.White
         )
     }
 }

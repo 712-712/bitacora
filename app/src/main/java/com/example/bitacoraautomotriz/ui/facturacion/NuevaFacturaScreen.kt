@@ -28,6 +28,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -80,7 +81,7 @@ fun NuevaFacturaScreen(
     }
 
     // CÁLCULOS AUTOMÁTICOS
-    val subtotalNumero = subtotalText.toDoubleOrNull() ?: 0.0
+    val subtotalNumero = subtotalText.replace(",", ".").toDoubleOrNull() ?: 0.0
     val ivaNumero = subtotalNumero * 0.16
     val totalNumero = subtotalNumero + ivaNumero
 
@@ -217,7 +218,7 @@ fun NuevaFacturaScreen(
                     textStyle = estiloTextoCampo,
                     singleLine = true,
                     colors = coloresCampoTexto,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
                     keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -242,7 +243,7 @@ fun NuevaFacturaScreen(
                     textStyle = estiloTextoCampo,
                     singleLine = true,
                     colors = coloresCampoTexto,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
                     keyboardActions = KeyboardActions(onNext = { mostrarSelectorFecha() }),
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -294,9 +295,15 @@ fun NuevaFacturaScreen(
                 )
                 OutlinedTextField(
                     value = subtotalText,
-                    onValueChange = { subtotalText = it },
+                    onValueChange = { input ->
+                        val normalizado = input.replace(",", ".")
+                        if (normalizado.isEmpty() || normalizado.matches(Regex("^\\d*\\.?\\d{0,2}$"))) {
+                            subtotalText = normalizado
+                        }
+                    },
                     placeholder = { Text("0.00", color = Color.Gray) },
-                    textStyle = estiloTextoCampo,
+                    textStyle = TextStyle(color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold),
+                    prefix = { Text("$ ", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold) },
                     singleLine = true,
                     colors = coloresCampoTexto,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
@@ -310,7 +317,7 @@ fun NuevaFacturaScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // TARJETA DE RESUMEN: SUBTOTAL, I.V.A. Y TOTAL CÁLCULO AUTOMÁTICO
+            // TARJETA DE RESUMEN: SUBTOTAL, I.V.A. Y TOTAL CÁLCULO AUTOMÁTICO (DÍGITOS DE PRECIO EN ROJO)
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
@@ -332,7 +339,7 @@ fun NuevaFacturaScreen(
                             text = String.format(Locale.US, "$ %,.2f", subtotalNumero),
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = Color(0xFFFF5252)
                         )
                     }
 
@@ -345,7 +352,7 @@ fun NuevaFacturaScreen(
                             text = String.format(Locale.US, "$ %,.2f", ivaNumero),
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = Color(0xFFFF5252)
                         )
                     }
 
@@ -360,7 +367,7 @@ fun NuevaFacturaScreen(
                             text = String.format(Locale.US, "$ %,.2f", totalNumero),
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF00DDEB)
+                            color = Color(0xFFFF5252)
                         )
                     }
                 }

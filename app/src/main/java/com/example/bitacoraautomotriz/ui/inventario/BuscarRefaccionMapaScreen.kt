@@ -2,6 +2,7 @@ package com.example.bitacoraautomotriz.ui.inventario
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -19,6 +20,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,6 +36,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,6 +53,7 @@ import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 // ======================================================
 // MODELO
@@ -424,6 +429,34 @@ fun BuscarRefaccionMapaScreen(
     var fotoUri by remember { mutableStateOf<Uri?>(null) }
     var fotoBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
+    // LIMPIEZA AUTOMÁTICA AL ABRIR O REGRESAR A LA PANTALLA
+    LaunchedEffect(Unit) {
+        textoBusqueda = ""
+    }
+
+    fun abrirGoogleMapsConCoordenadasReales() {
+        focusManager.clearFocus()
+        keyboardController?.hide()
+
+        obtenerUbicacionActual(context) { loc ->
+            val lat = loc?.latitude ?: 19.4326
+            val lon = loc?.longitude ?: -99.1332
+            val q = if (textoBusqueda.isBlank()) "refaccionaria taller autopartes" else "refaccionaria ${textoBusqueda.trim()}"
+            val queryEncoded = URLEncoder.encode(q, StandardCharsets.UTF_8.toString())
+
+            val mapIntentUri = Uri.parse("geo:$lat,$lon?q=$queryEncoded&z=14")
+            val mapIntent = Intent(Intent.ACTION_VIEW, mapIntentUri).apply {
+                setPackage("com.google.android.apps.maps")
+            }
+            try {
+                context.startActivity(mapIntent)
+            } catch (_: Exception) {
+                val webUri = Uri.parse("https://www.google.com/maps/search/?api=1&query=$queryEncoded&center=$lat,$lon")
+                context.startActivity(Intent(Intent.ACTION_VIEW, webUri))
+            }
+        }
+    }
+
     val lanzadorCamara = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { exito ->
@@ -432,7 +465,7 @@ fun BuscarRefaccionMapaScreen(
                 val stream = context.contentResolver.openInputStream(fotoUri!!)
                 fotoBitmap = BitmapFactory.decodeStream(stream)
                 stream?.close()
-                onBuscarResultados("REFACCIÓN")
+                abrirGoogleMapsConCoordenadasReales()
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -471,19 +504,20 @@ fun BuscarRefaccionMapaScreen(
         Spacer(modifier = Modifier.height(10.dp))
 
         Text(
-            text = "Encuentre refaccionarias y talleres cercanos",
-            fontSize = 17.sp,
+            text = "Encuentre refaccionarias y talleres cercanos (Máximo 5 km)",
+            fontSize = 15.sp,
             fontWeight = FontWeight.Bold,
             color = Colores.EtiquetaCampo,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(30.dp))
+        Spacer(modifier = Modifier.height(28.dp))
 
+        // CAMPO DE BÚSQUEDA CON BOTÓN ÍCONO LIMPIAR AL FINAL (X)
         OutlinedTextField(
             value = textoBusqueda,
-            onValueChange = { textoBusqueda = it },
+            onValueChange = { textoBusqueda = it.uppercase() },
             label = {
                 Text(
                     text = "¿QUÉ REFACCIÓN BUSCAS?",
@@ -494,19 +528,29 @@ fun BuscarRefaccionMapaScreen(
             },
             placeholder = {
                 Text(
-                    text = "Ejemplo: BUJÍAS, ACEITE, FRENOS",
+                    text = "EJEMPLO: BUJÍAS, ACEITE, FRENOS",
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     color = Colores.EtiquetaCampo.copy(alpha = 0.6f)
                 )
             },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            keyboardActions = KeyboardActions(
-                onSearch = {
-                    focusManager.clearFocus()
-                    keyboardController?.hide()
-                    onBuscarResultados(textoBusqueda)
+            trailingIcon = {
+                if (textoBusqueda.isNotBlank()) {
+                    IconButton(onClick = {
+                        textoBusqueda = ""
+                        focusManager.clearFocus()
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Clear,
+                            contentDescription = "Limpiar Búsqueda",
+                            tint = Color.White
+                        )
+                    }
                 }
+            },
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(
+                onSearch = { abrirGoogleMapsConCoordenadasReales() }
             ),
             singleLine = true,
             shape = RoundedCornerShape(12.dp),
@@ -526,20 +570,35 @@ fun BuscarRefaccionMapaScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // BOTÓN DIRECTO AL MAPA
+        // BOTÓN ROSA / MORADO DE LIMPIAR BÚSQUEDA
+        if (textoBusqueda.isNotBlank()) {
+            BotonModulo3D(
+                texto = "LIMPIAR BÚSQUEDA",
+                icono = "🧹",
+                colorClaro = Color(0xFFF3A7FF),
+                colorMedio = Color(0xFFD83CFF),
+                colorOscuro = Color(0xFF7B1599),
+                colorTexto = Color.Black,
+                onClick = {
+                    textoBusqueda = ""
+                    focusManager.clearFocus()
+                },
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                tamanioTexto = 15
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        // BOTÓN DIRECTO AL MAPA CON GPS DEL USUARIO Y ZOOM 5 KM
         BotonModulo3D(
             texto = "BUSCAR REPUESTO EN MAPA",
             icono = "🗺️",
             colorClaro = Color(0xFFF3A7FF),
             colorMedio = Color(0xFFD83CFF),
             colorOscuro = Color(0xFF7B1599),
-            onClick = {
-                focusManager.clearFocus()
-                keyboardController?.hide()
-                onBuscarResultados(textoBusqueda)
-            },
+            onClick = { abrirGoogleMapsConCoordenadasReales() },
             modifier = Modifier.fillMaxWidth().height(58.dp),
             tamanioTexto = 16,
             colorTexto = Color.Black
@@ -547,8 +606,9 @@ fun BuscarRefaccionMapaScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // BOTÓN CON TEXTO FORMATO 2 LÍNEAS
         BotonModulo3D(
-            texto = "TOMAR FOTO DEL AUTO O REFACCIÓN",
+            texto = "TOMAR FOTO DEL AUTO\nREFACCIÓN O TALLER",
             icono = "📷",
             colorClaro = Color(0xFFF3A7FF),
             colorMedio = Color(0xFFD83CFF),
@@ -563,8 +623,8 @@ fun BuscarRefaccionMapaScreen(
                     lanzadorPermisoCamara.launch(Manifest.permission.CAMERA)
                 }
             },
-            modifier = Modifier.fillMaxWidth().height(58.dp),
-            tamanioTexto = 16,
+            modifier = Modifier.fillMaxWidth().height(68.dp),
+            tamanioTexto = 15,
             colorTexto = Color.Black
         )
 
@@ -581,8 +641,35 @@ fun BuscarRefaccionMapaScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(28.dp))
 
+        // TARJETA ROJA PEQUEÑA CON RECOMENDACIÓN DE LA IA EN EL MAPA
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFB51F1F)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "🤖 Si no encuentras lo que buscas, pregúntale a la IA dentro del mapa",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // BOTÓN REGRESAR VISIBLE
         BotonModulo3D(
             texto = "REGRESAR",
             icono = "🔙",
@@ -590,8 +677,8 @@ fun BuscarRefaccionMapaScreen(
             colorMedio = Colores.RegresarMedio,
             colorOscuro = Colores.RegresarOscuro,
             onClick = onRegresar,
-            modifier = Modifier.fillMaxWidth().height(58.dp),
-            tamanioTexto = 16,
+            modifier = Modifier.fillMaxWidth().height(60.dp),
+            tamanioTexto = 17,
             colorTexto = Color.White
         )
 

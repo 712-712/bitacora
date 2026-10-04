@@ -81,12 +81,10 @@ fun ReporteFacturacionScreen(
                 color = Color.White
             )
         } else {
-            Text(
-                text = "Total de facturas: ${facturas.size}",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
+            Row {
+                Text(text = "Total de facturas: ", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text(text = "${facturas.size}", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -94,7 +92,7 @@ fun ReporteFacturacionScreen(
                 text = String.format(Locale.US, "Total facturado: $ %,.2f", totalFacturado),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFFFF5252) // ✅ Cambiado a Rojo destacado
+                color = Color(0xFFFF5252)
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -118,47 +116,35 @@ fun ReporteFacturacionScreen(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Text(
-                            text = "FOLIO: #${factura.numero.ifBlank { "N/A" }}",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
+                        Row {
+                            Text(text = "FOLIO: # ", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(text = factura.numero.ifBlank { "N/A" }, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
 
-                        Text(
-                            text = "CLIENTE: ${factura.cliente.uppercase()}",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
+                        Row {
+                            Text(text = "CLIENTE: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(text = factura.cliente.uppercase(), fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
 
-                        Text(
-                            text = "FECHA: ${factura.fecha}",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
+                        Row {
+                            Text(text = "FECHA: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(text = factura.fecha, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
 
-                        Text(
-                            text = String.format(Locale.US, "SUBTOTAL: $ %,.2f", subtotal),
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text(text = "SUBTOTAL:", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(text = String.format(Locale.US, "$ %,.2f", subtotal), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
+                        }
 
-                        Text(
-                            text = String.format(Locale.US, "I.V.A.: $ %,.2f", iva),
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text(text = "I.V.A.:", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(text = String.format(Locale.US, "$ %,.2f", iva), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
+                        }
 
-                        Text(
-                            text = String.format(Locale.US, "TOTAL: $ %,.2f", total),
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFFF5252) // ✅ Cambiado a Rojo destacado
-                        )
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text(text = "TOTAL:", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(text = String.format(Locale.US, "$ %,.2f", total), fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
+                        }
                     }
                 }
             }

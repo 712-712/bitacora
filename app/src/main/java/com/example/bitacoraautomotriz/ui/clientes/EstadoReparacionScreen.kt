@@ -20,6 +20,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.bitacoraautomotriz.data.OrdenServicio
+import com.example.bitacoraautomotriz.repository.FirebaseSyncManager
 import com.example.bitacoraautomotriz.repository.OrdenServicioRepository
 import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
 import com.example.bitacoraautomotriz.ui.theme.Colores
@@ -39,7 +40,12 @@ fun EstadoReparacionScreen(
             val lista = OrdenServicioRepository.obtenerOrdenes(context)
             ordenes = lista
             if (lista.isNotEmpty()) {
-                ordenSeleccionada = lista.last()
+                val ultima = lista.last()
+                ordenSeleccionada = ultima
+                // ESCUCHAR EN TIEMPO REAL DESDE FIREBASE REALTIME DATABASE (<1 SEG SEGUNDO)
+                FirebaseSyncManager.escucharOrdenEnTiempoReal(ultima.id) { ordenDescargada ->
+                    ordenSeleccionada = ordenDescargada
+                }
             }
         } catch (_: Exception) {
             ordenes = emptyList()
@@ -93,7 +99,7 @@ fun EstadoReparacionScreen(
         Spacer(modifier = Modifier.height(6.dp))
 
         Text(
-            text = "Progreso cromático en tiempo real del servicio",
+            text = "Sincronizado en tiempo real con el taller",
             fontSize = 15.sp,
             fontWeight = FontWeight.Bold,
             color = Colores.EtiquetaCampo,

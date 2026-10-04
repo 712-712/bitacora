@@ -56,6 +56,7 @@ import com.example.bitacoraautomotriz.ui.mapa.MapaScreen
 import com.example.bitacoraautomotriz.ui.ordenes.BuscarOrdenScreen
 import com.example.bitacoraautomotriz.ui.ordenes.NuevaOrdenScreen
 import com.example.bitacoraautomotriz.ui.ordenes.OrdenesScreen
+import com.example.bitacoraautomotriz.ui.ordenes.ProgramarAlertaScreen
 import com.example.bitacoraautomotriz.ui.ordenes.SeguimientoReparacionScreen
 import com.example.bitacoraautomotriz.ui.ordenes.VerOrdenesScreen
 import com.example.bitacoraautomotriz.ui.reportes.ReporteAutosScreen
@@ -379,8 +380,12 @@ fun AppNavigation() {
             OrdenesScreen(
                 onNuevaOrden = { navController.navigate("nueva_orden") },
                 onBuscarOrden = { navController.navigate("buscar_orden") },
+                onProgramarAlerta = { navController.navigate("programar_alerta") },
                 onRegresar = { navController.popBackStack() }
             )
+        }
+        composable("programar_alerta") {
+            ProgramarAlertaScreen(onRegresar = { navController.popBackStack() })
         }
         composable("nueva_orden") {
             NuevaOrdenScreen(onGuardar = { navController.popBackStack() }, onRegresar = { navController.popBackStack() })

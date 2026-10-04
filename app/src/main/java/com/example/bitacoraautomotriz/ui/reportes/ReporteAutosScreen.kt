@@ -78,12 +78,10 @@ fun ReporteAutosScreen(
                 color = Color.White
             )
         } else {
-            Text(
-                text = "Total de autos: ${autos.size}",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
+            Row {
+                Text(text = "Total de autos: ", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text(text = "${autos.size}", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -102,34 +100,31 @@ fun ReporteAutosScreen(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Text(
-                            text = "VEHÍCULO: ${auto.marca.uppercase()} ${auto.modelo.uppercase()} (${auto.anio})",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
+                        Row {
+                            Text(text = "VEHÍCULO: ", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(text = "${auto.marca.uppercase()} ${auto.modelo.uppercase()}", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
 
-                        Text(
-                            text = "PLACA: ${auto.placa.uppercase()}",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
+                        Row {
+                            Text(text = "AÑO: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(text = "${auto.anio}", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
 
-                        Text(
-                            text = "CLIENTE: ${auto.cliente.uppercase()}",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
+                        Row {
+                            Text(text = "PLACA: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(text = auto.placa.uppercase(), fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
+
+                        Row {
+                            Text(text = "CLIENTE: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(text = auto.cliente.uppercase(), fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
 
                         if (auto.vin.isNotBlank()) {
-                            Text(
-                                text = "VIN: ${auto.vin.uppercase()}",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.Black
-                            )
+                            Row {
+                                Text(text = "VIN: ", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(text = auto.vin.uppercase(), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
                         }
                     }
                 }
@@ -140,6 +135,7 @@ fun ReporteAutosScreen(
 
         BotonModulo3D(
             texto = "REGRESAR",
+            icono = "🔙",
             colorClaro = Colores.RegresarClaro,
             colorMedio = Colores.RegresarMedio,
             colorOscuro = Colores.RegresarOscuro,

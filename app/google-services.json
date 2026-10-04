@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "461801707040",
+    "project_id": "bitacoraautomotriz",
+    "storage_bucket": "bitacoraautomotriz.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:461801707040:android:799c20e860e7309f8ace45",
+        "android_client_info": {
+          "package_name": "com.example.bitacoraautomotriz"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDYEAPVpRRfEPzAw_3njln8pzLuFJFjahs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

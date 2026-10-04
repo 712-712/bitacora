@@ -3,11 +3,11 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.android)
+    id("com.google.gms.google-services")
 }
 
 android {
     namespace = "com.example.bitacoraautomotriz"
-
 
     compileSdk = 37
 
@@ -53,8 +53,6 @@ android {
             "-opt-in=androidx.camera.core.ExperimentalGetImage"
         )
     }
-
-
 }
 
 dependencies {
@@ -78,6 +76,13 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
     implementation(libs.maps.compose)
+
+    // FIREBASE EN TIEMPO REAL
+    implementation(platform("com.google.firebase:firebase-bom:33.10.0"))
+    implementation("com.google.firebase:firebase-database-ktx")
+
+    // GENERADOR DE CÓDIGO QR REAL
+    implementation("com.google.zxing:core:3.5.3")
 
     // ESCÁNER DE VIN: CameraX + ML Kit
     implementation("androidx.camera:camera-camera2:1.3.4")
