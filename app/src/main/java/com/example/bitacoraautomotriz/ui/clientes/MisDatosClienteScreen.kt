@@ -200,355 +200,371 @@ fun MisDatosClienteScreen(
         )
     )
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Colores.FondoPantalla)
             .statusBarsPadding()
-            .imePadding()
-            .verticalScroll(scrollState)
-            .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 28.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
+            .navigationBarsPadding()
     ) {
-        // TÍTULO SOLICITADO
-        Text(
-            text = "AGREGAR MI AUTO / AUTOS",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = Colores.TituloPrincipal,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(6.dp))
-
-        Text(
-            text = "Registre y administre sus vehículos para cotizaciones y servicio",
-            fontSize = 15.sp,
-            fontWeight = FontWeight.Bold,
-            color = Colores.EtiquetaCampo,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // TARJETA DE FORMULARIO DE VEHÍCULO
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(14.dp),
-            colors = CardDefaults.cardColors(containerColor = Colores.FondoTarjeta),
-            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .imePadding()
+                .verticalScroll(scrollState)
+                .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 84.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+            // TÍTULO SOLICITADO
+            Text(
+                text = "AGREGAR MI AUTO / AUTOS",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = Colores.TituloPrincipal,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = "Registre y administre sus vehículos para cotizaciones y servicio",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                color = Colores.EtiquetaCampo,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // TARJETA DE FORMULARIO DE VEHÍCULO
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = Colores.FondoTarjeta),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
             ) {
-                Text(
-                    text = if (autoEditandoId == null) "REGISTRAR NUEVO VEHÍCULO" else "EDITAR VEHÍCULO SELECCIONADO",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-
-                // MARCA
-                Column {
-                    Text("MARCA:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                    OutlinedTextField(
-                        value = marca,
-                        onValueChange = { marca = it.uppercase(); mensaje = "" },
-                        placeholder = { Text("Ej: Toyota, Ford, Nissan", color = Color.Gray) },
-                        textStyle = estiloCampo,
-                        colors = coloresCampo,
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
-                        keyboardActions = KeyboardActions(onNext = { modeloFocus.requestFocus() }),
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.fillMaxWidth().focusRequester(marcaFocus)
-                    )
-                }
-
-                // MODELO
-                Column {
-                    Text("MODELO:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                    OutlinedTextField(
-                        value = modelo,
-                        onValueChange = { modelo = it.uppercase(); mensaje = "" },
-                        placeholder = { Text("Ej: Corolla, Mustang, Sentra", color = Color.Gray) },
-                        textStyle = estiloCampo,
-                        colors = coloresCampo,
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
-                        keyboardActions = KeyboardActions(onNext = { anioFocus.requestFocus() }),
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.fillMaxWidth().focusRequester(modeloFocus)
-                    )
-                }
-
-                // AÑO
-                Column {
-                    Text("AÑO:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                    OutlinedTextField(
-                        value = anio,
-                        onValueChange = { if (it.length <= 4 && it.all { c -> c.isDigit() }) { anio = it; mensaje = "" } },
-                        placeholder = { Text("Ej: 2022", color = Color.Gray) },
-                        textStyle = estiloCampo,
-                        colors = coloresCampo,
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
-                        keyboardActions = KeyboardActions(onNext = { placaFocus.requestFocus() }),
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.fillMaxWidth().focusRequester(anioFocus)
-                    )
-                }
-
-                // PLACA
-                Column {
-                    Text("PLACA:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                    OutlinedTextField(
-                        value = placa,
-                        onValueChange = { placa = it.uppercase(); mensaje = "" },
-                        placeholder = { Text("Ej: ABC-123", color = Color.Gray) },
-                        textStyle = estiloCampo,
-                        colors = coloresCampo,
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
-                        keyboardActions = KeyboardActions(onNext = { colorFocus.requestFocus() }),
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.fillMaxWidth().focusRequester(placaFocus)
-                    )
-                }
-
-                // COLOR
-                Column {
-                    Text("COLOR:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                    OutlinedTextField(
-                        value = colorAuto,
-                        onValueChange = { colorAuto = it.uppercase(); mensaje = "" },
-                        placeholder = { Text("Ej: Rojo, Blanco, Negro", color = Color.Gray) },
-                        textStyle = estiloCampo,
-                        colors = coloresCampo,
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
-                        keyboardActions = KeyboardActions(onNext = { vinFocus.requestFocus() }),
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.fillMaxWidth().focusRequester(colorFocus)
-                    )
-                }
-
-                // VIN (NÚMERO DE SERIE)
-                Column {
-                    Text("VIN (NÚMERO DE SERIE):", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                    OutlinedTextField(
-                        value = vin,
-                        onValueChange = { vin = it.uppercase(); mensaje = "" },
-                        placeholder = { Text("17 caracteres del chasis", color = Color.Gray) },
-                        textStyle = estiloCampo,
-                        colors = coloresCampo,
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
-                        keyboardActions = KeyboardActions(onNext = { kmFocus.requestFocus() }),
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.fillMaxWidth().focusRequester(vinFocus)
-                    )
-                }
-
-                // KILOMETRAJE
-                Column {
-                    Text("KILOMETRAJE:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                    OutlinedTextField(
-                        value = kilometraje,
-                        onValueChange = { if (it.all { c -> c.isDigit() }) { kilometraje = it; mensaje = "" } },
-                        placeholder = { Text("Ej: 45000", color = Color.Gray) },
-                        textStyle = estiloCampo,
-                        colors = coloresCampo,
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
-                        keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.fillMaxWidth().focusRequester(kmFocus)
-                    )
-                }
-
-                if (mensaje.isNotBlank()) {
-                    Text(mensaje, color = Color(0xFFFF5252), fontSize = 15.sp, fontWeight = FontWeight.Bold)
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // BOTÓN GUARDAR / CANCELAR
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    BotonModulo3D(
-                        texto = if (guardando) "GUARDANDO..." else if (autoEditandoId == null) "GUARDAR AUTO" else "ACTUALIZAR",
-                        icono = "💾",
-                        colorClaro = Color(0xFFB9F6CA),
-                        colorMedio = Color(0xFF00C853),
-                        colorOscuro = Color(0xFF00695C),
-                        colorTexto = Color.Black,
-                        onClick = { if (!guardando) guardar() },
-                        modifier = Modifier.weight(1f).height(52.dp),
-                        tamanioTexto = 15
+                    Text(
+                        text = if (autoEditandoId == null) "REGISTRAR NUEVO VEHÍCULO" else "EDITAR VEHÍCULO SELECCIONADO",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
                     )
 
-                    if (autoEditandoId != null) {
+                    // MARCA
+                    Column {
+                        Text("MARCA:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                        OutlinedTextField(
+                            value = marca,
+                            onValueChange = { marca = it.uppercase(); mensaje = "" },
+                            placeholder = { Text("Ej: Toyota, Ford, Nissan", color = Color.Gray) },
+                            textStyle = estiloCampo,
+                            colors = coloresCampo,
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
+                            keyboardActions = KeyboardActions(onNext = { modeloFocus.requestFocus() }),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.fillMaxWidth().focusRequester(marcaFocus)
+                        )
+                    }
+
+                    // MODELO
+                    Column {
+                        Text("MODELO:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                        OutlinedTextField(
+                            value = modelo,
+                            onValueChange = { modelo = it.uppercase(); mensaje = "" },
+                            placeholder = { Text("Ej: Corolla, Mustang, Sentra", color = Color.Gray) },
+                            textStyle = estiloCampo,
+                            colors = coloresCampo,
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
+                            keyboardActions = KeyboardActions(onNext = { anioFocus.requestFocus() }),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.fillMaxWidth().focusRequester(modeloFocus)
+                        )
+                    }
+
+                    // AÑO
+                    Column {
+                        Text("AÑO:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                        OutlinedTextField(
+                            value = anio,
+                            onValueChange = { if (it.length <= 4 && it.all { c -> c.isDigit() }) { anio = it; mensaje = "" } },
+                            placeholder = { Text("Ej: 2022", color = Color.Gray) },
+                            textStyle = estiloCampo,
+                            colors = coloresCampo,
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+                            keyboardActions = KeyboardActions(onNext = { placaFocus.requestFocus() }),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.fillMaxWidth().focusRequester(anioFocus)
+                        )
+                    }
+
+                    // PLACA
+                    Column {
+                        Text("PLACA:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                        OutlinedTextField(
+                            value = placa,
+                            onValueChange = { placa = it.uppercase(); mensaje = "" },
+                            placeholder = { Text("Ej: ABC-123", color = Color.Gray) },
+                            textStyle = estiloCampo,
+                            colors = coloresCampo,
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
+                            keyboardActions = KeyboardActions(onNext = { colorFocus.requestFocus() }),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.fillMaxWidth().focusRequester(placaFocus)
+                        )
+                    }
+
+                    // COLOR
+                    Column {
+                        Text("COLOR:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                        OutlinedTextField(
+                            value = colorAuto,
+                            onValueChange = { colorAuto = it.uppercase(); mensaje = "" },
+                            placeholder = { Text("Ej: Rojo, Blanco, Negro", color = Color.Gray) },
+                            textStyle = estiloCampo,
+                            colors = coloresCampo,
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
+                            keyboardActions = KeyboardActions(onNext = { vinFocus.requestFocus() }),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.fillMaxWidth().focusRequester(colorFocus)
+                        )
+                    }
+
+                    // VIN (NÚMERO DE SERIE)
+                    Column {
+                        Text("VIN (NÚMERO DE SERIE):", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                        OutlinedTextField(
+                            value = vin,
+                            onValueChange = { vin = it.uppercase(); mensaje = "" },
+                            placeholder = { Text("17 caracteres del chasis", color = Color.Gray) },
+                            textStyle = estiloCampo,
+                            colors = coloresCampo,
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
+                            keyboardActions = KeyboardActions(onNext = { kmFocus.requestFocus() }),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.fillMaxWidth().focusRequester(vinFocus)
+                        )
+                    }
+
+                    // KILOMETRAJE
+                    Column {
+                        Text("KILOMETRAJE:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                        OutlinedTextField(
+                            value = kilometraje,
+                            onValueChange = { if (it.all { c -> c.isDigit() }) { kilometraje = it; mensaje = "" } },
+                            placeholder = { Text("Ej: 45000", color = Color.Gray) },
+                            textStyle = estiloCampo,
+                            colors = coloresCampo,
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.fillMaxWidth().focusRequester(kmFocus)
+                        )
+                    }
+
+                    if (mensaje.isNotBlank()) {
+                        Text(mensaje, color = Color(0xFFFF5252), fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // BOTÓN GUARDAR / CANCELAR
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
                         BotonModulo3D(
-                            texto = "CANCELAR",
-                            icono = "❌",
-                            colorClaro = Colores.RegresarClaro,
-                            colorMedio = Colores.RegresarMedio,
-                            colorOscuro = Colores.RegresarOscuro,
-                            colorTexto = Color.White,
-                            onClick = { limpiarFormulario() },
+                            texto = if (guardando) "GUARDANDO..." else if (autoEditandoId == null) "GUARDAR AUTO" else "ACTUALIZAR",
+                            icono = "💾",
+                            colorClaro = Color(0xFFB9F6CA),
+                            colorMedio = Color(0xFF00C853),
+                            colorOscuro = Color(0xFF00695C),
+                            colorTexto = Color.Black,
+                            onClick = { if (!guardando) guardar() },
                             modifier = Modifier.weight(1f).height(52.dp),
                             tamanioTexto = 15
                         )
+
+                        if (autoEditandoId != null) {
+                            BotonModulo3D(
+                                texto = "CANCELAR",
+                                icono = "❌",
+                                colorClaro = Colores.RegresarClaro,
+                                colorMedio = Colores.RegresarMedio,
+                                colorOscuro = Colores.RegresarOscuro,
+                                colorTexto = Color.White,
+                                onClick = { limpiarFormulario() },
+                                modifier = Modifier.weight(1f).height(52.dp),
+                                tamanioTexto = 15
+                            )
+                        }
                     }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-        // LISTA DE AUTOS REGISTRADOS CON BOTONES EDITAR Y ELIMINAR
-        Text(
-            text = "MIS VEHÍCULOS REGISTRADOS",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = Colores.TituloPrincipal,
-            modifier = Modifier.align(Alignment.Start)
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        if (cargando) {
-            CircularProgressIndicator(color = Color.White)
-        } else if (autos.isEmpty()) {
+            // LISTA DE AUTOS REGISTRADOS CON BOTONES EDITAR Y ELIMINAR
             Text(
-                text = "NO TIENE VEHÍCULOS REGISTRADOS",
-                fontSize = 16.sp,
+                text = "MIS VEHÍCULOS REGISTRADOS",
+                fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = Colores.TituloPrincipal,
+                modifier = Modifier.align(Alignment.Start)
             )
-        } else {
-            autos.forEach { auto ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 12.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Colores.FondoTarjeta),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                ) {
-                    Column(
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (cargando) {
+                CircularProgressIndicator(color = Color.White)
+            } else if (autos.isEmpty()) {
+                Text(
+                    text = "NO TIENE VEHÍCULOS REGISTRADOS",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            } else {
+                autos.forEach { auto ->
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                            .padding(bottom = 12.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Colores.FondoTarjeta),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Text(
-                                text = "🚗 ${auto.marca.uppercase()} ${auto.modelo.uppercase()} (${auto.anio})",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-                            Text(
-                                text = "PLACA: ${auto.placa.uppercase()}",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF7DFFB2)
-                            )
-                        }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "🚗 ${auto.marca.uppercase()} ${auto.modelo.uppercase()} (${auto.anio})",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                                Text(
+                                    text = "PLACA: ${auto.placa.uppercase()}",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF7DFFB2)
+                                )
+                            }
 
-                        if (auto.color.isNotBlank() || auto.vin.isNotBlank()) {
-                            Text(
-                                text = "COLOR: ${auto.color.ifBlank { "N/A" }}   |   VIN: ${auto.vin.ifBlank { "N/A" }}",
-                                fontSize = 14.sp,
-                                color = Color.White.copy(alpha = 0.9f)
-                            )
-                        }
+                            if (auto.color.isNotBlank() || auto.vin.isNotBlank()) {
+                                Text(
+                                    text = "COLOR: ${auto.color.ifBlank { "N/A" }}   |   VIN: ${auto.vin.ifBlank { "N/A" }}",
+                                    fontSize = 14.sp,
+                                    color = Color.White.copy(alpha = 0.9f)
+                                )
+                            }
 
-                        HorizontalDivider(color = Color(0xFF004D33))
+                            HorizontalDivider(color = Color(0xFF004D33))
 
-                        // BOTONES DE ACCIÓN: EDITAR (VERDE) Y ELIMINAR (ROJO)
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            // EDITAR
-                            BotonModulo3D(
-                                texto = "EDITAR",
-                                icono = "✏️",
-                                colorClaro = Color(0xFFB9F6CA),
-                                colorMedio = Color(0xFF00C853),
-                                colorOscuro = Color(0xFF00695C),
-                                colorTexto = Color.Black,
-                                onClick = { prepararEdicion(auto) },
-                                modifier = Modifier.weight(1f).height(46.dp),
-                                tamanioTexto = 14
-                            )
+                            // BOTONES DE ACCIÓN: EDITAR (VERDE) Y ELIMINAR (ROJO)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                // EDITAR
+                                BotonModulo3D(
+                                    texto = "EDITAR",
+                                    icono = "✏️",
+                                    colorClaro = Color(0xFFB9F6CA),
+                                    colorMedio = Color(0xFF00C853),
+                                    colorOscuro = Color(0xFF00695C),
+                                    colorTexto = Color.Black,
+                                    onClick = { prepararEdicion(auto) },
+                                    modifier = Modifier.weight(1f).height(46.dp),
+                                    tamanioTexto = 14
+                                )
 
-                            // ELIMINAR
-                            BotonModulo3D(
-                                texto = "ELIMINAR",
-                                icono = "🗑️",
-                                colorClaro = Color(0xFFEF9A9A),
-                                colorMedio = Color(0xFFE53935),
-                                colorOscuro = Color(0xFFB71C1C),
-                                colorTexto = Color.Black,
-                                onClick = {
-                                    AlertDialog.Builder(context).apply {
-                                        setTitle("⚠️ ELIMINAR VEHÍCULO")
-                                        setMessage("¿Está seguro de eliminar el auto \"${auto.marca} ${auto.modelo} (${auto.placa})\"?\n\nEsta acción no se puede deshacer.")
-                                        setPositiveButton("SÍ, ELIMINAR") { _, _ ->
-                                            scope.launch {
-                                                try {
-                                                    AutoRepository.eliminarAuto(auto, context)
-                                                    Toast.makeText(context, "✅ Vehículo eliminado", Toast.LENGTH_SHORT).show()
-                                                    if (autoEditandoId == auto.id) limpiarFormulario()
-                                                    cargarAutos()
-                                                } catch (e: Exception) {
-                                                    Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                                // ELIMINAR
+                                BotonModulo3D(
+                                    texto = "ELIMINAR",
+                                    icono = "🗑️",
+                                    colorClaro = Color(0xFFEF9A9A),
+                                    colorMedio = Color(0xFFE53935),
+                                    colorOscuro = Color(0xFFB71C1C),
+                                    colorTexto = Color.Black,
+                                    onClick = {
+                                        AlertDialog.Builder(context).apply {
+                                            setTitle("⚠️ ELIMINAR VEHÍCULO")
+                                            setMessage("¿Está seguro de eliminar el auto \"${auto.marca} ${auto.modelo} (${auto.placa})\"?\n\nEsta acción no se puede deshacer.")
+                                            setPositiveButton("SÍ, ELIMINAR") { _, _ ->
+                                                scope.launch {
+                                                    try {
+                                                        AutoRepository.eliminarAuto(auto, context)
+                                                        Toast.makeText(context, "✅ Vehículo eliminado", Toast.LENGTH_SHORT).show()
+                                                        if (autoEditandoId == auto.id) limpiarFormulario()
+                                                        cargarAutos()
+                                                    } catch (e: Exception) {
+                                                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                                                    }
                                                 }
                                             }
+                                            setNegativeButton("CANCELAR", null)
+                                            show()
                                         }
-                                        setNegativeButton("CANCELAR", null)
-                                        show()
-                                    }
-                                },
-                                modifier = Modifier.weight(1f).height(46.dp),
-                                tamanioTexto = 14
-                            )
+                                    },
+                                    modifier = Modifier.weight(1f).height(46.dp),
+                                    tamanioTexto = 14
+                                )
+                            }
                         }
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // REGRESAR (GRIS)
-        BotonModulo3D(
-            texto = "REGRESAR",
-            icono = "🔙",
-            colorClaro = Colores.RegresarClaro,
-            colorMedio = Colores.RegresarMedio,
-            colorOscuro = Colores.RegresarOscuro,
-            colorTexto = Color.White,
-            onClick = onRegresar,
-            modifier = Modifier.fillMaxWidth().height(58.dp),
-            tamanioTexto = 16
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
+        // BOTÓN REGRESAR FIJO E INMÓVIL AL FONDO DE LA PANTALLA
+        Surface(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth(),
+            color = Colores.FondoPantalla
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 12.dp)
+            ) {
+                BotonModulo3D(
+                    texto = "REGRESAR",
+                    icono = "🔙",
+                    colorClaro = Colores.RegresarClaro,
+                    colorMedio = Colores.RegresarMedio,
+                    colorOscuro = Colores.RegresarOscuro,
+                    onClick = onRegresar,
+                    modifier = Modifier.fillMaxWidth().height(58.dp),
+                    colorTexto = Color.White
+                )
+            }
+        }
     }
 }

@@ -125,141 +125,154 @@ fun NuevoClienteScreen(
         }
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Colores.FondoPantalla)
             .statusBarsPadding()
+            .navigationBarsPadding()
             .imePadding()
-            .verticalScroll(rememberScrollState())
-            .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
     ) {
-        Text(
-            text = "NUEVO CLIENTE",
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Bold,
-            color = Colores.TituloPrincipal
-        )
-        Spacer(modifier = Modifier.height(24.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 84.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
+        ) {
+            Text(
+                text = "NUEVO CLIENTE",
+                fontSize = 26.sp,
+                fontWeight = FontWeight.Bold,
+                color = Colores.TituloPrincipal
+            )
+            Spacer(modifier = Modifier.height(24.dp))
 
-        // TARJETA DE ALERTA DE COINCIDENCIA DE CLIENTE REGISTRADO
-        if (clienteCoincidencia != null) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFB51F1F)),
-                shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "⚠️ CLIENTE YA REGISTRADO",
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Este cliente ya existe en el sistema:\n• ID: ${clienteCoincidencia.id}\n• Nombre: ${clienteCoincidencia.nombre}\n• Teléfono: ${clienteCoincidencia.telefono}",
-                        color = Color.White,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium
-                    )
+            // TARJETA DE ALERTA DE COINCIDENCIA DE CLIENTE REGISTRADO
+            if (clienteCoincidencia != null) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFB51F1F)),
+                    shape = RoundedCornerShape(12.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "⚠️ CLIENTE YA REGISTRADO",
+                            color = Color.White,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Este cliente ya existe en el sistema:\n• ID: ${clienteCoincidencia.id}\n• Nombre: ${clienteCoincidencia.nombre}\n• Teléfono: ${clienteCoincidencia.telefono}",
+                            color = Color.White,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
+
+            // NOMBRE
+            Text(text = "NOMBRE:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
+            OutlinedTextField(
+                value = nombre,
+                onValueChange = { nombre = it.uppercase(); mensaje = "" },
+                textStyle = estiloTexto,
+                colors = coloresCampo,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(nombreFocus),
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { telefonoFocus.requestFocus() })
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // TELEFONO
+            Text(text = "TELÉFONO:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
+            OutlinedTextField(
+                value = telefono,
+                onValueChange = { telefono = it.filter { char -> char.isDigit() || char == '-' || char == ' ' }; mensaje = "" },
+                textStyle = estiloTexto,
+                colors = coloresCampo,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(telefonoFocus),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { correoFocus.requestFocus() })
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // CORREO
+            Text(text = "CORREO:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
+            OutlinedTextField(
+                value = correo,
+                onValueChange = { correo = it.lowercase(); mensaje = "" },
+                textStyle = estiloTexto,
+                colors = coloresCampo,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(correoFocus),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { direccionFocus.requestFocus() })
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // DIRECCION
+            Text(text = "DIRECCIÓN:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
+            OutlinedTextField(
+                value = direccion,
+                onValueChange = { direccion = it.uppercase(); mensaje = "" },
+                textStyle = estiloTexto,
+                colors = coloresCampo,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(direccionFocus),
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
+            )
+
+            if (mensaje.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(text = "⚠️ $mensaje", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            BotonModulo3D(
+                texto = if (guardando) "GUARDANDO..." else "GUARDAR CLIENTE",
+                icono = "💾",
+                colorClaro = Color(0xFF80D8FF),
+                colorMedio = Color(0xFF00B8D4),
+                colorOscuro = Color(0xFF006064),
+                onClick = { guardar() },
+                modifier = Modifier.fillMaxWidth().height(58.dp)
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
         }
 
-        // NOMBRE
-        Text(text = "NOMBRE:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
-        OutlinedTextField(
-            value = nombre,
-            onValueChange = { nombre = it.uppercase(); mensaje = "" },
-            textStyle = estiloTexto,
-            colors = coloresCampo,
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(nombreFocus),
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
-            keyboardActions = KeyboardActions(onNext = { telefonoFocus.requestFocus() })
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // TELEFONO
-        Text(text = "TELÉFONO:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
-        OutlinedTextField(
-            value = telefono,
-            onValueChange = { telefono = it.filter { char -> char.isDigit() || char == '-' || char == ' ' }; mensaje = "" },
-            textStyle = estiloTexto,
-            colors = coloresCampo,
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(telefonoFocus),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next),
-            keyboardActions = KeyboardActions(onNext = { correoFocus.requestFocus() })
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // CORREO
-        Text(text = "CORREO:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
-        OutlinedTextField(
-            value = correo,
-            onValueChange = { correo = it.lowercase(); mensaje = "" },
-            textStyle = estiloTexto,
-            colors = coloresCampo,
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(correoFocus),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
-            keyboardActions = KeyboardActions(onNext = { direccionFocus.requestFocus() })
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // DIRECCION
-        Text(text = "DIRECCIÓN:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
-        OutlinedTextField(
-            value = direccion,
-            onValueChange = { direccion = it.uppercase(); mensaje = "" },
-            textStyle = estiloTexto,
-            colors = coloresCampo,
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(direccionFocus),
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
-        )
-
-        if (mensaje.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(text = "⚠️ $mensaje", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
+        // BOTÓN REGRESAR FIJO E INMÓVIL AL FONDO
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .background(Colores.FondoPantalla)
+                .padding(horizontal = 24.dp, vertical = 12.dp)
+        ) {
+            BotonModulo3D(
+                texto = "REGRESAR",
+                icono = "🔙",
+                colorClaro = Colores.RegresarClaro,
+                colorMedio = Colores.RegresarMedio,
+                colorOscuro = Colores.RegresarOscuro,
+                onClick = {
+                    focusManager.clearFocus()
+                    onRegresar()
+                },
+                modifier = Modifier.fillMaxWidth().height(58.dp),
+                colorTexto = Color.White
+            )
         }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        BotonModulo3D(
-            texto = if (guardando) "GUARDANDO..." else "GUARDAR CLIENTE",
-            icono = "💾",
-            colorClaro = Color(0xFF80D8FF),
-            colorMedio = Color(0xFF00B8D4),
-            colorOscuro = Color(0xFF006064),
-            onClick = { guardar() },
-            modifier = Modifier.fillMaxWidth().height(58.dp)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        BotonModulo3D(
-            texto = "REGRESAR",
-            icono = "🔙",
-            colorClaro = Colores.RegresarClaro,
-            colorMedio = Colores.RegresarMedio,
-            colorOscuro = Colores.RegresarOscuro,
-            onClick = {
-                focusManager.clearFocus()
-                onRegresar()
-            },
-            modifier = Modifier.fillMaxWidth().height(58.dp),
-            colorTexto = Color.White
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
     }
 }

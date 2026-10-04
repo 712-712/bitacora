@@ -37,114 +37,128 @@ fun ReporteAutosScreen(
         }
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Colores.FondoPantalla)
             .statusBarsPadding()
-            .verticalScroll(rememberScrollState())
-            .padding(
-                start = 24.dp,
-                end = 24.dp,
-                top = 24.dp,
-                bottom = 28.dp
-            ),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
+            .navigationBarsPadding()
     ) {
-        Text(
-            text = "REPORTE DE AUTOS",
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Bold,
-            color = Colores.TituloPrincipal
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        if (cargando) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = Color.White)
-            }
-        } else if (autos.isEmpty()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .imePadding()
+                .verticalScroll(rememberScrollState())
+                .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 84.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
+        ) {
             Text(
-                text = "NO HAY AUTOS REGISTRADOS",
-                fontSize = 18.sp,
+                text = "REPORTE DE AUTOS",
+                fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = Colores.TituloPrincipal
             )
-        } else {
-            Row {
-                Text(text = "Total de autos: ", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                Text(text = "${autos.size}", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            autos.forEach { auto ->
-                Card(
+            if (cargando) {
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 12.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Colores.FondoTarjeta),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                        .height(200.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Column(
+                    CircularProgressIndicator(color = Color.White)
+                }
+            } else if (autos.isEmpty()) {
+                Text(
+                    text = "NO HAY AUTOS REGISTRADOS",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            } else {
+                Row {
+                    Text(text = "Total de autos: ", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text(text = "${autos.size}", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                autos.forEach { auto ->
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                            .padding(bottom = 12.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Colores.FondoTarjeta),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                     ) {
-                        Row {
-                            Text(text = "VEHÍCULO: ", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                            Text(text = "${auto.marca.uppercase()} ${auto.modelo.uppercase()}", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                        }
-
-                        Row {
-                            Text(text = "AÑO: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                            Text(text = "${auto.anio}", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                        }
-
-                        Row {
-                            Text(text = "PLACA: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                            Text(text = auto.placa.uppercase(), fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                        }
-
-                        Row {
-                            Text(text = "CLIENTE: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                            Text(text = auto.cliente.uppercase(), fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                        }
-
-                        if (auto.vin.isNotBlank()) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
                             Row {
-                                Text(text = "VIN: ", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                                Text(text = auto.vin.uppercase(), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                Text(text = "VEHÍCULO: ", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(text = "${auto.marca.uppercase()} ${auto.modelo.uppercase()}", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+
+                            Row {
+                                Text(text = "AÑO: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(text = "${auto.anio}", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+
+                            Row {
+                                Text(text = "PLACA: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(text = auto.placa.uppercase(), fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+
+                            Row {
+                                Text(text = "CLIENTE: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(text = auto.cliente.uppercase(), fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+
+                            if (auto.vin.isNotBlank()) {
+                                Row {
+                                    Text(text = "VIN: ", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                    Text(text = auto.vin.uppercase(), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                }
                             }
                         }
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
-
-        BotonModulo3D(
-            texto = "REGRESAR",
-            icono = "🔙",
-            colorClaro = Colores.RegresarClaro,
-            colorMedio = Colores.RegresarMedio,
-            colorOscuro = Colores.RegresarOscuro,
-            onClick = onRegresar,
-            modifier = Modifier.fillMaxWidth().height(58.dp),
-            tamanioTexto = 16,
-            colorTexto = Color.White
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
+        // BOTÓN REGRESAR FIJO E INMÓVIL AL FONDO DE LA PANTALLA
+        Surface(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth(),
+            color = Colores.FondoPantalla
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 12.dp)
+            ) {
+                BotonModulo3D(
+                    texto = "REGRESAR",
+                    icono = "🔙",
+                    colorClaro = Colores.RegresarClaro,
+                    colorMedio = Colores.RegresarMedio,
+                    colorOscuro = Colores.RegresarOscuro,
+                    onClick = onRegresar,
+                    modifier = Modifier.fillMaxWidth().height(58.dp),
+                    tamanioTexto = 16,
+                    colorTexto = Color.White
+                )
+            }
+        }
     }
 }

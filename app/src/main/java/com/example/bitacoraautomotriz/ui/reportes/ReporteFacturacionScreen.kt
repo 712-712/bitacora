@@ -40,130 +40,144 @@ fun ReporteFacturacionScreen(
 
     val totalFacturado = facturas.sumOf { if (it.total.isNaN() || it.total < 0) 0.0 else it.total }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Colores.FondoPantalla)
             .statusBarsPadding()
-            .verticalScroll(rememberScrollState())
-            .padding(
-                start = 24.dp,
-                end = 24.dp,
-                top = 24.dp,
-                bottom = 28.dp
-            ),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
+            .navigationBarsPadding()
     ) {
-        Text(
-            text = "REPORTE DE FACTURACIÓN",
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Bold,
-            color = Colores.TituloPrincipal
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        if (cargando) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = Color.White)
-            }
-        } else if (facturas.isEmpty()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .imePadding()
+                .verticalScroll(rememberScrollState())
+                .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 84.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
+        ) {
             Text(
-                text = "NO HAY FACTURAS REGISTRADAS",
-                fontSize = 18.sp,
+                text = "REPORTE DE FACTURACIÓN",
+                fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-        } else {
-            Row {
-                Text(text = "Total de facturas: ", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                Text(text = "${facturas.size}", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = String.format(Locale.US, "Total facturado: $ %,.2f", totalFacturado),
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFFFF5252)
+                color = Colores.TituloPrincipal
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            facturas.forEach { factura ->
-                val subtotal = if (factura.subtotal.isNaN() || factura.subtotal < 0) 0.0 else factura.subtotal
-                val iva = if (factura.iva.isNaN() || factura.iva < 0) 0.0 else factura.iva
-                val total = if (factura.total.isNaN() || factura.total < 0) 0.0 else factura.total
-
-                Card(
+            if (cargando) {
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 12.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Colores.FondoTarjeta),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                        .height(200.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Column(
+                    CircularProgressIndicator(color = Color.White)
+                }
+            } else if (facturas.isEmpty()) {
+                Text(
+                    text = "NO HAY FACTURAS REGISTRADAS",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            } else {
+                Row {
+                    Text(text = "Total de facturas: ", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text(text = "${facturas.size}", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = String.format(Locale.US, "Total facturado: $ %,.2f", totalFacturado),
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFFF5252)
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                facturas.forEach { factura ->
+                    val subtotal = if (factura.subtotal.isNaN() || factura.subtotal < 0) 0.0 else factura.subtotal
+                    val iva = if (factura.iva.isNaN() || factura.iva < 0) 0.0 else factura.iva
+                    val total = if (factura.total.isNaN() || factura.total < 0) 0.0 else factura.total
+
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                            .padding(bottom = 12.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Colores.FondoTarjeta),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                     ) {
-                        Row {
-                            Text(text = "FOLIO: # ", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                            Text(text = factura.numero.ifBlank { "N/A" }, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                        }
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Row {
+                                Text(text = "FOLIO: # ", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(text = factura.numero.ifBlank { "N/A" }, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
 
-                        Row {
-                            Text(text = "CLIENTE: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                            Text(text = factura.cliente.uppercase(), fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                        }
+                            Row {
+                                Text(text = "CLIENTE: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(text = factura.cliente.uppercase(), fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
 
-                        Row {
-                            Text(text = "FECHA: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                            Text(text = factura.fecha, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                        }
+                            Row {
+                                Text(text = "FECHA: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(text = factura.fecha, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
 
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(text = "SUBTOTAL:", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                            Text(text = String.format(Locale.US, "$ %,.2f", subtotal), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
-                        }
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(text = "SUBTOTAL:", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(text = String.format(Locale.US, "$ %,.2f", subtotal), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
+                            }
 
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(text = "I.V.A.:", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                            Text(text = String.format(Locale.US, "$ %,.2f", iva), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
-                        }
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(text = "I.V.A.:", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(text = String.format(Locale.US, "$ %,.2f", iva), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
+                            }
 
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(text = "TOTAL:", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                            Text(text = String.format(Locale.US, "$ %,.2f", total), fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(text = "TOTAL:", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(text = String.format(Locale.US, "$ %,.2f", total), fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
+                            }
                         }
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
-
-        BotonModulo3D(
-            texto = "REGRESAR",
-            icono = "🔙",
-            colorClaro = Colores.RegresarClaro,
-            colorMedio = Colores.RegresarMedio,
-            colorOscuro = Colores.RegresarOscuro,
-            onClick = onRegresar,
-            modifier = Modifier.fillMaxWidth().height(58.dp),
-            tamanioTexto = 16,
-            colorTexto = Color.White
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
+        // BOTÓN REGRESAR FIJO E INMÓVIL AL FONDO DE LA PANTALLA
+        Surface(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth(),
+            color = Colores.FondoPantalla
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 12.dp)
+            ) {
+                BotonModulo3D(
+                    texto = "REGRESAR",
+                    icono = "🔙",
+                    colorClaro = Colores.RegresarClaro,
+                    colorMedio = Colores.RegresarMedio,
+                    colorOscuro = Colores.RegresarOscuro,
+                    onClick = onRegresar,
+                    modifier = Modifier.fillMaxWidth().height(58.dp),
+                    tamanioTexto = 16,
+                    colorTexto = Color.White
+                )
+            }
+        }
     }
 }

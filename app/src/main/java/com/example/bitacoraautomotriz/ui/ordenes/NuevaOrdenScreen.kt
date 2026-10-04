@@ -152,7 +152,6 @@ fun NuevaOrdenScreen(
         }
     }
 
-    // SOPORTE FLEXIBLE PARA DÉCIMAS, CENTÉSIMAS Y PUNTOS DE MILLARES
     val manoObraNum = costoManoObra.replace(",", ".").toDoubleOrNull() ?: 0.0
     val refaccionesNum = costoRefacciones.replace(",", ".").toDoubleOrNull() ?: 0.0
     val subtotal = manoObraNum + refaccionesNum
@@ -207,9 +206,10 @@ fun NuevaOrdenScreen(
         }
     }
 
+    // TARJETA ÚNICA CON BOTONES ALINEADOS DEBAJO DEL NOMBRE Y AUTO
     @Composable
-    fun ResumenSeleccion() {
-        if (clienteSeleccionado != null && autoSeleccionado != null) {
+    fun TarjetaUnificadaClienteYAuto() {
+        if (clienteSeleccionado != null) {
             Card(
                 modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
                 shape = RoundedCornerShape(12.dp),
@@ -217,19 +217,48 @@ fun NuevaOrdenScreen(
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
                 Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-                    Text(
-                        text = "CLIENTE: ${clienteSeleccionado!!.nombre.uppercase()}",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "AUTO: ${autoSeleccionado!!.marca.uppercase()} ${autoSeleccionado!!.modelo.uppercase()} (${autoSeleccionado!!.placa.uppercase()})",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        Text(
+                            text = "CLIENTE: ${clienteSeleccionado!!.nombre.uppercase()}",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        TextButton(
+                            onClick = { clienteSeleccionado = null; autoSeleccionado = null },
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Text("CAMBIAR DE CLIENTE", color = Color(0xFFFF5252), fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                        }
+                    }
+
+                    if (autoSeleccionado != null) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        HorizontalDivider(color = Color(0xFF004D33))
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.Start
+                        ) {
+                            Text(
+                                text = "AUTO: ${autoSeleccionado!!.marca.uppercase()} ${autoSeleccionado!!.modelo.uppercase()} (${autoSeleccionado!!.placa.uppercase()})",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF7DFFB2)
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            TextButton(
+                                onClick = { autoSeleccionado = null },
+                                contentPadding = PaddingValues(0.dp)
+                            ) {
+                                Text("CAMBIAR DE AUTO", color = Color(0xFFFF5252), fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -240,7 +269,7 @@ fun NuevaOrdenScreen(
             .fillMaxSize()
             .background(Colores.FondoPantalla)
             .statusBarsPadding()
-            .imePadding()
+            .navigationBarsPadding()
             .pointerInput(Unit) {
                 detectTapGestures(onTap = {
                     focusManager.clearFocus()
@@ -251,8 +280,9 @@ fun NuevaOrdenScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .imePadding()
                 .verticalScroll(scrollState)
-                .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 28.dp),
+                .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 84.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -263,7 +293,7 @@ fun NuevaOrdenScreen(
             )
             Spacer(modifier = Modifier.height(24.dp))
 
-            ResumenSeleccion()
+            TarjetaUnificadaClienteYAuto()
 
             if (clienteSeleccionado == null) {
                 EtiquetaCampo("BUSCAR CLIENTE:")
@@ -308,18 +338,6 @@ fun NuevaOrdenScreen(
                     }
                 }
             } else if (autoSeleccionado == null) {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.Start
-                ) {
-                    Text(text = "CLIENTE: ${clienteSeleccionado!!.nombre.uppercase()}", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.height(2.dp))
-                    TextButton(onClick = { clienteSeleccionado = null }, contentPadding = PaddingValues(0.dp)) {
-                        Text("CAMBIAR", color = Color(0xFFFF5252), fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-
                 EtiquetaCampo("SELECCIONAR AUTO DEL CLIENTE:")
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -350,18 +368,6 @@ fun NuevaOrdenScreen(
                     }
                 }
             } else {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.Start
-                ) {
-                    Text(text = "VEHÍCULO SELECCIONADO", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.height(2.dp))
-                    TextButton(onClick = { autoSeleccionado = null }, contentPadding = PaddingValues(0.dp)) {
-                        Text("CAMBIAR AUTO", color = Color(0xFFFF5252), fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-
                 // KILOMETRAJE
                 EtiquetaCampo("KILOMETRAJE ACTUAL:")
                 Spacer(modifier = Modifier.height(6.dp))
@@ -423,7 +429,7 @@ fun NuevaOrdenScreen(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // MANO DE OBRA CON ACEPTACIÓN DE DÉCIMAS, CENTÉSIMAS Y COMAS/PUNTOS
+                // MANO DE OBRA
                 EtiquetaCampo("COSTO MANO DE OBRA ($):")
                 Spacer(modifier = Modifier.height(6.dp))
                 OutlinedTextField(
@@ -444,7 +450,7 @@ fun NuevaOrdenScreen(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // REFACCIONES CON ACEPTACIÓN DE DÉCIMAS, CENTÉSIMAS Y COMAS/PUNTOS
+                // REFACCIONES
                 EtiquetaCampo("COSTO REFACCIONES ($):")
                 Spacer(modifier = Modifier.height(6.dp))
                 OutlinedTextField(
@@ -465,7 +471,7 @@ fun NuevaOrdenScreen(
                 )
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // RESUMEN COSTOS FORMATO COMPLETO $ %,.2f (DÉCIMAS, CENTÉSIMAS Y MILLARES)
+                // RESUMEN COSTOS
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp),
@@ -514,8 +520,17 @@ fun NuevaOrdenScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+        }
 
+        // BOTÓN REGRESAR FIJO E INMÓVIL AL FONDO (DETRÁS DEL TECLADO)
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .background(Colores.FondoPantalla)
+                .padding(horizontal = 24.dp, vertical = 12.dp)
+        ) {
             BotonModulo3D(
                 texto = "REGRESAR",
                 icono = "🔙",

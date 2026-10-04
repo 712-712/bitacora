@@ -51,157 +51,176 @@ fun VerClientesScreen(
         }
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Colores.FondoPantalla)
-            .verticalScroll(rememberScrollState())
-            .padding(start = 24.dp, end = 24.dp, top = 48.dp, bottom = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .imePadding()
     ) {
-        Text(
-            text = "CLIENTES REGISTRADOS",
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Bold,
-            color = Colores.TituloPrincipal
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-
-        if (clientes.isEmpty()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 84.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
+        ) {
             Text(
-                text = "NO HAY CLIENTES REGISTRADOS",
-                fontSize = 18.sp,
+                text = "CLIENTES REGISTRADOS",
+                fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
-                color = Colores.TextoGlobal
+                color = Colores.TituloPrincipal
             )
-        } else {
-            clientes.forEach { cliente ->
-                Card(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Colores.FondoTarjeta),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                ) {
-                    Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+            Spacer(modifier = Modifier.height(24.dp))
 
-                        Text(text = cliente.nombre, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+            if (clientes.isEmpty()) {
+                Text(
+                    text = "NO HAY CLIENTES REGISTRADOS",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Colores.TextoGlobal
+                )
+            } else {
+                clientes.forEach { cliente ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Colores.FondoTarjeta),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    ) {
+                        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
 
-                        Text(
-                            text = "📞 ${cliente.telefono}   |   ID: ${cliente.id}",
-                            fontSize = 22.sp,
-                            color = Color.Black,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier
-                                .clickable {
-                                    val intent = Intent(Intent.ACTION_DIAL).apply {
-                                        data = Uri.parse("tel:${cliente.telefono}")
-                                    }
-                                    context.startActivity(intent)
-                                }
-                                .padding(top = 4.dp)
-                        )
+                            Text(text = cliente.nombre, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.Black)
 
-                        if (cliente.correo.isNotBlank()) {
-                            ClickableText(
-                                text = buildAnnotatedString {
-                                    append("✉️ ")
-                                    pushStyle(SpanStyle(color = Color(0xFF0033FF), textDecoration = TextDecoration.Underline, fontWeight = FontWeight.Bold))
-                                    append(cliente.correo)
-                                    pop()
-                                },
-                                onClick = {
-                                    val intent = Intent(Intent.ACTION_SENDTO).apply { data = Uri.parse("mailto:${cliente.correo}") }
-                                    context.startActivity(intent)
-                                },
-                                modifier = Modifier.padding(top = 4.dp)
-                            )
-                        }
-
-                        if (cliente.direccion.isNotBlank()) {
-                            Text(text = "📍 ${cliente.direccion}", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = Color.Black, modifier = Modifier.padding(top = 4.dp))
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            BotonModulo3D(
-                                texto = "EDITAR",
-                                colorClaro = Color(0xFF90CAF9),
-                                colorMedio = Color(0xFF1976D2),
-                                colorOscuro = Color(0xFF0D47A1),
-                                onClick = { onEditarCliente(cliente.id) },
-                                modifier = Modifier.fillMaxWidth().height(60.dp),
-                                tamanioTexto = 16,
-                                colorTexto = Color.Black
-                            )
-
-                            // BOTÓN ELIMINAR CON ADVERTENCIA DE ELIMINACIÓN EN CASCADA
-                            BotonModulo3D(
-                                texto = "ELIMINAR",
-                                colorClaro = Color(0xFFEF9A9A),
-                                colorMedio = Color(0xFFE53935),
-                                colorOscuro = Color(0xFFB71C1C),
-                                onClick = {
-                                    scope.launch {
-                                        val cantidadAutos = AutoRepository.contarAutosPorCliente(cliente.nombre, context)
-
-                                        val mensajeAdvertencia = if (cantidadAutos > 0) {
-                                            "¿Está seguro de eliminar al cliente \"${cliente.nombre}\"?\n\n⚠️ ADVERTENCIA: Esta acción eliminará TAMBIÉN:\n• $cantidadAutos auto(s) registrado(s)\n• Todos los registros de servicio asociados\n\nEsta acción NO se puede deshacer."
-                                        } else {
-                                            "¿Está seguro de eliminar al cliente \"${cliente.nombre}\"?\n\nEste cliente no tiene autos registrados.\n\nEsta acción NO se puede deshacer."
+                            Text(
+                                text = "📞 ${cliente.telefono}   |   ID: ${cliente.id}",
+                                fontSize = 22.sp,
+                                color = Color.Black,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier
+                                    .clickable {
+                                        val intent = Intent(Intent.ACTION_DIAL).apply {
+                                            data = Uri.parse("tel:${cliente.telefono}")
                                         }
+                                        context.startActivity(intent)
+                                    }
+                                    .padding(top = 4.dp)
+                            )
 
-                                        AlertDialog.Builder(context).apply {
-                                            setTitle("⚠️ ELIMINACIÓN EN CASCADA")
-                                            setMessage(mensajeAdvertencia)
-                                            setPositiveButton("SÍ, ELIMINAR TODO") { _, _ ->
-                                                scope.launch {
-                                                    try {
-                                                        ClienteRepository.eliminarCliente(cliente.id, context)
-                                                        refreshTrigger++
-                                                    } catch (_: Exception) { }
-                                                }
+                            if (cliente.correo.isNotBlank()) {
+                                ClickableText(
+                                    text = buildAnnotatedString {
+                                        append("✉️ ")
+                                        pushStyle(SpanStyle(color = Color(0xFF0033FF), textDecoration = TextDecoration.Underline, fontWeight = FontWeight.Bold))
+                                        append(cliente.correo)
+                                        pop()
+                                    },
+                                    onClick = {
+                                        val intent = Intent(Intent.ACTION_SENDTO).apply { data = Uri.parse("mailto:${cliente.correo}") }
+                                        context.startActivity(intent)
+                                    },
+                                    modifier = Modifier.padding(top = 4.dp)
+                                )
+                            }
+
+                            if (cliente.direccion.isNotBlank()) {
+                                Text(text = "📍 ${cliente.direccion}", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = Color.Black, modifier = Modifier.padding(top = 4.dp))
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                BotonModulo3D(
+                                    texto = "EDITAR",
+                                    colorClaro = Color(0xFF90CAF9),
+                                    colorMedio = Color(0xFF1976D2),
+                                    colorOscuro = Color(0xFF0D47A1),
+                                    onClick = { onEditarCliente(cliente.id) },
+                                    modifier = Modifier.fillMaxWidth().height(60.dp),
+                                    tamanioTexto = 16,
+                                    colorTexto = Color.Black
+                                )
+
+                                // BOTÓN ELIMINAR CON ADVERTENCIA DE ELIMINACIÓN EN CASCADA
+                                BotonModulo3D(
+                                    texto = "ELIMINAR",
+                                    colorClaro = Color(0xFFEF9A9A),
+                                    colorMedio = Color(0xFFE53935),
+                                    colorOscuro = Color(0xFFB71C1C),
+                                    onClick = {
+                                        scope.launch {
+                                            val cantidadAutos = AutoRepository.contarAutosPorCliente(cliente.nombre, context)
+
+                                            val mensajeAdvertencia = if (cantidadAutos > 0) {
+                                                "¿Está seguro de eliminar al cliente \"${cliente.nombre}\"?\n\n⚠️ ADVERTENCIA: Esta acción eliminará TAMBIÉN:\n• $cantidadAutos auto(s) registrado(s)\n• Todos los registros de servicio asociados\n\nEsta acción NO se puede deshacer."
+                                            } else {
+                                                "¿Está seguro de eliminar al cliente \"${cliente.nombre}\"?\n\nEste cliente no tiene autos registrados.\n\nEsta acción NO se puede deshacer."
                                             }
-                                            setNegativeButton("CANCELAR", null)
-                                            show()
-                                        }
-                                    }
-                                },
-                                modifier = Modifier.fillMaxWidth().height(60.dp),
-                                tamanioTexto = 16,
-                                colorTexto = Color.Black
-                            )
 
-                            BotonModulo3D(
-                                texto = "VER AUTOS CLIENTES",
-                                colorClaro = Color(0xFFB9F6CA),
-                                colorMedio = Color(0xFF00C853),
-                                colorOscuro = Color(0xFF00695C),
-                                onClick = {
-                                    val nombreCodificado = URLEncoder.encode(cliente.nombre, "UTF-8")
-                                    onVerAutos(cliente.id, nombreCodificado)
-                                },
-                                modifier = Modifier.fillMaxWidth().height(60.dp),
-                                tamanioTexto = 16,
-                                colorTexto = Color.Black
-                            )
+                                            AlertDialog.Builder(context).apply {
+                                                setTitle("⚠️ ELIMINACIÓN EN CASCADA")
+                                                setMessage(mensajeAdvertencia)
+                                                setPositiveButton("SÍ, ELIMINAR TODO") { _, _ ->
+                                                    scope.launch {
+                                                        try {
+                                                            ClienteRepository.eliminarCliente(cliente.id, context)
+                                                            refreshTrigger++
+                                                        } catch (_: Exception) { }
+                                                    }
+                                                }
+                                                setNegativeButton("CANCELAR", null)
+                                                show()
+                                            }
+                                        }
+                                    },
+                                    modifier = Modifier.fillMaxWidth().height(60.dp),
+                                    tamanioTexto = 16,
+                                    colorTexto = Color.Black
+                                )
+
+                                BotonModulo3D(
+                                    texto = "VER AUTOS CLIENTES",
+                                    colorClaro = Color(0xFFB9F6CA),
+                                    colorMedio = Color(0xFF00C853),
+                                    colorOscuro = Color(0xFF00695C),
+                                    onClick = {
+                                        val nombreCodificado = URLEncoder.encode(cliente.nombre, "UTF-8")
+                                        onVerAutos(cliente.id, nombreCodificado)
+                                    },
+                                    modifier = Modifier.fillMaxWidth().height(60.dp),
+                                    tamanioTexto = 16,
+                                    colorTexto = Color.Black
+                                )
+                            }
                         }
                     }
                 }
             }
         }
-        Spacer(modifier = Modifier.height(32.dp))
-        BotonModulo3D(
-            texto = "REGRESAR",
-            colorClaro = Colores.RegresarClaro,
-            colorMedio = Colores.RegresarMedio,
-            colorOscuro = Colores.RegresarOscuro,
-            onClick = onRegresar,
-            colorTexto = Color.White
-        )
+
+        // BOTÓN REGRESAR FIJO E INMÓVIL AL FONDO DE LA PANTALLA
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .background(Colores.FondoPantalla)
+                .padding(horizontal = 24.dp, vertical = 12.dp)
+        ) {
+            BotonModulo3D(
+                texto = "REGRESAR",
+                icono = "🔙",
+                colorClaro = Colores.RegresarClaro,
+                colorMedio = Colores.RegresarMedio,
+                colorOscuro = Colores.RegresarOscuro,
+                onClick = onRegresar,
+                modifier = Modifier.fillMaxWidth().height(58.dp),
+                colorTexto = Color.White
+            )
+        }
     }
 }

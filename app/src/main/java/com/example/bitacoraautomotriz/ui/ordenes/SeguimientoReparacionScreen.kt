@@ -205,275 +205,291 @@ Fecha de cotización: ${o.fecha}
         }
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Colores.FondoPantalla)
             .statusBarsPadding()
+            .navigationBarsPadding()
             .imePadding()
-            .padding(24.dp)
-            .verticalScroll(rememberScrollState())
     ) {
-        if (cargando) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(300.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = Color.White)
-            }
-        } else if (orden == null) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(300.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = "No se encontró la cotización", color = Color.White, fontSize = 18.sp)
-            }
-        } else {
-            val o = orden!!
-            Text(
-                text = "ENVIAR REPORTE AL CLIENTE",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Colores.TituloPrincipal,
-                softWrap = false,
-                maxLines = 1,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp),
-                colors = CardDefaults.cardColors(containerColor = Colores.FondoTarjeta)
-            ) {
-                Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
-                    Text(
-                        text = "FOLIO: ${String.format(Locale.US, "%05d", o.id)}   |   ID: $clienteId",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF7DFFB2)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = o.cliente.uppercase(), fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                    Text(text = o.auto.uppercase(), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(text = "TELÉFONO DEL CLIENTE:", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "📞 $telefonoCliente",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF0033FF),
-                        textDecoration = TextDecoration.Underline,
-                        modifier = Modifier.clickable {
-                            val intent = Intent(Intent.ACTION_DIAL).apply {
-                                data = Uri.parse("tel:$telefonoCliente")
-                            }
-                            try { context.startActivity(intent) } catch (_: Exception) { }
-                        }
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(text = "Fecha de cotización: ${o.fecha}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp), color = Color(0xFF004D33))
-                    Text(text = "Falla Reportada:", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                    Text(text = o.fallaReportada, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(text = "Diagnóstico:", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                    Text(text = o.diagnostico, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(text = "Trabajo por Realizar:", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                    Text(text = o.trabajoRealizado, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp), color = Color(0xFF004D33))
-                    Text(text = "COSTOS:", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                    Text(text = "Mano de Obra: $ " + String.format(Locale.US, "%,.2f", o.costoManoObra), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                    Text(text = "Refacciones: $ " + String.format(Locale.US, "%,.2f", o.costoRefacciones), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                    Text(text = "I.V.A. (16%): $ " + String.format(Locale.US, "%,.2f", o.iva), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                    Text(text = "TOTAL: $ " + String.format(Locale.US, "%,.2f", o.total), fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // CAMPOS PERSONALIZADOS PARA EL REPORTE DE WHATSAPP
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp),
-                colors = CardDefaults.cardColors(containerColor = Colores.FondoSecundario)
-            ) {
-                Column(
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 84.dp)
+        ) {
+            if (cargando) {
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                        .height(300.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "DATOS PARA MENSAJE WHATSAPP",
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Colores.TituloPrincipal
-                    )
+                    CircularProgressIndicator(color = Color.White)
+                }
+            } else if (orden == null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(300.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "No se encontró la cotización", color = Color.White, fontSize = 18.sp)
+                }
+            } else {
+                val o = orden!!
+                Text(
+                    text = "ENVIAR REPORTE AL CLIENTE",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Colores.TituloPrincipal,
+                    softWrap = false,
+                    maxLines = 1,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+                Spacer(modifier = Modifier.height(24.dp))
 
-                    Text(text = "NOMBRE DEL TALLER O MECÁNICO", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Colores.EtiquetaCampo)
-                    OutlinedTextField(
-                        value = nombreTallerMecanico,
-                        onValueChange = { nombreTallerMecanico = it.uppercase() },
-                        placeholder = { Text("EJ: TALLER LOS PINOS / JUAN PÉREZ", color = Color.Gray, fontSize = 15.sp) },
-                        textStyle = TextStyle(color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
-                        keyboardActions = KeyboardActions(onNext = { minDiasFocusRequester.requestFocus() }),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = coloresCamposTexto,
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = Colores.FondoTarjeta)
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
+                        Text(
+                            text = "FOLIO: ${String.format(Locale.US, "%05d", o.id)}   |   ID: $clienteId",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF7DFFB2)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(text = o.cliente.uppercase(), fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text(text = o.auto.uppercase(), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Text(text = "TELÉFONO DEL CLIENTE:", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "📞 $telefonoCliente",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF0033FF),
+                            textDecoration = TextDecoration.Underline,
+                            modifier = Modifier.clickable {
+                                val intent = Intent(Intent.ACTION_DIAL).apply {
+                                    data = Uri.parse("tel:$telefonoCliente")
+                                }
+                                try { context.startActivity(intent) } catch (_: Exception) { }
+                            }
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(text = "Fecha de cotización: ${o.fecha}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp), color = Color(0xFF004D33))
+                        Text(text = "Falla Reportada:", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                        Text(text = o.fallaReportada, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(text = "Diagnóstico:", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                        Text(text = o.diagnostico, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(text = "Trabajo por Realizar:", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                        Text(text = o.trabajoRealizado, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp), color = Color(0xFF004D33))
+                        Text(text = "COSTOS:", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                        Text(text = "Mano de Obra: $ " + String.format(Locale.US, "%,.2f", o.costoManoObra), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text(text = "Refacciones: $ " + String.format(Locale.US, "%,.2f", o.costoRefacciones), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text(text = "I.V.A. (16%): $ " + String.format(Locale.US, "%,.2f", o.iva), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text(text = "TOTAL: $ " + String.format(Locale.US, "%,.2f", o.total), fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // CAMPOS PERSONALIZADOS PARA EL REPORTE DE WHATSAPP
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = Colores.FondoSecundario)
+                ) {
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .focusRequester(tallerFocusRequester)
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            .padding(18.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(text = "DÍAS MÍNIMOS", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
-                            Spacer(modifier = Modifier.height(4.dp))
-                            OutlinedTextField(
-                                value = diasMinimos,
-                                onValueChange = { if (it.all { c -> c.isDigit() }) diasMinimos = it },
-                                placeholder = { Text("Ej: 1", color = Color.Gray, fontSize = 15.sp) },
-                                textStyle = TextStyle(color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
-                                keyboardActions = KeyboardActions(onNext = { maxDiasFocusRequester.requestFocus() }),
-                                singleLine = true,
-                                shape = RoundedCornerShape(10.dp),
-                                colors = coloresCamposTexto,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .focusRequester(minDiasFocusRequester)
-                            )
-                        }
+                        Text(
+                            text = "DATOS PARA MENSAJE WHATSAPP",
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Colores.TituloPrincipal
+                        )
 
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(text = "DÍAS MÁXIMOS", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
-                            Spacer(modifier = Modifier.height(4.dp))
-                            OutlinedTextField(
-                                value = diasMaximos,
-                                onValueChange = { if (it.all { c -> c.isDigit() }) diasMaximos = it },
-                                placeholder = { Text("Ej: 3", color = Color.Gray, fontSize = 15.sp) },
-                                textStyle = TextStyle(color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
-                                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-                                singleLine = true,
-                                shape = RoundedCornerShape(10.dp),
-                                colors = coloresCamposTexto,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .focusRequester(maxDiasFocusRequester)
-                            )
+                        Text(text = "NOMBRE DEL TALLER O MECÁNICO", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Colores.EtiquetaCampo)
+                        OutlinedTextField(
+                            value = nombreTallerMecanico,
+                            onValueChange = { nombreTallerMecanico = it.uppercase() },
+                            placeholder = { Text("EJ: TALLER LOS PINOS / JUAN PÉREZ", color = Color.Gray, fontSize = 15.sp) },
+                            textStyle = TextStyle(color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
+                            keyboardActions = KeyboardActions(onNext = { minDiasFocusRequester.requestFocus() }),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = coloresCamposTexto,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .focusRequester(tallerFocusRequester)
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(text = "DÍAS MÍNIMOS", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
+                                Spacer(modifier = Modifier.height(4.dp))
+                                OutlinedTextField(
+                                    value = diasMinimos,
+                                    onValueChange = { if (it.all { c -> c.isDigit() }) diasMinimos = it },
+                                    placeholder = { Text("Ej: 1", color = Color.Gray, fontSize = 15.sp) },
+                                    textStyle = TextStyle(color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+                                    keyboardActions = KeyboardActions(onNext = { maxDiasFocusRequester.requestFocus() }),
+                                    singleLine = true,
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = coloresCamposTexto,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .focusRequester(minDiasFocusRequester)
+                                )
+                            }
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(text = "DÍAS MÁXIMOS", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
+                                Spacer(modifier = Modifier.height(4.dp))
+                                OutlinedTextField(
+                                    value = diasMaximos,
+                                    onValueChange = { if (it.all { c -> c.isDigit() }) diasMaximos = it },
+                                    placeholder = { Text("Ej: 3", color = Color.Gray, fontSize = 15.sp) },
+                                    textStyle = TextStyle(color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                                    keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+                                    singleLine = true,
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = coloresCamposTexto,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .focusRequester(maxDiasFocusRequester)
+                                )
+                            }
                         }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-            Text(
-                text = "ESTADO DE LA COTIZACIÓN:",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = Colores.TituloPrincipal,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                // 1. EN ESPERA
-                BotonModulo3D(
-                    texto = "EN ESPERA",
-                    colorClaro = if (estadoSeleccionado == "EN ESPERA") Color(0xFF90CAF9) else Color(0xFF64B5F6),
-                    colorMedio = if (estadoSeleccionado == "EN ESPERA") Color(0xFF1976D2) else Color(0xFF1976D2),
-                    colorOscuro = if (estadoSeleccionado == "EN ESPERA") Color(0xFF0D47A1) else Color(0xFF0D47A1),
-                    onClick = { estadoSeleccionado = "EN ESPERA" },
-                    modifier = Modifier.weight(1f).height(58.dp),
-                    tamanioTexto = 15,
-                    colorTexto = Color.Black
-                )
-                // 2. RECHAZADO
-                BotonModulo3D(
-                    texto = "RECHAZADO",
-                    colorClaro = if (estadoSeleccionado == "RECHAZADO") Color(0xFFEF9A9A) else Color(0xFF64B5F6),
-                    colorMedio = if (estadoSeleccionado == "RECHAZADO") Color(0xFFE53935) else Color(0xFF1976D2),
-                    colorOscuro = if (estadoSeleccionado == "RECHAZADO") Color(0xFFB71C1C) else Color(0xFF0D47A1),
-                    onClick = { estadoSeleccionado = "RECHAZADO" },
-                    modifier = Modifier.weight(1f).height(58.dp),
-                    tamanioTexto = 15,
-                    colorTexto = Color.Black
-                )
-                // 3. ACEPTADO
-                BotonModulo3D(
-                    texto = "ACEPTADO",
-                    colorClaro = if (estadoSeleccionado == "ACEPTADO") Color(0xFF7DFFB2) else Color(0xFF64B5F6),
-                    colorMedio = if (estadoSeleccionado == "ACEPTADO") Color(0xFF00D96B) else Color(0xFF1976D2),
-                    colorOscuro = if (estadoSeleccionado == "ACEPTADO") Color(0xFF008844) else Color(0xFF0D47A1),
-                    onClick = { estadoSeleccionado = "ACEPTADO" },
-                    modifier = Modifier.weight(1f).height(58.dp),
-                    tamanioTexto = 15,
-                    colorTexto = Color.Black
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            if (estadoSeleccionado == "ACEPTADO") {
                 Text(
-                    text = "PROGRAMAR TRABAJO:",
+                    text = "ESTADO DE LA COTIZACIÓN:",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF7DFFB2),
+                    color = Colores.TituloPrincipal,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    // 1. EN ESPERA
+                    BotonModulo3D(
+                        texto = "EN ESPERA",
+                        colorClaro = if (estadoSeleccionado == "EN ESPERA") Color(0xFF90CAF9) else Color(0xFF64B5F6),
+                        colorMedio = if (estadoSeleccionado == "EN ESPERA") Color(0xFF1976D2) else Color(0xFF1976D2),
+                        colorOscuro = if (estadoSeleccionado == "EN ESPERA") Color(0xFF0D47A1) else Color(0xFF0D47A1),
+                        onClick = { estadoSeleccionado = "EN ESPERA" },
+                        modifier = Modifier.weight(1f).height(58.dp),
+                        tamanioTexto = 15,
+                        colorTexto = Color.Black
+                    )
+                    // 2. RECHAZADO
+                    BotonModulo3D(
+                        texto = "RECHAZADO",
+                        colorClaro = if (estadoSeleccionado == "RECHAZADO") Color(0xFFEF9A9A) else Color(0xFF64B5F6),
+                        colorMedio = if (estadoSeleccionado == "RECHAZADO") Color(0xFFE53935) else Color(0xFF1976D2),
+                        colorOscuro = if (estadoSeleccionado == "RECHAZADO") Color(0xFFB71C1C) else Color(0xFF0D47A1),
+                        onClick = { estadoSeleccionado = "RECHAZADO" },
+                        modifier = Modifier.weight(1f).height(58.dp),
+                        tamanioTexto = 15,
+                        colorTexto = Color.Black
+                    )
+                    // 3. ACEPTADO
+                    BotonModulo3D(
+                        texto = "ACEPTADO",
+                        colorClaro = if (estadoSeleccionado == "ACEPTADO") Color(0xFF7DFFB2) else Color(0xFF64B5F6),
+                        colorMedio = if (estadoSeleccionado == "ACEPTADO") Color(0xFF00D96B) else Color(0xFF1976D2),
+                        colorOscuro = if (estadoSeleccionado == "ACEPTADO") Color(0xFF008844) else Color(0xFF0D47A1),
+                        onClick = { estadoSeleccionado = "ACEPTADO" },
+                        modifier = Modifier.weight(1f).height(58.dp),
+                        tamanioTexto = 15,
+                        colorTexto = Color.Black
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                if (estadoSeleccionado == "ACEPTADO") {
+                    Text(
+                        text = "PROGRAMAR TRABAJO:",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF7DFFB2),
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    BotonModulo3D(
+                        texto = if (fechaIngreso.isEmpty()) "📅 SELECCIONAR INGRESO Y ENTREGA DEL VEHÍCULO" else " INGRESO: $fechaIngreso | ENTREGA: $fechaEntrega",
+                        colorClaro = Color(0xFF90CAF9), colorMedio = Color(0xFF1976D2), colorOscuro = Color(0xFF0D47A1),
+                        onClick = { mostrarCalendarioDoble() },
+                        modifier = Modifier.fillMaxWidth(),
+                        colorTexto = Color.Black
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
 
                 BotonModulo3D(
-                    texto = if (fechaIngreso.isEmpty()) "📅 SELECCIONAR INGRESO Y ENTREGA DEL VEHÍCULO" else " INGRESO: $fechaIngreso | ENTREGA: $fechaEntrega",
-                    colorClaro = Color(0xFF90CAF9), colorMedio = Color(0xFF1976D2), colorOscuro = Color(0xFF0D47A1),
-                    onClick = { mostrarCalendarioDoble() },
-                    modifier = Modifier.fillMaxWidth(),
+                    texto = if (guardando) "GUARDANDO..." else "💾 GUARDAR CAMBIOS",
+                    colorClaro = Color(0xFFD7B899), colorMedio = Color(0xFF9B6B43), colorOscuro = Color(0xFF5D3A1A),
+                    onClick = { guardarCambios() },
                     colorTexto = Color.Black
                 )
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+
+                BotonModulo3D(
+                    texto = "📱 ENVIAR AL CLIENTE",
+                    colorClaro = Color(0xFFD7B899), colorMedio = Color(0xFF9B6B43), colorOscuro = Color(0xFF5D3A1A),
+                    onClick = { enviarWhatsApp() },
+                    colorTexto = Color.Black
+                )
             }
+            Spacer(modifier = Modifier.height(12.dp))
+        }
 
-            BotonModulo3D(
-                texto = if (guardando) "GUARDANDO..." else "💾 GUARDAR CAMBIOS",
-                colorClaro = Color(0xFFD7B899), colorMedio = Color(0xFF9B6B43), colorOscuro = Color(0xFF5D3A1A),
-                onClick = { guardarCambios() },
-                colorTexto = Color.Black
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            BotonModulo3D(
-                texto = "📱 ENVIAR AL CLIENTE",
-                colorClaro = Color(0xFFD7B899), colorMedio = Color(0xFF9B6B43), colorOscuro = Color(0xFF5D3A1A),
-                onClick = { enviarWhatsApp() },
-                colorTexto = Color.Black
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
+        // BOTÓN REGRESAR FIJO E INMÓVIL AL FONDO DE LA PANTALLA
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .background(Colores.FondoPantalla)
+                .padding(horizontal = 24.dp, vertical = 12.dp)
+        ) {
             BotonModulo3D(
                 texto = "REGRESAR",
+                icono = "🔙",
                 colorClaro = Colores.RegresarClaro,
                 colorMedio = Colores.RegresarMedio,
                 colorOscuro = Colores.RegresarOscuro,
                 onClick = onRegresar,
+                modifier = Modifier.fillMaxWidth().height(58.dp),
                 colorTexto = Color.White
             )
-            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }

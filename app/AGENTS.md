@@ -23,7 +23,7 @@
 - **Cursor e Indicador de Selección Blanco (Sin Puntos Negros):**
     - Todos los campos deben configurar `cursorColor = Color.White` y `selectionColors = TextSelectionColors(handleColor = Color.White, backgroundColor = Color(...).copy(alpha = 0.4f))` para evitar la gota/punto negro inferior en Android Material3.
 - **Navegación del Teclado:**
-    - Incluir `.imePadding()` en la columna principal y `ImeAction.Next` con `focusManager.moveFocus(FocusDirection.Down)` para navegación fluida campo por campo sin tapar la interfaz.
+    - Incluir `.imePadding()` en el contenedor principal y `ImeAction.Next` con `focusManager.moveFocus(FocusDirection.Down)` para navegación fluida campo por campo sin tapar la interfaz.
 
 ## 4. Validación Antiduplicados y Tarjeta de Alerta
 - **Consulta Previa en Tiempo Real:**
@@ -37,7 +37,14 @@
 - **WhatsApp:**
     - Generación y envío de cotizaciones a través de `https://wa.me/52$telefono` con resúmenes detallados de fallo, diagnóstico, mano de obra, refacciones y total formateado.
 
-## 6. Diseño, Accesibilidad y Paleta de Colores por Módulo (Reglas Globales)
+## 6. Arquitectura de Botón REGRESAR Fijo e Inmóvil al Fondo (Fixed Bottom Regresar Button)
+- **Criterio Global Obligatorio en TODAS las Pantallas:**
+    - El contenedor raíz debe ser un `Box(modifier = Modifier.fillMaxSize().background(Colores.FondoPantalla).statusBarsPadding().navigationBarsPadding().imePadding())`.
+    - La columna de contenido desplazable (`Column` o `LazyColumn` o `.verticalScroll(scrollState)`) toma `.fillMaxSize()` con un padding inferior amplio (ej: `.padding(bottom = 76.dp)`).
+    - El botón de **`REGRESAR`** o **`SALIR DE LA APP`** (`BotonModulo3D`) se posiciona **fijo e inmóvil al fondo** alineado con `Alignment.BottomCenter` dentro del `Box` externo (`modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 24.dp, vertical = 10.dp)`).
+    - **Resultado:** La lista o formulario de datos se desplaza libremente por detrás del botón, mientras que el botón **REGRESAR permanece siempre visible, accesible e inmóvil al fondo** sin necesidad de hacer scroll hasta el final de la pantalla.
+
+## 7. Diseño, Accesibilidad y Paleta de Colores por Módulo (Reglas Globales)
 - **Accesibilidad (Adultos Mayores):**
   - Todos los botones (`BotonModulo3D`) deben tener un tamaño accesible, áreas táctiles amplias y texto en **Negro Negrita** (`colorTexto = Color.Black`), excepto los botones de regresó o salir que usan texto en **Blanco** (`colorTexto = Color.White`).
 - **Paleta de Colores por Módulo (Criterio obligatorio en TODOS los submenús y pantallas de la app):**

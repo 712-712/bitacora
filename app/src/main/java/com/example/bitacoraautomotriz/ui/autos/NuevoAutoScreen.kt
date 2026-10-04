@@ -1,14 +1,7 @@
 package com.example.bitacoraautomotriz.ui.autos
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -17,12 +10,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -46,8 +34,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun NuevoAutoScreen(
     nombreCliente: String = "",
-    vinInicial: String = "", // ✅ Para recibir el VIN escaneado
-    onEscanearVin: () -> Unit, // ✅ Para abrir el escáner desde aquí
+    vinInicial: String = "",
+    onEscanearVin: () -> Unit,
     onGuardar: () -> Unit,
     onRegresar: () -> Unit
 ) {
@@ -57,11 +45,11 @@ fun NuevoAutoScreen(
     var anio by remember { mutableStateOf("") }
     var placa by remember { mutableStateOf("") }
     var kilometraje by remember { mutableStateOf("") }
-    var vin by remember { mutableStateOf(vinInicial) } // ✅ Se inicializa con el VIN escaneado
+    var vin by remember { mutableStateOf(vinInicial) }
     var color by remember { mutableStateOf("") }
     var mensaje by remember { mutableStateOf("") }
 
-    androidx.compose.runtime.LaunchedEffect(vinInicial) {
+    LaunchedEffect(vinInicial) {
         if (vinInicial.isNotBlank()) {
             vin = vinInicial
         }
@@ -136,199 +124,215 @@ fun NuevoAutoScreen(
         }
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Colores.FondoPantalla)
+            .statusBarsPadding()
+            .navigationBarsPadding()
             .imePadding()
-            .verticalScroll(rememberScrollState())
-            .padding(start = 24.dp, end = 24.dp, top = 48.dp, bottom = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
     ) {
-        Text(
-            text = "NUEVO AUTO",
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Bold,
-            color = Colores.TituloPrincipal
-        )
-
-        if (nombreCliente.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(16.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 84.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
+        ) {
             Text(
-                text = "CLIENTE:",
-                fontSize = 14.sp,
+                text = "NUEVO AUTO",
+                fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
                 color = Colores.TituloPrincipal
             )
-            Text(
-                text = nombreCliente.uppercase(),
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                color = Colores.TituloPrincipal
-            )
-        }
 
-        Spacer(modifier = Modifier.height(24.dp))
+            if (nombreCliente.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "CLIENTE:",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Colores.TituloPrincipal
+                )
+                Text(
+                    text = nombreCliente.uppercase(),
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Colores.TituloPrincipal
+                )
+            }
 
-        // 1. BOTÓN DE ESCÁNER VIN AL INICIO DEL FORMULARIO
-        BotonModulo3D(
-            texto = "📷 ESCANEAR CÓDIGO VIN",
-            colorClaro = Color(0xFFD1C4E9),
-            colorMedio = Color(0xFF7E57C2),
-            colorOscuro = Color(0xFF4527A0),
-            onClick = onEscanearVin,
-            modifier = Modifier.fillMaxWidth().height(56.dp)
-        )
-        Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-        // 2. CAMPO VIN DEBAJO DEL BOTÓN ESCÁNER
-        Text("VIN:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
-        OutlinedTextField(
-            value = vin,
-            onValueChange = { vin = it.uppercase(); mensaje = "" },
-            textStyle = estiloTexto,
-            colors = coloresCampo,
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(vinFocus),
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
-            keyboardActions = KeyboardActions(onNext = { marcaFocus.requestFocus() })
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // 3. MARCA
-        Text("MARCA:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
-        OutlinedTextField(
-            value = marca,
-            onValueChange = { marca = it.uppercase(); mensaje = "" },
-            textStyle = estiloTexto,
-            colors = coloresCampo,
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(marcaFocus),
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
-            keyboardActions = KeyboardActions(onNext = { modeloFocus.requestFocus() })
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // 4. MODELO
-        Text("MODELO:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
-        OutlinedTextField(
-            value = modelo,
-            onValueChange = { modelo = it.uppercase(); mensaje = "" },
-            textStyle = estiloTexto,
-            colors = coloresCampo,
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(modeloFocus),
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
-            keyboardActions = KeyboardActions(onNext = { anioFocus.requestFocus() })
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // 5. AÑO
-        Text("AÑO:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
-        OutlinedTextField(
-            value = anio,
-            onValueChange = { anio = it.filter { char -> char.isDigit() }; mensaje = "" },
-            textStyle = estiloTexto,
-            colors = coloresCampo,
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(anioFocus),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
-            keyboardActions = KeyboardActions(onNext = { placaFocus.requestFocus() })
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // 6. PLACA
-        Text("PLACA:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
-        OutlinedTextField(
-            value = placa,
-            onValueChange = { nuevaPlaca ->
-                placa = nuevaPlaca.uppercase()
-                mensaje = ""
-                if (nuevaPlaca.length >= 4) {
-                    scope.launch {
-                        autoExistente = AutoRepository.obtenerAutoPorPlaca(nuevaPlaca.uppercase())
-                    }
-                } else {
-                    autoExistente = null
-                }
-            },
-            textStyle = estiloTexto,
-            colors = coloresCampo.copy(
-                focusedIndicatorColor = if (autoExistente != null) Colores.TextoBoton else Colores.BordeBoton
-            ),
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(placaFocus),
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
-            keyboardActions = KeyboardActions(onNext = { colorFocus.requestFocus() })
-        )
-
-        if (autoExistente != null) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = "⚠️ YA EXISTE UN AUTO CON ESTA PLACA", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Colores.TextoBoton)
-        }
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // 7. COLOR
-        Text("COLOR:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
-        OutlinedTextField(
-            value = color,
-            onValueChange = { color = it.uppercase(); mensaje = "" },
-            textStyle = estiloTexto,
-            colors = coloresCampo,
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(colorFocus),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-            keyboardActions = KeyboardActions(onNext = { kmFocus.requestFocus() })
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // 8. KILOMETRAJE
-        Text("KILOMETRAJE:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
-        OutlinedTextField(
-            value = kilometraje,
-            onValueChange = { kilometraje = it.filter { char -> char.isDigit() }; mensaje = "" },
-            textStyle = estiloTexto,
-            colors = coloresCampo,
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(kmFocus),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
-        )
-
-        if (mensaje.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(text = mensaje, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Colores.TextoBoton)
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        if (autoExistente != null) {
-            BotonModulo3D(texto = "PLACA YA REGISTRADA", icono = "⚠️", onClick = { }, modifier = Modifier.fillMaxWidth())
-        } else {
+            // 1. BOTÓN DE ESCÁNER VIN AL INICIO DEL FORMULARIO
             BotonModulo3D(
-                texto = "GUARDAR AUTO",
-                icono = "💾",
-                colorClaro = Color(0xFFB9F6CA),
-                colorMedio = Color(0xFF00C853),
-                colorOscuro = Color(0xFF00695C),
-                onClick = { guardarAuto() },
-                modifier = Modifier.fillMaxWidth(),
-                colorTexto = Color.Black
+                texto = "📷 ESCANEAR CÓDIGO VIN",
+                colorClaro = Color(0xFFD1C4E9),
+                colorMedio = Color(0xFF7E57C2),
+                colorOscuro = Color(0xFF4527A0),
+                onClick = onEscanearVin,
+                modifier = Modifier.fillMaxWidth().height(56.dp)
             )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 2. CAMPO VIN DEBAJO DEL BOTÓN ESCÁNER
+            Text("VIN:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
+            OutlinedTextField(
+                value = vin,
+                onValueChange = { vin = it.uppercase(); mensaje = "" },
+                textStyle = estiloTexto,
+                colors = coloresCampo,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(vinFocus),
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { marcaFocus.requestFocus() })
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 3. MARCA
+            Text("MARCA:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
+            OutlinedTextField(
+                value = marca,
+                onValueChange = { marca = it.uppercase(); mensaje = "" },
+                textStyle = estiloTexto,
+                colors = coloresCampo,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(marcaFocus),
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { modeloFocus.requestFocus() })
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 4. MODELO
+            Text("MODELO:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
+            OutlinedTextField(
+                value = modelo,
+                onValueChange = { modelo = it.uppercase(); mensaje = "" },
+                textStyle = estiloTexto,
+                colors = coloresCampo,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(modeloFocus),
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { anioFocus.requestFocus() })
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 5. AÑO
+            Text("AÑO:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
+            OutlinedTextField(
+                value = anio,
+                onValueChange = { anio = it.filter { char -> char.isDigit() }; mensaje = "" },
+                textStyle = estiloTexto,
+                colors = coloresCampo,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(anioFocus),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { placaFocus.requestFocus() })
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 6. PLACA
+            Text("PLACA:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
+            OutlinedTextField(
+                value = placa,
+                onValueChange = { nuevaPlaca ->
+                    placa = nuevaPlaca.uppercase()
+                    mensaje = ""
+                    if (nuevaPlaca.length >= 4) {
+                        scope.launch {
+                            autoExistente = AutoRepository.obtenerAutoPorPlaca(nuevaPlaca.uppercase())
+                        }
+                    } else {
+                        autoExistente = null
+                    }
+                },
+                textStyle = estiloTexto,
+                colors = coloresCampo.copy(
+                    focusedIndicatorColor = if (autoExistente != null) Colores.TextoBoton else Colores.BordeBoton
+                ),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(placaFocus),
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { colorFocus.requestFocus() })
+            )
+
+            if (autoExistente != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = "⚠️ YA EXISTE UN AUTO CON ESTA PLACA", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Colores.TextoBoton)
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 7. COLOR
+            Text("COLOR:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
+            OutlinedTextField(
+                value = color,
+                onValueChange = { color = it.uppercase(); mensaje = "" },
+                textStyle = estiloTexto,
+                colors = coloresCampo,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(colorFocus),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { kmFocus.requestFocus() })
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 8. KILOMETRAJE
+            Text("KILOMETRAJE:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
+            OutlinedTextField(
+                value = kilometraje,
+                onValueChange = { kilometraje = it.filter { char -> char.isDigit() }; mensaje = "" },
+                textStyle = estiloTexto,
+                colors = coloresCampo,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(kmFocus),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
+            )
+
+            if (mensaje.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(text = mensaje, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Colores.TextoBoton)
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            if (autoExistente != null) {
+                BotonModulo3D(texto = "PLACA YA REGISTRADA", icono = "⚠️", onClick = { }, modifier = Modifier.fillMaxWidth())
+            } else {
+                BotonModulo3D(
+                    texto = "GUARDAR AUTO",
+                    icono = "💾",
+                    colorClaro = Color(0xFFB9F6CA),
+                    colorMedio = Color(0xFF00C853),
+                    colorOscuro = Color(0xFF00695C),
+                    onClick = { guardarAuto() },
+                    modifier = Modifier.fillMaxWidth().height(58.dp),
+                    colorTexto = Color.Black
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        BotonModulo3D(
-            texto = "REGRESAR",
-            icono = "🔙",
-            colorClaro = Colores.RegresarClaro,
-            colorMedio = Colores.RegresarMedio,
-            colorOscuro = Colores.RegresarOscuro,
-            onClick = onRegresar,
-            modifier = Modifier.fillMaxWidth(),
-            colorTexto = Color.White
-        )
+        // BOTÓN REGRESAR FIJO E INMÓVIL AL FONDO DE LA PANTALLA
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .background(Colores.FondoPantalla)
+                .padding(horizontal = 24.dp, vertical = 12.dp)
+        ) {
+            BotonModulo3D(
+                texto = "REGRESAR",
+                icono = "🔙",
+                colorClaro = Colores.RegresarClaro,
+                colorMedio = Colores.RegresarMedio,
+                colorOscuro = Colores.RegresarOscuro,
+                onClick = onRegresar,
+                modifier = Modifier.fillMaxWidth().height(58.dp),
+                colorTexto = Color.White
+            )
+        }
     }
 }
