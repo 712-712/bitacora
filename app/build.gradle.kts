@@ -33,6 +33,18 @@ android {
         }
     }
 
+    flavorDimensions += "version"
+    productFlavors {
+        create("taller") {
+            dimension = "version"
+            resValue("string", "app_name_flavor", "Bitácora Automotriz Taller")
+        }
+        create("cliente") {
+            dimension = "version"
+            resValue("string", "app_name_flavor", "Bitácora Automotriz Cliente")
+        }
+    }
+
     lint {
         disable.add("UnsafeOptInUsageError")
         abortOnError = false
@@ -45,6 +57,7 @@ android {
 
     buildFeatures {
         compose = true
+        resValues = true
     }
 
     kotlinOptions {
