@@ -32,7 +32,9 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.bitacoraautomotriz.R
+import com.example.bitacoraautomotriz.data.Auto
 import com.example.bitacoraautomotriz.data.OrdenServicio
+import com.example.bitacoraautomotriz.repository.AutoRepository
 import com.example.bitacoraautomotriz.repository.ClienteRepository
 import com.example.bitacoraautomotriz.repository.OrdenServicioRepository
 import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
@@ -55,6 +57,7 @@ fun SeguimientoReparacionScreen(
     val maxDiasFocusRequester = remember { FocusRequester() }
 
     var orden by remember { mutableStateOf<OrdenServicio?>(null) }
+    var autoDetalle by remember { mutableStateOf<Auto?>(null) }
     var telefonoCliente by remember { mutableStateOf("") }
     var clienteId by remember { mutableStateOf(0) }
     var cargando by remember { mutableStateOf(true) }
@@ -64,7 +67,6 @@ fun SeguimientoReparacionScreen(
     var fechaEntrega by remember { mutableStateOf("") }
     var guardando by remember { mutableStateOf(false) }
 
-    // CAMPOS PERSONALIZADOS PARA EL MENSAJE WHATSAPP (CAMPOS LIMPIOS SIN VALORES POR DEFECTO)
     var nombreTallerMecanico by remember { mutableStateOf("") }
     var diasMinimos by remember { mutableStateOf("") }
     var diasMaximos by remember { mutableStateOf("") }
@@ -98,6 +100,16 @@ fun SeguimientoReparacionScreen(
                 } catch (_: Exception) {
                     telefonoCliente = "No disponible"
                     clienteId = 0
+                }
+
+                try {
+                    val partes = o.auto.split("-")
+                    val placaStr = partes.lastOrNull()?.trim() ?: ""
+                    if (placaStr.isNotBlank()) {
+                        autoDetalle = AutoRepository.obtenerAutoPorPlaca(placaStr, context)
+                    }
+                } catch (_: Exception) {
+                    autoDetalle = null
                 }
             }
             cargando = false
@@ -175,6 +187,7 @@ $leyendaInicial
 Folio: ${String.format(Locale.US, "%05d", o.id)}   |   ID: $clienteId
 Cliente: ${o.cliente}
 Auto: ${o.auto}
+Placa: ${autoDetalle?.placa ?: "N/A"}   |   VIN: ${autoDetalle?.vin?.ifBlank { "N/A" } ?: "N/A"}
 
 *Detalles:*
 - Falla: ${o.fallaReportada}
@@ -211,11 +224,11 @@ Fecha de cotización: ${o.fecha}
             .background(Colores.FondoPantalla)
             .statusBarsPadding()
             .navigationBarsPadding()
-            .imePadding()
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 84.dp)
         ) {
@@ -265,6 +278,16 @@ Fecha de cotización: ${o.fecha}
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(text = o.cliente.uppercase(), fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         Text(text = o.auto.uppercase(), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+
+                        // PLACA Y VIN DEL VEHÍCULO SOLICITADOS
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "PLACA: ${autoDetalle?.placa?.uppercase() ?: "N/A"}   |   VIN: ${autoDetalle?.vin?.uppercase()?.ifBlank { "N/A" } ?: "N/A"}",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF7DFFB2)
+                        )
+
                         Spacer(modifier = Modifier.height(16.dp))
 
                         Text(text = "TELÉFONO DEL CLIENTE:", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
@@ -472,24 +495,29 @@ Fecha de cotización: ${o.fecha}
             Spacer(modifier = Modifier.height(12.dp))
         }
 
-        // BOTÓN REGRESAR FIJO E INMÓVIL AL FONDO DE LA PANTALLA
-        Box(
+        // BOTÓN REGRESAR FIJO E INMÓVIL AL FONDO DE LA PANTALLA (DETRÁS DEL TECLADO)
+        Surface(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .background(Colores.FondoPantalla)
-                .padding(horizontal = 24.dp, vertical = 12.dp)
+                .fillMaxWidth(),
+            color = Colores.FondoPantalla
         ) {
-            BotonModulo3D(
-                texto = "REGRESAR",
-                icono = "🔙",
-                colorClaro = Colores.RegresarClaro,
-                colorMedio = Colores.RegresarMedio,
-                colorOscuro = Colores.RegresarOscuro,
-                onClick = onRegresar,
-                modifier = Modifier.fillMaxWidth().height(58.dp),
-                colorTexto = Color.White
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 12.dp)
+            ) {
+                BotonModulo3D(
+                    texto = "REGRESAR",
+                    icono = "🔙",
+                    colorClaro = Colores.RegresarClaro,
+                    colorMedio = Colores.RegresarMedio,
+                    colorOscuro = Colores.RegresarOscuro,
+                    onClick = onRegresar,
+                    modifier = Modifier.fillMaxWidth().height(58.dp),
+                    colorTexto = Color.White
+                )
+            }
         }
     }
 }
