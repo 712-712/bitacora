@@ -6,7 +6,6 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
@@ -14,9 +13,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.bitacoraautomotriz.repository.ClienteRepository
+import com.example.bitacoraautomotriz.ui.mapa.MapaScreen
 import com.example.bitacoraautomotriz.ui.areacliente.AreaClienteScreen
 import com.example.bitacoraautomotriz.ui.autos.AutosDelClienteScreen
+import com.example.bitacoraautomotriz.ui.autos.AutosScreen
 import com.example.bitacoraautomotriz.ui.autos.BusquedaAutoScreen
 import com.example.bitacoraautomotriz.ui.autos.EditarAutoScreen
 import com.example.bitacoraautomotriz.ui.autos.NuevoAutoScreen
@@ -31,6 +31,7 @@ import com.example.bitacoraautomotriz.ui.clientes.MisDatosClienteScreen
 import com.example.bitacoraautomotriz.ui.clientes.MisDatosFacturacionScreen
 import com.example.bitacoraautomotriz.ui.clientes.NuevoClienteScreen
 import com.example.bitacoraautomotriz.ui.clientes.VerClientesScreen
+import com.example.bitacoraautomotriz.ui.clientes.VerReporteClienteScreen
 import com.example.bitacoraautomotriz.ui.configuracion.AcercaDeScreen
 import com.example.bitacoraautomotriz.ui.configuracion.ConfiguracionScreen
 import com.example.bitacoraautomotriz.ui.dashboard.DashboardScreen
@@ -41,8 +42,6 @@ import com.example.bitacoraautomotriz.ui.facturacion.BusquedaFacturaScreen
 import com.example.bitacoraautomotriz.ui.facturacion.FacturacionScreen
 import com.example.bitacoraautomotriz.ui.facturacion.NuevaFacturaScreen
 import com.example.bitacoraautomotriz.ui.facturacion.VerFacturasScreen
-import com.example.bitacoraautomotriz.ui.inventario.MapaRutaScreen
-import com.example.bitacoraautomotriz.ui.inventario.ResultadosRefaccionesScreen
 import com.example.bitacoraautomotriz.ui.gastos.BusquedaGastoScreen
 import com.example.bitacoraautomotriz.ui.gastos.GastosScreen
 import com.example.bitacoraautomotriz.ui.gastos.NuevoGastoScreen
@@ -50,15 +49,14 @@ import com.example.bitacoraautomotriz.ui.gastos.VerGastosScreen
 import com.example.bitacoraautomotriz.ui.inventario.BuscarRefaccionMapaScreen
 import com.example.bitacoraautomotriz.ui.inventario.BuscarRepuestosScreen
 import com.example.bitacoraautomotriz.ui.inventario.InventarioScreen
+import com.example.bitacoraautomotriz.ui.inventario.MapaRutaScreen
 import com.example.bitacoraautomotriz.ui.inventario.NuevoRepuestoScreen
 import com.example.bitacoraautomotriz.ui.inventario.VerInventarioScreen
-import com.example.bitacoraautomotriz.ui.mapa.MapaScreen
 import com.example.bitacoraautomotriz.ui.ordenes.BuscarOrdenScreen
 import com.example.bitacoraautomotriz.ui.ordenes.NuevaOrdenScreen
 import com.example.bitacoraautomotriz.ui.ordenes.OrdenesScreen
 import com.example.bitacoraautomotriz.ui.ordenes.ProgramarAlertaScreen
 import com.example.bitacoraautomotriz.ui.ordenes.SeguimientoReparacionScreen
-import com.example.bitacoraautomotriz.ui.ordenes.VerOrdenesScreen
 import com.example.bitacoraautomotriz.ui.reportes.ReporteAutosScreen
 import com.example.bitacoraautomotriz.ui.reportes.ReporteClientesScreen
 import com.example.bitacoraautomotriz.ui.reportes.ReporteFacturacionScreen
@@ -67,7 +65,6 @@ import com.example.bitacoraautomotriz.ui.reportes.ReporteInventarioScreen
 import com.example.bitacoraautomotriz.ui.reportes.ReporteOrdenesServicioScreen
 import com.example.bitacoraautomotriz.ui.reportes.ReportesScreen
 import com.example.bitacoraautomotriz.ui.welcome.WelcomeScreen
-import kotlinx.coroutines.launch
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -75,14 +72,17 @@ import java.nio.charset.StandardCharsets
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
-    val activity = LocalContext.current as? Activity
     val context = LocalContext.current
+    val activity = context as? Activity
 
-    NavHost(navController = navController, startDestination = "welcome") {
+    NavHost(
+        navController = navController,
+        startDestination = "welcome"
+    ) {
         composable("welcome") {
             WelcomeScreen(
-                onTallerClick = { navController.navigate("dashboard") { popUpTo("welcome") { inclusive = true } } },
-                onClienteClick = { navController.navigate("area_cliente") { popUpTo("welcome") { inclusive = true } } }
+                onTallerClick = { navController.navigate("dashboard") },
+                onClienteClick = { navController.navigate("area_cliente") }
             )
         }
 
@@ -110,58 +110,35 @@ fun AppNavigation() {
                 onRegresar = { navController.popBackStack() }
             )
         }
-
         composable("nuevo_cliente") {
             NuevoClienteScreen(
-                onClienteCreado = { cliente ->
-                    val nombreCodificado = URLEncoder.encode(cliente.nombre, StandardCharsets.UTF_8.toString())
-                    navController.navigate("nuevo_auto?cliente=$nombreCodificado&vin=") {
-                        popUpTo("clientes") { inclusive = false }
-                    }
+                onClienteCreado = {
+                    navController.popBackStack()
                 },
                 onRegresar = { navController.popBackStack() }
             )
         }
-
         composable("ver_clientes") {
             VerClientesScreen(
-                onEditarCliente = { clienteId -> navController.navigate("editar_cliente/$clienteId") },
-                onVerAutos = { clienteId, nombreCodificado ->
-                    navController.navigate("autos_del_cliente/$clienteId/$nombreCodificado")
+                onEditarCliente = { id -> navController.navigate("editar_cliente/$id") },
+                onVerAutos = { id, nombre ->
+                    navController.navigate("autos_del_cliente/$id/$nombre")
                 },
                 onRegresar = { navController.popBackStack() }
             )
         }
-
         composable("buscar_cliente") {
-            val scope = rememberCoroutineScope()
             BusquedaClienteScreen(
-                onClienteSeleccionado = { clienteId, nombreCodificado ->
-                    navController.navigate("autos_del_cliente/$clienteId/$nombreCodificado")
+                onClienteSeleccionado = { id, nombre ->
+                    navController.navigate("autos_del_cliente/$id/$nombre")
                 },
-                onEditarCliente = { clienteId -> navController.navigate("editar_cliente/$clienteId") },
-                onEliminarCliente = { clienteId ->
-                    android.app.AlertDialog.Builder(context).apply {
-                        setTitle("¿Eliminar cliente?")
-                        setMessage("Esta acción no se puede deshacer")
-                        setPositiveButton("SÍ, ELIMINAR") { _, _ ->
-                            scope.launch {
-                                try {
-                                    ClienteRepository.eliminarCliente(clienteId)
-                                    Toast.makeText(context, "Cliente eliminado", Toast.LENGTH_SHORT).show()
-                                } catch (e: Exception) {
-                                    Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
-                                }
-                            }
-                        }
-                        setNegativeButton("CANCELAR", null)
-                        show()
-                    }
+                onEditarCliente = { id -> navController.navigate("editar_cliente/$id") },
+                onEliminarCliente = { id ->
+                    navController.popBackStack()
                 },
                 onRegresar = { navController.popBackStack() }
             )
         }
-
         composable(
             route = "editar_cliente/{clienteId}",
             arguments = listOf(navArgument("clienteId") { type = NavType.IntType })
@@ -170,6 +147,16 @@ fun AppNavigation() {
             EditarClienteScreen(
                 clienteId = clienteId,
                 onGuardado = { navController.popBackStack() },
+                onRegresar = { navController.popBackStack() }
+            )
+        }
+
+        composable("autos") {
+            AutosScreen(
+                onNuevoAuto = { navController.navigate("nuevo_auto") },
+                onVerAutos = { navController.navigate("ver_autos") },
+                onBuscarAuto = { navController.navigate("buscar_auto") },
+                onEscanearVin = { navController.navigate("escanear_vin") },
                 onRegresar = { navController.popBackStack() }
             )
         }
@@ -183,13 +170,23 @@ fun AppNavigation() {
         ) { backStackEntry ->
             val clienteId = backStackEntry.arguments?.getInt("clienteId") ?: 0
             val nombreCodificado = backStackEntry.arguments?.getString("nombreCliente") ?: ""
-            val nombreDecodificado = try { URLDecoder.decode(nombreCodificado, "UTF-8") } catch (e: Exception) { nombreCodificado }
+
+            val nombreDecodificado = try {
+                URLDecoder.decode(nombreCodificado, StandardCharsets.UTF_8.toString())
+            } catch (e: Exception) {
+                nombreCodificado
+            }
 
             AutosDelClienteScreen(
                 clienteId = clienteId,
                 nombreCliente = nombreDecodificado,
-                onAgregarAuto = { navController.navigate("nuevo_auto?cliente=$nombreCodificado&vin=") },
-                onEditarAuto = { autoId -> navController.navigate("editar_auto/$autoId") },
+                onAgregarAuto = {
+                    val encoded = URLEncoder.encode(nombreDecodificado, StandardCharsets.UTF_8.toString())
+                    navController.navigate("nuevo_auto?cliente=$encoded")
+                },
+                onEditarAuto = { autoId ->
+                    navController.navigate("editar_auto/$autoId")
+                },
                 onRegresar = { navController.popBackStack() }
             )
         }
@@ -199,6 +196,7 @@ fun AppNavigation() {
                 onDatosClienteAutos = { navController.navigate("mis_datos") },
                 onDatosFacturacion = { navController.navigate("mis_datos_facturacion") },
                 onEstadoReparacion = { navController.navigate("estado_reparacion") },
+                onVerReporteCliente = { navController.navigate("ver_reporte_cliente") },
                 onCitaEntrega = { navController.navigate("cita_entrega") },
                 onHistorial = { navController.navigate("historial") },
                 onRegresar = { activity?.finishAffinity() }
@@ -208,6 +206,7 @@ fun AppNavigation() {
         composable("mis_datos_facturacion") { MisDatosFacturacionScreen(onRegresar = { navController.popBackStack() }) }
         composable("cita_entrega") { CitaEntregaScreen(onRegresar = { navController.popBackStack() }) }
         composable("estado_reparacion") { EstadoReparacionScreen(onRegresar = { navController.popBackStack() }) }
+        composable("ver_reporte_cliente") { VerReporteClienteScreen(onRegresar = { navController.popBackStack() }) }
         composable("historial") { HistorialServiciosScreen(onRegresar = { navController.popBackStack() }) }
 
         composable("nuevo_auto") { backStackEntry ->
@@ -363,10 +362,11 @@ fun AppNavigation() {
                 navArgument("direccion") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            val lat = backStackEntry.arguments?.getFloat("lat")?.toDouble() ?: 19.4326
-            val lon = backStackEntry.arguments?.getFloat("lon")?.toDouble() ?: -99.1332
+            val lat = backStackEntry.arguments?.getFloat("lat")?.toDouble() ?: 0.0
+            val lon = backStackEntry.arguments?.getFloat("lon")?.toDouble() ?: 0.0
             val nombre = backStackEntry.arguments?.getString("nombre") ?: ""
             val direccion = backStackEntry.arguments?.getString("direccion") ?: ""
+
             MapaRutaScreen(
                 latDestino = lat,
                 lonDestino = lon,
