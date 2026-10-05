@@ -75,9 +75,13 @@ fun AppNavigation() {
     val context = LocalContext.current
     val activity = context as? Activity
 
+    val pkgName = context.packageName.lowercase()
+    val esAppCliente = pkgName.contains("cliente")
+    val destinoInicial = if (esAppCliente) "area_cliente" else "welcome"
+
     NavHost(
         navController = navController,
-        startDestination = "welcome"
+        startDestination = destinoInicial
     ) {
         composable("welcome") {
             WelcomeScreen(

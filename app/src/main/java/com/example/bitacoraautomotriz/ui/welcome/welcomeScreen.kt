@@ -118,7 +118,7 @@ private fun WelcomeContent(
     onClienteClick: () -> Unit,
 ) {
     val context = LocalContext.current
-    val esAppCliente = remember { context.packageName.endsWith(".cliente") }
+    val esAppCliente = remember { context.packageName.lowercase().contains("cliente") }
 
     var selectedLanguage by remember {
         val currentTag = AppCompatDelegate.getApplicationLocales().toLanguageTags()
