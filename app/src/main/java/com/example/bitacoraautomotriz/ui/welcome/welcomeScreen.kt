@@ -232,10 +232,10 @@ private fun WelcomeContent(
             Spacer(modifier = Modifier.height(18.dp))
 
             if (esAppCliente) {
-                // VISTA EXCLUSIVA APP CLIENTE: HIDE TALLER, SHOW ONLY CLIENTE ACCESS
+                // VISTA EXCLUSIVA APP CLIENTE: SÓLO MUESTRA LA TARJETA DEL ÁREA DEL CLIENTE
                 SectionCard(
                     labelIcon = Icons.Default.Person,
-                    label = "ÁREA DEL CLIENTE",
+                    label = "INGRESAR AL ÁREA DEL CLIENTE",
                     buttonLabel = stringResource(id = R.string.ingresar),
                     accentColor = Color(0xFF43A047),
                     accentColorDark = Color(0xFF1B5E20),
@@ -245,7 +245,7 @@ private fun WelcomeContent(
                         .weight(1f)
                 )
             } else {
-                // VISTA APP TALLER: SHOW TALLER CARD AND QR CODE FOR CUSTOMERS
+                // VISTA APP TALLER: MUESTRA SECCIÓN TALLER Y CÓDIGO QR PARA LOS CLIENTES
                 SectionCard(
                     labelIcon = Icons.Default.Build,
                     label = stringResource(id = R.string.taller),

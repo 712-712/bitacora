@@ -85,23 +85,38 @@ fun AppNavigation() {
     ) {
         composable("welcome") {
             WelcomeScreen(
-                onTallerClick = { navController.navigate("dashboard") },
+                onTallerClick = {
+                    if (esAppCliente) navController.navigate("area_cliente")
+                    else navController.navigate("dashboard")
+                },
                 onClienteClick = { navController.navigate("area_cliente") }
             )
         }
 
         composable("dashboard") {
-            DashboardScreen(
-                onClientesClick = { navController.navigate("clientes") },
-                onAreaClienteClick = { navController.navigate("area_cliente") },
-                onOrdenesClick = { navController.navigate("ordenes") },
-                onInventarioClick = { navController.navigate("inventario") },
-                onGastosClick = { navController.navigate("gastos") },
-                onFacturacionClick = { navController.navigate("facturacion") },
-                onReportesClick = { navController.navigate("reportes") },
-                onConfiguracionClick = { navController.navigate("configuracion") },
-                onRegresar = { activity?.finishAffinity() }
-            )
+            if (esAppCliente) {
+                AreaClienteScreen(
+                    onDatosClienteAutos = { navController.navigate("mis_datos") },
+                    onDatosFacturacion = { navController.navigate("mis_datos_facturacion") },
+                    onEstadoReparacion = { navController.navigate("estado_reparacion") },
+                    onVerReporteCliente = { navController.navigate("ver_reporte_cliente") },
+                    onCitaEntrega = { navController.navigate("cita_entrega") },
+                    onHistorial = { navController.navigate("historial") },
+                    onRegresar = { activity?.finishAffinity() }
+                )
+            } else {
+                DashboardScreen(
+                    onClientesClick = { navController.navigate("clientes") },
+                    onAreaClienteClick = { navController.navigate("area_cliente") },
+                    onOrdenesClick = { navController.navigate("ordenes") },
+                    onInventarioClick = { navController.navigate("inventario") },
+                    onGastosClick = { navController.navigate("gastos") },
+                    onFacturacionClick = { navController.navigate("facturacion") },
+                    onReportesClick = { navController.navigate("reportes") },
+                    onConfiguracionClick = { navController.navigate("configuracion") },
+                    onRegresar = { activity?.finishAffinity() }
+                )
+            }
         }
 
         composable("clientes") {
