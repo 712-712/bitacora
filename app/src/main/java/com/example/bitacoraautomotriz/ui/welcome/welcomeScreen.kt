@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,7 +21,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -117,9 +115,6 @@ private fun WelcomeContent(
     onTallerClick: () -> Unit,
     onClienteClick: () -> Unit,
 ) {
-    val context = LocalContext.current
-    val esAppCliente = remember { context.packageName.lowercase().contains("cliente") }
-
     var selectedLanguage by remember {
         val currentTag = AppCompatDelegate.getApplicationLocales().toLanguageTags()
         val match = supportedLanguages.find { currentTag.startsWith(it.code) }
@@ -208,9 +203,9 @@ private fun WelcomeContent(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Icon(
-                    imageVector = if (esAppCliente) Icons.Default.Person else Icons.Default.Build,
+                    imageVector = Icons.Default.Person,
                     contentDescription = null,
-                    tint = if (esAppCliente) Color(0xFF43A047) else Color(0xFF3FA9F5),
+                    tint = Color(0xFF43A047),
                     modifier = Modifier.size(40.dp)
                 )
                 Text(
@@ -221,8 +216,8 @@ private fun WelcomeContent(
                     letterSpacing = 2.sp
                 )
                 Text(
-                    text = if (esAppCliente) "CLIENTE" else stringResource(id = R.string.brand_automotriz),
-                    color = if (esAppCliente) Color(0xFF7DFFB2) else Color(0xFFFFB300),
+                    text = "CLIENTE",
+                    color = Color(0xFF7DFFB2),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 3.sp
@@ -231,81 +226,67 @@ private fun WelcomeContent(
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            if (esAppCliente) {
-                // VISTA EXCLUSIVA APP CLIENTE: SÓLO MUESTRA LA TARJETA DEL ÁREA DEL CLIENTE
-                SectionCard(
-                    labelIcon = Icons.Default.Person,
-                    label = "INGRESAR AL ÁREA DEL CLIENTE",
-                    buttonLabel = stringResource(id = R.string.ingresar),
-                    accentColor = Color(0xFF43A047),
-                    accentColorDark = Color(0xFF1B5E20),
+            // ---------- TARJETA VERDE CON EL FORD MODEL A 1928 Y BOTÓN INGRESAR AL ÁREA DEL CLIENTE ----------
+            SectionCard(
+                labelIcon = Icons.Default.Person,
+                label = "ÁREA DEL CLIENTE",
+                buttonLabel = stringResource(id = R.string.ingresar),
+                accentColor = Color(0xFF43A047),
+                accentColorDark = Color(0xFF1B5E20),
+                onClick = onClienteClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(250.dp)
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // ---------- CÓDIGO QR GIGANTE Y CENTRADO CON LOGO DE FORD ----------
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                Surface(
                     onClick = onClienteClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                )
-            } else {
-                // VISTA APP TALLER: MUESTRA SECCIÓN TALLER Y CÓDIGO QR PARA LOS CLIENTES
-                SectionCard(
-                    labelIcon = Icons.Default.Build,
-                    label = stringResource(id = R.string.taller),
-                    buttonLabel = stringResource(id = R.string.ingresar),
-                    accentColor = Color(0xFF1E88E5),
-                    accentColorDark = Color(0xFF0D47A1),
-                    onClick = onTallerClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(250.dp)
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // CÓDIGO QR GIGANTE Y CENTRADO PARA EL CLIENTE
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    contentAlignment = Alignment.Center
+                    shape = RoundedCornerShape(22.dp),
+                    color = Color.White,
+                    shadowElevation = 12.dp,
+                    border = BorderStroke(2.dp, Color(0xFF43A047))
                 ) {
-                    Surface(
-                        onClick = onClienteClick,
-                        shape = RoundedCornerShape(22.dp),
-                        color = Color.White,
-                        shadowElevation = 12.dp,
-                        border = BorderStroke(2.dp, Color(0xFF43A047))
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.padding(14.dp)
                     ) {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier.padding(14.dp)
-                        ) {
-                            if (qrBitmap != null) {
-                                Image(
-                                    bitmap = qrBitmap.asImageBitmap(),
-                                    contentDescription = "Código QR App Cliente",
-                                    modifier = Modifier.size(175.dp)
-                                )
+                        if (qrBitmap != null) {
+                            Image(
+                                bitmap = qrBitmap.asImageBitmap(),
+                                contentDescription = "Código QR App Cliente",
+                                modifier = Modifier.size(175.dp)
+                            )
 
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = Color.White,
-                                    border = BorderStroke(1.5.dp, Color.Black),
-                                    shadowElevation = 4.dp,
-                                    modifier = Modifier.size(42.dp)
-                                ) {
-                                    Image(
-                                        painter = painterResource(id = R.drawable.ford_model_a_feliz),
-                                        contentDescription = "Logo Ford 1928",
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier.padding(2.dp)
-                                    )
-                                }
-                            } else {
-                                Box(
-                                    modifier = Modifier.size(175.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    CircularProgressIndicator(color = Color.Black)
-                                }
+                            // EMBLEMA FORD MODELO A EN EL CENTRO EXACTO DEL CÓDIGO QR
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = Color.White,
+                                border = BorderStroke(1.5.dp, Color.Black),
+                                shadowElevation = 4.dp,
+                                modifier = Modifier.size(42.dp)
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.ford_model_a_feliz),
+                                    contentDescription = "Logo Ford 1928",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.padding(2.dp)
+                                )
+                            }
+                        } else {
+                            Box(
+                                modifier = Modifier.size(175.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(color = Color.Black)
                             }
                         }
                     }
