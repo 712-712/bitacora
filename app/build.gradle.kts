@@ -41,6 +41,7 @@ android {
         }
         create("cliente") {
             dimension = "version"
+            applicationIdSuffix = ".cliente"
             resValue("string", "app_name_flavor", "Bitácora Automotriz Cliente")
         }
     }
