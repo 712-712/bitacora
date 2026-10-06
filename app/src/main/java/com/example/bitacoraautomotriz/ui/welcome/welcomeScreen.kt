@@ -127,7 +127,7 @@ private fun WelcomeContent(
     }
     var menuExpanded by remember { mutableStateOf(false) }
 
-    val urlDescarga = "https://drive.google.com/file/d/1oOnFvly-xx4jWwwxdsx42RL-d8AI84vT/view?usp=sharing"
+    val urlDescarga = "https://appdistribution.firebase.google.com/testerapps/1:461801707040:android:3107fc2830e958138ace45/releases/6c051kv6aa048?utm_source=firebase-console"
     val qrBitmap = remember(urlDescarga) { generarQrBitmapRealConAltaCorreccion(urlDescarga, 450, 450) }
 
     Box(
