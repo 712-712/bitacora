@@ -1,6 +1,8 @@
 package com.example.bitacoraautomotriz.ui.welcome
 
+import android.content.Intent
 import android.graphics.Bitmap
+import android.net.Uri
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -49,12 +51,8 @@ val supportedLanguages = listOf(
     AppLanguage("it", "Italiano", "🇮🇹"),
 )
 
-// GENERADOR DE CÓDIGO QR EXCLUSIVO Y DEDICADO DE FIREBASE (NIVEL H DE ALTA PRECISIÓN)
-fun generarQrBitmapFirebaseExclusivo(
-    urlFirebase: String = "https://appdistribution.firebase.dev/i/d15eaf1dda6c6929",
-    ancho: Int = 450,
-    alto: Int = 450
-): Bitmap? {
+// GENERADOR DE CÓDIGO QR REAL ESTÁNDAR CON ALTA CORRECCIÓN DE ERRORES (LEVEL H)
+fun generarQrBitmapRealConAltaCorreccion(contenido: String, ancho: Int = 450, alto: Int = 450): Bitmap? {
     return try {
         val hints = mapOf(
             EncodeHintType.MARGIN to 1,
@@ -62,7 +60,7 @@ fun generarQrBitmapFirebaseExclusivo(
             EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.H
         )
         val bitMatrix = MultiFormatWriter().encode(
-            urlFirebase,
+            contenido,
             BarcodeFormat.QR_CODE,
             ancho,
             alto,
@@ -132,8 +130,8 @@ private fun WelcomeContent(
     }
     var menuExpanded by remember { mutableStateOf(false) }
 
-    // GENERACIÓN FRESCA Y EXCLUSIVA DEL CÓDIGO QR OFICIAL DE FIREBASE
-    val qrBitmap = remember { generarQrBitmapFirebaseExclusivo() }
+    val urlDescarga = "https://appdistribution.firebase.dev/i/d15eaf1dda6c6929"
+    val qrBitmap = remember { generarQrBitmapRealConAltaCorreccion(urlDescarga, 450, 450) }
 
     Box(
         modifier = Modifier
@@ -296,7 +294,10 @@ private fun WelcomeContent(
                                 verticalArrangement = Arrangement.Center
                             ) {
                                 Surface(
-                                    onClick = onClienteClick,
+                                    onClick = {
+                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(urlDescarga))
+                                        try { context.startActivity(intent) } catch (_: Exception) {}
+                                    },
                                     shape = RoundedCornerShape(18.dp),
                                     color = Color.White,
                                     shadowElevation = 10.dp
@@ -337,16 +338,25 @@ private fun WelcomeContent(
                                     }
                                 }
 
-                                Spacer(modifier = Modifier.height(6.dp))
+                                Spacer(modifier = Modifier.height(4.dp))
 
-                                // ETIQUETA VISUAL EXCLUSIVA DE FIREBASE
-                                Text(
-                                    text = "🔥 DESCARGAR APP CLIENTE FIREBASE",
-                                    color = Color(0xFF7DFFB2),
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    textAlign = TextAlign.Center
-                                )
+                                Button(
+                                    onClick = {
+                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(urlDescarga))
+                                        try { context.startActivity(intent) } catch (_: Exception) {}
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF43A047)),
+                                    shape = RoundedCornerShape(50),
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                                ) {
+                                    Text(
+                                        text = "🔥 DESCARGAR APP CLIENTE",
+                                        color = Color.White,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
                             }
                         }
                     }
