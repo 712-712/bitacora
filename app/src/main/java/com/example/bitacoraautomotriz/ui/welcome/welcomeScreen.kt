@@ -49,8 +49,12 @@ val supportedLanguages = listOf(
     AppLanguage("it", "Italiano", "🇮🇹"),
 )
 
-// GENERADOR DE CÓDIGO QR REAL ESTÁNDAR CON ALTA CORRECCIÓN DE ERRORES (LEVEL H)
-fun generarQrBitmapRealConAltaCorreccion(contenido: String, ancho: Int = 450, alto: Int = 450): Bitmap? {
+// GENERADOR DE CÓDIGO QR EXCLUSIVO Y DEDICADO DE FIREBASE (NIVEL H DE ALTA PRECISIÓN)
+fun generarQrBitmapFirebaseExclusivo(
+    urlFirebase: String = "https://appdistribution.firebase.dev/i/d15eaf1dda6c6929",
+    ancho: Int = 450,
+    alto: Int = 450
+): Bitmap? {
     return try {
         val hints = mapOf(
             EncodeHintType.MARGIN to 1,
@@ -58,7 +62,7 @@ fun generarQrBitmapRealConAltaCorreccion(contenido: String, ancho: Int = 450, al
             EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.H
         )
         val bitMatrix = MultiFormatWriter().encode(
-            contenido,
+            urlFirebase,
             BarcodeFormat.QR_CODE,
             ancho,
             alto,
@@ -128,8 +132,8 @@ private fun WelcomeContent(
     }
     var menuExpanded by remember { mutableStateOf(false) }
 
-    val urlDescarga = "https://appdistribution.firebase.dev/i/d15eaf1dda6c6929"
-    val qrBitmap = remember(urlDescarga) { generarQrBitmapRealConAltaCorreccion(urlDescarga, 450, 450) }
+    // GENERACIÓN FRESCA Y EXCLUSIVA DEL CÓDIGO QR OFICIAL DE FIREBASE
+    val qrBitmap = remember { generarQrBitmapFirebaseExclusivo() }
 
     Box(
         modifier = Modifier
@@ -203,7 +207,7 @@ private fun WelcomeContent(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // ---------- Logo / Título (ACCESO ADMINISTRATIVO TALLER AL TOCAR EL ÍCONO) ----------
+            // ---------- Logo / Título ----------
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -304,7 +308,7 @@ private fun WelcomeContent(
                                         if (qrBitmap != null) {
                                             Image(
                                                 bitmap = qrBitmap.asImageBitmap(),
-                                                contentDescription = "Código QR App Cliente",
+                                                contentDescription = "Código QR Firebase App Cliente",
                                                 modifier = Modifier.size(130.dp)
                                             )
 
@@ -333,11 +337,11 @@ private fun WelcomeContent(
                                     }
                                 }
 
-                                Spacer(modifier = Modifier.height(4.dp))
+                                Spacer(modifier = Modifier.height(6.dp))
 
-                                // TEXTO INDICADOR OFICIAL DE FIREBASE
+                                // ETIQUETA VISUAL EXCLUSIVA DE FIREBASE
                                 Text(
-                                    text = "🔥 DESCARGA FIREBASE OFICIAL",
+                                    text = "🔥 DESCARGAR APP CLIENTE FIREBASE",
                                     color = Color(0xFF7DFFB2),
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
