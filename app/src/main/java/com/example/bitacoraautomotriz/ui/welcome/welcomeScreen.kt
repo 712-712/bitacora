@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -116,6 +117,9 @@ private fun WelcomeContent(
     onTallerClick: () -> Unit,
     onClienteClick: () -> Unit,
 ) {
+    val context = LocalContext.current
+    val esAppCliente = remember { context.packageName.lowercase().contains("cliente") }
+
     var selectedLanguage by remember {
         val currentTag = AppCompatDelegate.getApplicationLocales().toLanguageTags()
         val match = supportedLanguages.find { currentTag.startsWith(it.code) }
@@ -204,9 +208,9 @@ private fun WelcomeContent(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Icon(
-                    imageVector = Icons.Default.Build,
+                    imageVector = if (esAppCliente) Icons.Default.Person else Icons.Default.Build,
                     contentDescription = null,
-                    tint = Color(0xFF3FA9F5),
+                    tint = if (esAppCliente) Color(0xFF43A047) else Color(0xFF3FA9F5),
                     modifier = Modifier.size(40.dp)
                 )
                 Text(
@@ -217,8 +221,8 @@ private fun WelcomeContent(
                     letterSpacing = 2.sp
                 )
                 Text(
-                    text = stringResource(id = R.string.brand_automotriz),
-                    color = Color(0xFFFFB300),
+                    text = if (esAppCliente) "CLIENTE" else stringResource(id = R.string.brand_automotriz),
+                    color = if (esAppCliente) Color(0xFF7DFFB2) else Color(0xFFFFB300),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 3.sp
@@ -227,126 +231,136 @@ private fun WelcomeContent(
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // ---------- SECCIÓN TALLER (Tarjeta Superior) ----------
-            SectionCard(
-                labelIcon = Icons.Default.Build,
-                label = stringResource(id = R.string.taller),
-                buttonLabel = stringResource(id = R.string.ingresar),
-                accentColor = Color(0xFF1E88E5),
-                accentColorDark = Color(0xFF0D47A1),
-                onClick = onTallerClick,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            // ---------- SECCIÓN CÓDIGO QR CLIENTE (Mismo Tamaño exacto que la Tarjeta del Taller) ----------
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(28.dp))
-                    .border(2.dp, Color(0xFF43A047), RoundedCornerShape(28.dp))
-            ) {
-                // CONTENIDO CON IMAGEN DE FONDO Y CÓDIGO QR CENTRADO
-                Box(
+            if (esAppCliente) {
+                // VISTA EXCLUSIVA APP CLIENTE: SOLO ÁREA DEL CLIENTE (CERO TALLER Y CERO QR)
+                SectionCard(
+                    labelIcon = Icons.Default.Person,
+                    label = "ÁREA DEL CLIENTE",
+                    buttonLabel = stringResource(id = R.string.ingresar),
+                    accentColor = Color(0xFF43A047),
+                    accentColorDark = Color(0xFF1B5E20),
+                    onClick = onClienteClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                )
+            } else {
+                // VISTA APP TALLER: SECCIÓN TALLER Y CÓDIGO QR PARA LOS CLIENTES
+                SectionCard(
+                    labelIcon = Icons.Default.Build,
+                    label = stringResource(id = R.string.taller),
+                    buttonLabel = stringResource(id = R.string.ingresar),
+                    accentColor = Color(0xFF1E88E5),
+                    accentColorDark = Color(0xFF0D47A1),
+                    onClick = onTallerClick,
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth()
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ford_model_a_feliz),
-                        contentDescription = "Fondo Cliente",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
+                )
 
-                    // OVERLAY OSCURO CON CÓDIGO QR REAL Y EMBLEMA CENTRAL
+                Spacer(modifier = Modifier.height(18.dp))
+
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(28.dp))
+                        .border(2.dp, Color(0xFF43A047), RoundedCornerShape(28.dp))
+                ) {
                     Box(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.Black.copy(alpha = 0.45f))
-                            .padding(6.dp),
-                        contentAlignment = Alignment.Center
+                            .weight(1f)
+                            .fillMaxWidth()
                     ) {
-                        Surface(
-                            onClick = onClienteClick,
-                            shape = RoundedCornerShape(18.dp),
-                            color = Color.White,
-                            shadowElevation = 10.dp
-                        ) {
-                            Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier.padding(10.dp)
-                            ) {
-                                if (qrBitmap != null) {
-                                    Image(
-                                        bitmap = qrBitmap.asImageBitmap(),
-                                        contentDescription = "Código QR App Cliente",
-                                        modifier = Modifier.size(140.dp)
-                                    )
+                        Image(
+                            painter = painterResource(id = R.drawable.ford_model_a_feliz),
+                            contentDescription = "Fondo Cliente",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
 
-                                    // EMBLEMA FORD MODELO A EN EL CENTRO EXACTO DEL QR
-                                    Surface(
-                                        shape = RoundedCornerShape(8.dp),
-                                        color = Color.White,
-                                        border = BorderStroke(1.5.dp, Color.Black),
-                                        shadowElevation = 4.dp,
-                                        modifier = Modifier.size(36.dp)
-                                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.Black.copy(alpha = 0.45f))
+                                .padding(6.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Surface(
+                                onClick = onClienteClick,
+                                shape = RoundedCornerShape(18.dp),
+                                color = Color.White,
+                                shadowElevation = 10.dp
+                            ) {
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier.padding(10.dp)
+                                ) {
+                                    if (qrBitmap != null) {
                                         Image(
-                                            painter = painterResource(id = R.drawable.ford_model_a_feliz),
-                                            contentDescription = "Logo Ford 1928",
-                                            contentScale = ContentScale.Crop,
-                                            modifier = Modifier.padding(2.dp)
+                                            bitmap = qrBitmap.asImageBitmap(),
+                                            contentDescription = "Código QR App Cliente",
+                                            modifier = Modifier.size(140.dp)
                                         )
-                                    }
-                                } else {
-                                    Box(
-                                        modifier = Modifier.size(140.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        CircularProgressIndicator(color = Color.Black)
+
+                                        Surface(
+                                            shape = RoundedCornerShape(8.dp),
+                                            color = Color.White,
+                                            border = BorderStroke(1.5.dp, Color.Black),
+                                            shadowElevation = 4.dp,
+                                            modifier = Modifier.size(36.dp)
+                                        ) {
+                                            Image(
+                                                painter = painterResource(id = R.drawable.ford_model_a_feliz),
+                                                contentDescription = "Logo Ford 1928",
+                                                contentScale = ContentScale.Crop,
+                                                modifier = Modifier.padding(2.dp)
+                                            )
+                                        }
+                                    } else {
+                                        Box(
+                                            modifier = Modifier.size(140.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            CircularProgressIndicator(color = Color.Black)
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
 
-                // FRANJA INFERIOR VERDE DEL CLIENTE
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFF1B5E20))
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(28.dp)
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = stringResource(id = R.string.cliente),
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Button(
-                        onClick = onClienteClick,
-                        shape = RoundedCornerShape(50),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF43A047)),
-                        contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xFF1B5E20))
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(stringResource(id = R.string.ingresar), fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(">")
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(28.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = stringResource(id = R.string.cliente),
+                            color = Color.White,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Button(
+                            onClick = onClienteClick,
+                            shape = RoundedCornerShape(50),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF43A047)),
+                            contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp)
+                        ) {
+                            Text(stringResource(id = R.string.ingresar), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(">")
+                        }
                     }
                 }
             }
