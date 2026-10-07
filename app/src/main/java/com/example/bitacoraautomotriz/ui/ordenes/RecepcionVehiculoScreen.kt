@@ -13,7 +13,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -22,6 +23,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -143,8 +145,7 @@ fun RecepcionVehiculoScreen(
     }
 
     // LISTA DE PUNTOS PARA FIRMA DIGITAL FLUIDA EN TIEMPO REAL
-    val trazosFirma = remember { mutableStateListOf<MutableList<Offset>>() }
-    var trazoActual by remember { mutableStateOf<MutableList<Offset>?>(null) }
+    val trazosFirma = remember { mutableStateListOf<SnapshotStateList<Offset>>() }
     var firmaCapturada by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -506,7 +507,7 @@ Agradecemos su confianza.
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // 3. LIENZO DE FIRMA DIGITAL TÁCTIL EN TIEMPO REAL (ALTURA Y DISEÑO CONSTANTE)
+            // 3. LIENZO DE FIRMA DIGITAL TÁCTIL INSTANTÁNEA EN TIEMPO REAL
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
@@ -529,17 +530,21 @@ Agradecemos su confianza.
                             modifier = Modifier
                                 .fillMaxSize()
                                 .pointerInput(Unit) {
-                                    detectDragGestures(
-                                        onDragStart = { offset ->
-                                            val nuevoTrazo = mutableListOf(offset)
-                                            trazosFirma.add(nuevoTrazo)
-                                            trazoActual = nuevoTrazo
-                                        },
-                                        onDrag = { change, _ ->
-                                            change.consume()
-                                            trazoActual?.add(change.position)
-                                        }
-                                    )
+                                    awaitEachGesture {
+                                        val down = awaitFirstDown(requireUnconsumed = false)
+                                        down.consume()
+                                        val listaPuntos = mutableStateListOf(down.position)
+                                        trazosFirma.add(listaPuntos)
+
+                                        do {
+                                            val event = awaitPointerEvent()
+                                            val change = event.changes.firstOrNull()
+                                            if (change != null && change.pressed) {
+                                                change.consume()
+                                                listaPuntos.add(change.position)
+                                            }
+                                        } while (event.changes.any { it.pressed })
+                                    }
                                 }
                         ) {
                             trazosFirma.forEach { puntos ->
@@ -568,7 +573,7 @@ Agradecemos su confianza.
                             }
                         }
 
-                        TextButton(onClick = { trazosFirma.clear(); trazoActual = null; firmaCapturada = false }) {
+                        TextButton(onClick = { trazosFirma.clear(); firmaCapturada = false }) {
                             Text("🗑️ BORRAR FIRMA", color = Color(0xFFFF5252), fontWeight = FontWeight.Bold)
                         }
                     }
@@ -735,7 +740,7 @@ Agradecemos su confianza.
                         Text("🔐 3. INTEGRIDAD HASH SHA-256:", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold)
                         Text("Cada acta genera una huella criptográfica SHA-256. Si alguien intenta alterar las fotos, la firma o los datos, el Hash cambia y demuestra manipulación en un juicio.", color = Color.White, fontSize = 14.sp)
 
-                        Text("⏳ 4. TIEMPO DE RETENCIÓN:", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold)
+                        Text("⏳ 4. TIEMPO DE RETENCIÓN Y TEMPORIZADOR:", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold)
                         Text("Se recomienda conservar la evidencia mínimo 2 años (tiempo legal de prescripción de disputas vehiculares). Al cumplirse el periodo, el sistema purga automáticamente la evidencia para liberar memoria en el taller.", color = Color.White, fontSize = 14.sp)
                     }
                 },
