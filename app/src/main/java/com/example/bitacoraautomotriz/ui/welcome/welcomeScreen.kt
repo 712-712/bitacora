@@ -263,6 +263,7 @@ private fun WelcomeContent(
 
                 Spacer(modifier = Modifier.height(18.dp))
 
+                // RECUADRO DEL CÓDIGO QR CUBRIENDO EL FONDO CON FRANJA VERDE E INGRESAR >
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -274,93 +275,57 @@ private fun WelcomeContent(
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxWidth()
+                            .background(Color(0xFF03070D)),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.ford_model_a_feliz),
-                            contentDescription = "Fondo Cliente",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
-
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(Color.Black.copy(alpha = 0.45f))
-                                .padding(6.dp),
-                            contentAlignment = Alignment.Center
+                        Surface(
+                            onClick = {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(urlDescarga))
+                                try { context.startActivity(intent) } catch (_: Exception) {}
+                            },
+                            shape = RoundedCornerShape(20.dp),
+                            color = Color.White,
+                            shadowElevation = 10.dp
                         ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier.padding(10.dp)
                             ) {
-                                Surface(
-                                    onClick = {
-                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(urlDescarga))
-                                        try { context.startActivity(intent) } catch (_: Exception) {}
-                                    },
-                                    shape = RoundedCornerShape(18.dp),
-                                    color = Color.White,
-                                    shadowElevation = 10.dp
-                                ) {
-                                    Box(
-                                        contentAlignment = Alignment.Center,
-                                        modifier = Modifier.padding(10.dp)
-                                    ) {
-                                        if (qrBitmap != null) {
-                                            Image(
-                                                bitmap = qrBitmap.asImageBitmap(),
-                                                contentDescription = "Código QR Firebase App Cliente",
-                                                modifier = Modifier.size(130.dp)
-                                            )
-
-                                            Surface(
-                                                shape = RoundedCornerShape(8.dp),
-                                                color = Color.White,
-                                                border = BorderStroke(1.5.dp, Color.Black),
-                                                shadowElevation = 4.dp,
-                                                modifier = Modifier.size(34.dp)
-                                            ) {
-                                                Image(
-                                                    painter = painterResource(id = R.drawable.ford_model_a_feliz),
-                                                    contentDescription = "Logo Ford 1928",
-                                                    contentScale = ContentScale.Crop,
-                                                    modifier = Modifier.padding(2.dp)
-                                                )
-                                            }
-                                        } else {
-                                            Box(
-                                                modifier = Modifier.size(130.dp),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                CircularProgressIndicator(color = Color.Black)
-                                            }
-                                        }
-                                    }
-                                }
-
-                                Spacer(modifier = Modifier.height(4.dp))
-
-                                Button(
-                                    onClick = {
-                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(urlDescarga))
-                                        try { context.startActivity(intent) } catch (_: Exception) {}
-                                    },
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF43A047)),
-                                    shape = RoundedCornerShape(50),
-                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
-                                ) {
-                                    Text(
-                                        text = "🔥 DESCARGAR APP CLIENTE",
-                                        color = Color.White,
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        textAlign = TextAlign.Center
+                                if (qrBitmap != null) {
+                                    Image(
+                                        bitmap = qrBitmap.asImageBitmap(),
+                                        contentDescription = "Código QR App Cliente",
+                                        modifier = Modifier.size(165.dp)
                                     )
+
+                                    // EMBLEMA FORD MODELO A EN EL CENTRO
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = Color.White,
+                                        border = BorderStroke(1.5.dp, Color.Black),
+                                        shadowElevation = 4.dp,
+                                        modifier = Modifier.size(38.dp)
+                                    ) {
+                                        Image(
+                                            painter = painterResource(id = R.drawable.ford_model_a_feliz),
+                                            contentDescription = "Logo Ford 1928",
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier.padding(2.dp)
+                                        )
+                                    }
+                                } else {
+                                    Box(
+                                        modifier = Modifier.size(165.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator(color = Color.Black)
+                                    }
                                 }
                             }
                         }
                     }
 
+                    // FRANJA INFERIOR VERDE DEL CLIENTE CON BOTÓN INGRESAR >
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
