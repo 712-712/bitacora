@@ -113,7 +113,10 @@ fun AppNavigationTaller() {
         }
         composable("nuevo_cliente") {
             NuevoClienteScreen(
-                onClienteCreado = { navController.popBackStack() },
+                onClienteCreado = { cliente ->
+                    val encoded = URLEncoder.encode(cliente.nombre, StandardCharsets.UTF_8.toString())
+                    navController.navigate("nuevo_auto?cliente=$encoded")
+                },
                 onRegresar = { navController.popBackStack() }
             )
         }

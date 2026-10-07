@@ -1,6 +1,7 @@
 package com.example.bitacoraautomotriz.ui.clientes
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,8 +15,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -37,6 +40,7 @@ fun NuevoClienteScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     var clientesExistentes by remember { mutableStateOf<List<Cliente>>(emptyList()) }
     var nombre by remember { mutableStateOf("") }
@@ -117,6 +121,7 @@ fun NuevoClienteScreen(
                 )
                 ClienteRepository.guardarCliente(nuevoCliente, context)
                 focusManager.clearFocus()
+                keyboardController?.hide()
                 onClienteCreado(nuevoCliente)
             } catch (e: Exception) {
                 mensaje = "ERROR AL GUARDAR: ${e.message}"
@@ -131,11 +136,17 @@ fun NuevoClienteScreen(
             .background(Colores.FondoPantalla)
             .statusBarsPadding()
             .navigationBarsPadding()
-            .imePadding()
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus()
+                    keyboardController?.hide()
+                })
+            }
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 84.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -184,6 +195,7 @@ fun NuevoClienteScreen(
                 onValueChange = { nombre = it.uppercase(); mensaje = "" },
                 textStyle = estiloTexto,
                 colors = coloresCampo,
+                singleLine = true,
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(nombreFocus),
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
@@ -198,6 +210,7 @@ fun NuevoClienteScreen(
                 onValueChange = { telefono = it.filter { char -> char.isDigit() || char == '-' || char == ' ' }; mensaje = "" },
                 textStyle = estiloTexto,
                 colors = coloresCampo,
+                singleLine = true,
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(telefonoFocus),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next),
@@ -212,6 +225,7 @@ fun NuevoClienteScreen(
                 onValueChange = { correo = it.lowercase(); mensaje = "" },
                 textStyle = estiloTexto,
                 colors = coloresCampo,
+                singleLine = true,
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(correoFocus),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
@@ -226,10 +240,11 @@ fun NuevoClienteScreen(
                 onValueChange = { direccion = it.uppercase(); mensaje = "" },
                 textStyle = estiloTexto,
                 colors = coloresCampo,
+                singleLine = true,
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(direccionFocus),
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
+                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus(); keyboardController?.hide() })
             )
 
             if (mensaje.isNotEmpty()) {
@@ -245,7 +260,7 @@ fun NuevoClienteScreen(
                 colorClaro = Color(0xFF80D8FF),
                 colorMedio = Color(0xFF00B8D4),
                 colorOscuro = Color(0xFF006064),
-                onClick = { guardar() },
+                onClick = { if (!guardando) guardar() },
                 modifier = Modifier.fillMaxWidth().height(58.dp)
             )
 
@@ -253,26 +268,32 @@ fun NuevoClienteScreen(
         }
 
         // BOTÓN REGRESAR FIJO E INMÓVIL AL FONDO
-        Box(
+        Surface(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .background(Colores.FondoPantalla)
-                .padding(horizontal = 24.dp, vertical = 12.dp)
+                .fillMaxWidth(),
+            color = Colores.FondoPantalla
         ) {
-            BotonModulo3D(
-                texto = "REGRESAR",
-                icono = "🔙",
-                colorClaro = Colores.RegresarClaro,
-                colorMedio = Colores.RegresarMedio,
-                colorOscuro = Colores.RegresarOscuro,
-                onClick = {
-                    focusManager.clearFocus()
-                    onRegresar()
-                },
-                modifier = Modifier.fillMaxWidth().height(58.dp),
-                colorTexto = Color.White
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 12.dp)
+            ) {
+                BotonModulo3D(
+                    texto = "REGRESAR",
+                    icono = "🔙",
+                    colorClaro = Colores.RegresarClaro,
+                    colorMedio = Colores.RegresarMedio,
+                    colorOscuro = Colores.RegresarOscuro,
+                    onClick = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
+                        onRegresar()
+                    },
+                    modifier = Modifier.fillMaxWidth().height(58.dp),
+                    colorTexto = Color.White
+                )
+            }
         }
     }
 }
