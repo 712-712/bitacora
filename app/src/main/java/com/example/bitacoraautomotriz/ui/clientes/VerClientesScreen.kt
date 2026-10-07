@@ -10,9 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,11 +55,11 @@ fun VerClientesScreen(
             .background(Colores.FondoPantalla)
             .statusBarsPadding()
             .navigationBarsPadding()
-            .imePadding()
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 84.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -141,7 +139,7 @@ fun VerClientesScreen(
                                     colorMedio = Color(0xFF1976D2),
                                     colorOscuro = Color(0xFF0D47A1),
                                     onClick = { onEditarCliente(cliente.id) },
-                                    modifier = Modifier.fillMaxWidth().height(60.dp),
+                                    modifier = Modifier.fillMaxWidth().height(52.dp),
                                     tamanioTexto = 16,
                                     colorTexto = Color.Black
                                 )
@@ -178,7 +176,7 @@ fun VerClientesScreen(
                                             }
                                         }
                                     },
-                                    modifier = Modifier.fillMaxWidth().height(60.dp),
+                                    modifier = Modifier.fillMaxWidth().height(52.dp),
                                     tamanioTexto = 16,
                                     colorTexto = Color.Black
                                 )
@@ -192,7 +190,7 @@ fun VerClientesScreen(
                                         val nombreCodificado = URLEncoder.encode(cliente.nombre, "UTF-8")
                                         onVerAutos(cliente.id, nombreCodificado)
                                     },
-                                    modifier = Modifier.fillMaxWidth().height(60.dp),
+                                    modifier = Modifier.fillMaxWidth().height(52.dp),
                                     tamanioTexto = 16,
                                     colorTexto = Color.Black
                                 )
@@ -201,26 +199,33 @@ fun VerClientesScreen(
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
         }
 
         // BOTÓN REGRESAR FIJO E INMÓVIL AL FONDO DE LA PANTALLA
-        Box(
+        Surface(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .background(Colores.FondoPantalla)
-                .padding(horizontal = 24.dp, vertical = 12.dp)
+                .fillMaxWidth(),
+            color = Colores.FondoPantalla
         ) {
-            BotonModulo3D(
-                texto = "REGRESAR",
-                icono = "🔙",
-                colorClaro = Colores.RegresarClaro,
-                colorMedio = Colores.RegresarMedio,
-                colorOscuro = Colores.RegresarOscuro,
-                onClick = onRegresar,
-                modifier = Modifier.fillMaxWidth().height(58.dp),
-                colorTexto = Color.White
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 12.dp)
+            ) {
+                BotonModulo3D(
+                    texto = "REGRESAR",
+                    icono = "🔙",
+                    colorClaro = Colores.RegresarClaro,
+                    colorMedio = Colores.RegresarMedio,
+                    colorOscuro = Colores.RegresarOscuro,
+                    onClick = onRegresar,
+                    modifier = Modifier.fillMaxWidth().height(58.dp),
+                    colorTexto = Color.White
+                )
+            }
         }
     }
 }

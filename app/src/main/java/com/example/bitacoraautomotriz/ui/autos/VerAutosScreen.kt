@@ -3,6 +3,7 @@ package com.example.bitacoraautomotriz.ui.autos
 import android.app.AlertDialog
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -12,7 +13,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -30,6 +34,8 @@ fun VerAutosScreen(
     onRegresar: () -> Unit,
 ) {
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
     val scope = rememberCoroutineScope()
 
     var autos by remember { mutableStateOf<List<Auto>>(value = emptyList()) }
@@ -61,11 +67,17 @@ fun VerAutosScreen(
             .background(Colores.FondoPantalla)
             .statusBarsPadding()
             .navigationBarsPadding()
-            .imePadding()
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus()
+                    keyboardController?.hide()
+                })
+            }
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 84.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -223,26 +235,37 @@ fun VerAutosScreen(
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
         }
 
         // BOTÓN REGRESAR FIJO E INMÓVIL AL FONDO DE LA PANTALLA
-        Box(
+        Surface(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .background(Colores.FondoPantalla)
-                .padding(horizontal = 24.dp, vertical = 12.dp)
+                .fillMaxWidth(),
+            color = Colores.FondoPantalla
         ) {
-            BotonModulo3D(
-                texto = "REGRESAR",
-                icono = "🔙",
-                colorClaro = Colores.RegresarClaro,
-                colorMedio = Colores.RegresarMedio,
-                colorOscuro = Colores.RegresarOscuro,
-                onClick = onRegresar,
-                modifier = Modifier.fillMaxWidth().height(58.dp),
-                colorTexto = Color.White
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 12.dp)
+            ) {
+                BotonModulo3D(
+                    texto = "REGRESAR",
+                    icono = "🔙",
+                    colorClaro = Colores.RegresarClaro,
+                    colorMedio = Colores.RegresarMedio,
+                    colorOscuro = Colores.RegresarOscuro,
+                    onClick = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
+                        onRegresar()
+                    },
+                    modifier = Modifier.fillMaxWidth().height(58.dp),
+                    colorTexto = Color.White
+                )
+            }
         }
     }
 }
