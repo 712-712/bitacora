@@ -1,31 +1,28 @@
 package com.example.bitacoraautomotriz.ui.clientes
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.bitacoraautomotriz.data.Cliente
@@ -41,6 +38,13 @@ fun EditarClienteScreen(
     onRegresar: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    val nombreFocus = remember { FocusRequester() }
+    val telefonoFocus = remember { FocusRequester() }
+    val correoFocus = remember { FocusRequester() }
+    val direccionFocus = remember { FocusRequester() }
 
     var cargando by remember { mutableStateOf(true) }
     var clienteOriginal by remember { mutableStateOf<Cliente?>(null) }
@@ -82,10 +86,12 @@ fun EditarClienteScreen(
                     original.copy(
                         nombre = nombre.trim().uppercase(),
                         telefono = telefono.trim(),
-                        correo = correo.trim(),
+                        correo = correo.trim().lowercase(),
                         direccion = direccion.trim().uppercase(),
                     )
                 )
+                focusManager.clearFocus()
+                keyboardController?.hide()
                 onGuardado()
             } catch (e: Exception) {
                 error = "ERROR AL GUARDAR LOS CAMBIOS"
@@ -112,151 +118,163 @@ fun EditarClienteScreen(
         unfocusedIndicatorColor = Colores.BordeBoton.copy(alpha = 0.5f)
     )
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Colores.FondoPantalla)
-            .verticalScroll(rememberScrollState())
-            .padding(start = 24.dp, end = 24.dp, top = 48.dp, bottom = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus()
+                    keyboardController?.hide()
+                })
+            }
     ) {
-        Text(
-            text = "EDITAR CLIENTE",
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Bold,
-            color = Colores.TituloPrincipal,
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        if (cargando) {
-            CircularProgressIndicator(color = Colores.TituloPrincipal)
-        } else if (clienteOriginal == null) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .imePadding()
+                .verticalScroll(rememberScrollState())
+                .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 84.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
+        ) {
             Text(
-                "NO SE ENCONTRÓ EL CLIENTE",
-                color = Colores.TextoBoton,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
-        } else {
-            // 1. NOMBRE
-            OutlinedTextField(
-                value = nombre,
-                onValueChange = { nombre = it.uppercase() },
-                placeholder = {
-                    Text(
-                        "Nombre",
-                        color = Colores.EtiquetaCampo.copy(alpha = 0.6f),
-                        fontSize = 19.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                textStyle = estiloCampo,
-                colors = coloresCampo,
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(72.dp)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // 2. TELÉFONO
-            OutlinedTextField(
-                value = telefono,
-                onValueChange = { telefono = it },
-                placeholder = {
-                    Text(
-                        "Teléfono",
-                        color = Colores.EtiquetaCampo.copy(alpha = 0.6f),
-                        fontSize = 19.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                textStyle = estiloCampo,
-                colors = coloresCampo,
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(72.dp)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // 3. CORREO
-            OutlinedTextField(
-                value = correo,
-                onValueChange = { correo = it },
-                placeholder = {
-                    Text(
-                        "Correo",
-                        color = Colores.EtiquetaCampo.copy(alpha = 0.6f),
-                        fontSize = 19.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                textStyle = estiloCampo,
-                colors = coloresCampo,
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(72.dp)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // 4. DIRECCIÓN
-            OutlinedTextField(
-                value = direccion,
-                onValueChange = { direccion = it.uppercase() },
-                placeholder = {
-                    Text(
-                        "Dirección",
-                        color = Colores.EtiquetaCampo.copy(alpha = 0.6f),
-                        fontSize = 19.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                textStyle = estiloCampo,
-                colors = coloresCampo,
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(72.dp)
+                text = "EDITAR CLIENTE",
+                fontSize = 26.sp,
+                fontWeight = FontWeight.Bold,
+                color = Colores.TituloPrincipal,
             )
 
-            if (error != null) {
-                Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+
+            if (cargando) {
+                CircularProgressIndicator(color = Colores.TituloPrincipal)
+            } else if (clienteOriginal == null) {
                 Text(
-                    error!!,
+                    "NO SE ENCONTRÓ EL CLIENTE",
                     color = Colores.TextoBoton,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
                 )
+            } else {
+                // 1. NOMBRE
+                Text("NOMBRE:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
+                OutlinedTextField(
+                    value = nombre,
+                    onValueChange = { nombre = it.uppercase() },
+                    placeholder = { Text("Nombre", color = Colores.EtiquetaCampo.copy(alpha = 0.6f), fontSize = 19.sp, fontWeight = FontWeight.Bold) },
+                    textStyle = estiloCampo,
+                    colors = coloresCampo,
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(onNext = { telefonoFocus.requestFocus() }),
+                    modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(nombreFocus)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // 2. TELÉFONO
+                Text("TELÉFONO:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
+                OutlinedTextField(
+                    value = telefono,
+                    onValueChange = { telefono = it.filter { char -> char.isDigit() || char == '-' || char == ' ' } },
+                    placeholder = { Text("Teléfono", color = Colores.EtiquetaCampo.copy(alpha = 0.6f), fontSize = 19.sp, fontWeight = FontWeight.Bold) },
+                    textStyle = estiloCampo,
+                    colors = coloresCampo,
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(onNext = { correoFocus.requestFocus() }),
+                    modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(telefonoFocus)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // 3. CORREO
+                Text("CORREO:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
+                OutlinedTextField(
+                    value = correo,
+                    onValueChange = { correo = it.lowercase() },
+                    placeholder = { Text("Correo", color = Colores.EtiquetaCampo.copy(alpha = 0.6f), fontSize = 19.sp, fontWeight = FontWeight.Bold) },
+                    textStyle = estiloCampo,
+                    colors = coloresCampo,
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(onNext = { direccionFocus.requestFocus() }),
+                    modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(correoFocus)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // 4. DIRECCIÓN
+                Text("DIRECCIÓN:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
+                OutlinedTextField(
+                    value = direccion,
+                    onValueChange = { direccion = it.uppercase() },
+                    placeholder = { Text("Dirección", color = Colores.EtiquetaCampo.copy(alpha = 0.6f), fontSize = 19.sp, fontWeight = FontWeight.Bold) },
+                    textStyle = estiloCampo,
+                    colors = coloresCampo,
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus(); keyboardController?.hide() }),
+                    modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(direccionFocus)
+                )
+
+                if (error != null) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(error!!, color = Colores.TextoBoton, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                BotonModulo3D(
+                    texto = if (guardando) "GUARDANDO..." else "GUARDAR CAMBIOS",
+                    icono = "💾",
+                    colorClaro = Color(0xFF80D8FF),
+                    colorMedio = Color(0xFF00B8D4),
+                    colorOscuro = Color(0xFF006064),
+                    onClick = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
+                        if (!guardando) guardar()
+                    },
+                    modifier = Modifier.fillMaxWidth().height(58.dp),
+                    colorTexto = Color.Black
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
             }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            BotonModulo3D(
-                texto = if (guardando) "GUARDANDO..." else "GUARDAR CAMBIOS",
-                icono = "💾",
-                colorClaro = Color(0xFF80D8FF),
-                colorMedio = Color(0xFF00B8D4),
-                colorOscuro = Color(0xFF006064),
-                onClick = { if (!guardando) guardar() },
-                modifier = Modifier.fillMaxWidth(),
-                colorTexto = Color.Black
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
         }
 
-        BotonModulo3D(
-            texto = "REGRESAR",
-            icono = "🔙",
-            colorClaro = Colores.RegresarClaro,
-            colorMedio = Colores.RegresarMedio,
-            colorOscuro = Colores.RegresarOscuro,
-            onClick = onRegresar,
-            modifier = Modifier.fillMaxWidth(),
-            colorTexto = Color.White
-        )
+        // BOTÓN REGRESAR FIJO E INMÓVIL AL FONDO DE LA PANTALLA
+        Surface(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth(),
+            color = Colores.FondoPantalla
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 12.dp)
+            ) {
+                BotonModulo3D(
+                    texto = "REGRESAR",
+                    icono = "🔙",
+                    colorClaro = Colores.RegresarClaro,
+                    colorMedio = Colores.RegresarMedio,
+                    colorOscuro = Colores.RegresarOscuro,
+                    onClick = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
+                        onRegresar()
+                    },
+                    modifier = Modifier.fillMaxWidth().height(58.dp),
+                    colorTexto = Color.White
+                )
+            }
+        }
     }
 }
