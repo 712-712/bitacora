@@ -8,8 +8,8 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="com.example.bitacoraautomotriz.cliente" />
-                  <option name="mobileSdkAppId" value="1:461801707040:android:3107fc2830e958138ace45" />
+                  <option name="appId" value="com.example.bitacoraautomotriz" />
+                  <option name="mobileSdkAppId" value="1:461801707040:android:799c20e860e7309f8ace45" />
                   <option name="projectId" value="bitacoraautomotriz" />
                   <option name="projectNumber" value="461801707040" />
                 </ConnectionSetting>

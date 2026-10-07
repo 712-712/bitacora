@@ -130,7 +130,7 @@ private fun WelcomeContent(
     }
     var menuExpanded by remember { mutableStateOf(false) }
 
-    val urlDescarga = "https://appdistribution.firebase.dev/i/d15eaf1dda6c6929"
+    val urlDescarga = "https://appdistribution.firebase.dev/i/18dd732eb8052be2"
     val qrBitmap = remember { generarQrBitmapRealConAltaCorreccion(urlDescarga, 450, 450) }
 
     Box(
