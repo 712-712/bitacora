@@ -3,13 +3,16 @@ package com.example.bitacoraautomotriz.ui.ordenes
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
+import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.launch
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
@@ -22,10 +25,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -75,7 +79,7 @@ fun RecepcionVehiculoScreen(
     var mostrarDialogoConsejos by remember { mutableStateOf(false) }
     var guardando by remember { mutableStateOf(false) }
 
-    // DÍAS / TIEMPO DE RETENCIÓN DE FOTOS (DESPLEGABLE CON TEMPORIZADOR)
+    // DÍAS / TIEMPO DE RETENCIÓN DE FOTOS (DESPLEGABLE CON TEMPORIZADOR DE CONTEO REGRESIVO)
     val opcionesRetencion = remember {
         listOf(
             "1 Día",
@@ -94,52 +98,53 @@ fun RecepcionVehiculoScreen(
     var retencionSeleccionada by remember { mutableStateOf(opcionesRetencion.last()) }
     var menuRetencionExpandido by remember { mutableStateOf(false) }
 
-    // SLOTS FOTOGRÁFICOS Y VIDEO DE RECEPCIÓN
-    var fotoFrenteTomada by remember { mutableStateOf(false) }
-    var fotoAtrasTomada by remember { mutableStateOf(false) }
-    var fotoIzquierdaTomada by remember { mutableStateOf(false) }
-    var fotoDerechaTomada by remember { mutableStateOf(false) }
-    var fotoTechoTomada by remember { mutableStateOf(false) }
-    var fotoRinesTomada by remember { mutableStateOf(false) }
-    var fotoInteriorTomada by remember { mutableStateOf(false) }
-    var fotoTableroTomada by remember { mutableStateOf(false) }
+    // BITMAPS MINIATURA DE CADA FOTO TOMADA
+    var fotoFrenteBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var fotoAtrasBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var fotoIzquierdaBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var fotoDerechaBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var fotoTechoBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var fotoRinesBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var fotoInteriorBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var fotoTableroBitmap by remember { mutableStateOf<Bitmap?>(null) }
+
+    // VIDEO
     var videoTomado by remember { mutableStateOf(false) }
 
-    // RUTA O SLOT ACTUALMENTE EN TOMA
     var slotFotoActual by remember { mutableStateOf("") }
 
-    // LAUNCHER DE CÁMARA EN TIEMPO REAL (ABRE CÁMARA EN VIVO)
+    // LAUNCHER DE CÁMARA EN TIEMPO REAL (FOTOS MINIATURA)
     val launcherCamaraEnVivo = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview()
     ) { bitmap: Bitmap? ->
         if (bitmap != null) {
             when (slotFotoActual) {
-                "FRENTE" -> fotoFrenteTomada = true
-                "ATRÁS" -> fotoAtrasTomada = true
-                "IZQUIERDA" -> fotoIzquierdaTomada = true
-                "DERECHA" -> fotoDerechaTomada = true
-                "TECHO" -> fotoTechoTomada = true
-                "RINES" -> fotoRinesTomada = true
-                "INTERIOR" -> fotoInteriorTomada = true
-                "TABLERO" -> fotoTableroTomada = true
+                "FRENTE" -> fotoFrenteBitmap = bitmap
+                "ATRÁS" -> fotoAtrasBitmap = bitmap
+                "IZQUIERDA" -> fotoIzquierdaBitmap = bitmap
+                "DERECHA" -> fotoDerechaBitmap = bitmap
+                "TECHO" -> fotoTechoBitmap = bitmap
+                "RINES" -> fotoRinesBitmap = bitmap
+                "INTERIOR" -> fotoInteriorBitmap = bitmap
+                "TABLERO" -> fotoTableroBitmap = bitmap
             }
-            Toast.makeText(context, "📷 Foto $slotFotoActual tomada con cámara en vivo y marca de agua", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "📷 Miniatura registrada para $slotFotoActual", Toast.LENGTH_SHORT).show()
         }
     }
 
-    // LAUNCHER DE VIDEO
-    val launcherVideo = rememberLauncherForActivityResult(
+    // LAUNCHER DE VIDEO EN VIVO
+    val launcherVideoCamara = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         if (uri != null) {
             videoTomado = true
-            Toast.makeText(context, "🎥 Video de recepción registrado (15-20 seg)", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "🎥 Video de recepción capturado con éxito", Toast.LENGTH_SHORT).show()
         }
     }
 
-    // TRAZADOS PARA FIRMA DIGITAL TÁCTIL EN TIEMPO REAL
-    val pathsFirma = remember { mutableStateListOf<Path>() }
-    var currentPath by remember { mutableStateOf<Path?>(null) }
+    // LISTA DE PUNTOS PARA FIRMA DIGITAL FLUIDA EN TIEMPO REAL
+    val trazosFirma = remember { mutableStateListOf<MutableList<Offset>>() }
+    var trazoActual by remember { mutableStateOf<MutableList<Offset>?>(null) }
     var firmaCapturada by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -182,6 +187,16 @@ fun RecepcionVehiculoScreen(
         launcherCamaraEnVivo.launch()
     }
 
+    fun tomarVideo() {
+        try {
+            val intent = Intent(MediaStore.ACTION_VIDEO_CAPTURE)
+            context.startActivity(intent)
+            videoTomado = true
+        } catch (_: Exception) {
+            launcherVideoCamara.launch("video/*")
+        }
+    }
+
     fun guardarRecepcionVehiculo() {
         if (clienteSeleccionado == null) { mensaje = "SELECCIONE EL CLIENTE"; return }
         if (autoSeleccionado == null) { mensaje = "SELECCIONE EL VEHÍCULO"; return }
@@ -204,14 +219,14 @@ fun RecepcionVehiculoScreen(
             vin = a.vin.trim().uppercase(),
             kilometraje = kmNum,
             fechaHora = fechaHoraActual,
-            fotoFrentePath = if (fotoFrenteTomada) "REGISTRADA" else "",
-            fotoAtrasPath = if (fotoAtrasTomada) "REGISTRADA" else "",
-            fotoIzquierdaPath = if (fotoIzquierdaTomada) "REGISTRADA" else "",
-            fotoDerechaPath = if (fotoDerechaTomada) "REGISTRADA" else "",
-            fotoTechoPath = if (fotoTechoTomada) "REGISTRADA" else "",
-            fotoRinesPath = if (fotoRinesTomada) "REGISTRADA" else "",
-            fotoInteriorPath = if (fotoInteriorTomada) "REGISTRADA" else "",
-            fotoTableroPath = if (fotoTableroTomada) "REGISTRADA" else "",
+            fotoFrentePath = if (fotoFrenteBitmap != null) "REGISTRADA" else "",
+            fotoAtrasPath = if (fotoAtrasBitmap != null) "REGISTRADA" else "",
+            fotoIzquierdaPath = if (fotoIzquierdaBitmap != null) "REGISTRADA" else "",
+            fotoDerechaPath = if (fotoDerechaBitmap != null) "REGISTRADA" else "",
+            fotoTechoPath = if (fotoTechoBitmap != null) "REGISTRADA" else "",
+            fotoRinesPath = if (fotoRinesBitmap != null) "REGISTRADA" else "",
+            fotoInteriorPath = if (fotoInteriorBitmap != null) "REGISTRADA" else "",
+            fotoTableroPath = if (fotoTableroBitmap != null) "REGISTRADA" else "",
             videoPath = if (videoTomado) "VIDEO_REGISTRADO" else "",
             firmaPath = if (firmaCapturada) "FIRMA_TACTIL_VALIDA" else "",
             hashIntegridadSha256 = hashGenerado,
@@ -260,7 +275,7 @@ Placa: ${a.placa.uppercase()}   |   VIN: ${a.vin.ifBlank { "N/A" }.uppercase()}
 Kilometraje: $kmNum km
 
 *Estado de la evidencia fotográfica y legal:*
-• Fotos de ángulos registrados: OK
+• Fotos registradas con miniatura: OK
 • Video de inspección: ${if (videoTomado) "INCLUIDO" else "OPCIONAL"}
 • Firma digital del cliente: ACEPTADA
 • Creador Hash SHA-256: Protegido
@@ -354,7 +369,7 @@ Agradecemos su confianza.
                             }
                         }
                     } else {
-                        // CLIENTE CON BOTÓN CAMBIAR DEBAJO
+                        // CLIENTE CON BOTÓN CAMBIAR DEBAJO DEL NOMBRE
                         Column(modifier = Modifier.fillMaxWidth()) {
                             Text(text = "CLIENTE: ${clienteSeleccionado!!.nombre.uppercase()}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
                             Spacer(modifier = Modifier.height(2.dp))
@@ -417,7 +432,7 @@ Agradecemos su confianza.
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // 2. CÁMARA GUIADA EN VIVO Y OPCIÓN DE VIDEO
+            // 2. CÁMARA GUIADA EN VIVO Y REGISTRO DE FOTOS MINIATURA
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
@@ -425,51 +440,66 @@ Agradecemos su confianza.
                 elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("2. CÁMARA GUIADA Y REGISTRO DE VIDEO", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                    Text("Al presionar cada botón se abre la cámara en vivo del teléfono", fontSize = 13.sp, color = Colores.EtiquetaCampo)
+                    Text("2. CÁMARA GUIADA (8 ÁNGULOS CON MINIATURAS)", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("Al tomar cada foto, la miniatura aparecerá directamente sobre su recuadro:", fontSize = 13.sp, color = Colores.EtiquetaCampo)
 
-                    val slots = listOf(
-                        "FRENTE" to fotoFrenteTomada,
-                        "ATRÁS" to fotoAtrasTomada,
-                        "IZQUIERDA" to fotoIzquierdaTomada,
-                        "DERECHA" to fotoDerechaTomada,
-                        "TECHO" to fotoTechoTomada,
-                        "RINES" to fotoRinesTomada,
-                        "INTERIOR" to fotoInteriorTomada,
-                        "TABLERO" to fotoTableroTomada
+                    val slotsLista = listOf(
+                        Triple("FRENTE", fotoFrenteBitmap) { tomarFotoSlot("FRENTE") },
+                        Triple("ATRÁS", fotoAtrasBitmap) { tomarFotoSlot("ATRÁS") },
+                        Triple("IZQUIERDA", fotoIzquierdaBitmap) { tomarFotoSlot("IZQUIERDA") },
+                        Triple("DERECHA", fotoDerechaBitmap) { tomarFotoSlot("DERECHA") },
+                        Triple("TECHO", fotoTechoBitmap) { tomarFotoSlot("TECHO") },
+                        Triple("RINES", fotoRinesBitmap) { tomarFotoSlot("RINES") },
+                        Triple("INTERIOR", fotoInteriorBitmap) { tomarFotoSlot("INTERIOR") },
+                        Triple("TABLERO", fotoTableroBitmap) { tomarFotoSlot("TABLERO") }
                     )
 
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        slots.chunked(2).forEach { fila ->
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                fila.forEach { (nombreSlot, tomada) ->
-                                    BotonModulo3D(
-                                        texto = if (tomada) "✅ $nombreSlot" else "📷 $nombreSlot",
-                                        colorClaro = if (tomada) Color(0xFFB9F6CA) else Color(0xFF80D8FF),
-                                        colorMedio = if (tomada) Color(0xFF00C853) else Color(0xFF00B8D4),
-                                        colorOscuro = if (tomada) Color(0xFF00695C) else Color(0xFF006064),
-                                        colorTexto = Color.Black,
-                                        onClick = { tomarFotoSlot(nombreSlot) },
-                                        modifier = Modifier.weight(1f).height(48.dp),
-                                        tamanioTexto = 13
-                                    )
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        slotsLista.chunked(2).forEach { par ->
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                par.forEach { (nombreSlot, bitmap, accionToma) ->
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(90.dp)
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .background(if (bitmap != null) Color(0xFF00C853) else Colores.FondoSecundario)
+                                            .clickable { accionToma() }
+                                            .border(1.5.dp, if (bitmap != null) Color(0xFF7DFFB2) else Colores.BordeBoton, RoundedCornerShape(12.dp)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        if (bitmap != null) {
+                                            Image(
+                                                bitmap = bitmap.asImageBitmap(),
+                                                contentDescription = nombreSlot,
+                                                contentScale = ContentScale.Crop,
+                                                modifier = Modifier.fillMaxSize()
+                                            )
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .background(Color.Black.copy(alpha = 0.35f)),
+                                                contentAlignment = Alignment.BottomCenter
+                                            ) {
+                                                Text(
+                                                    text = "✅ $nombreSlot",
+                                                    color = Color.White,
+                                                    fontSize = 12.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    modifier = Modifier.padding(bottom = 4.dp)
+                                                )
+                                            }
+                                        } else {
+                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                Text("📷", fontSize = 22.sp)
+                                                Spacer(modifier = Modifier.height(2.dp))
+                                                Text(nombreSlot, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
-
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        // BOTÓN DE VIDEO OPCIONAL DE 15-20 SEGUNDOS
-                        BotonModulo3D(
-                            texto = if (videoTomado) "✅ VIDEO GRABADO" else "🎥 GRABAR VIDEO OPCIONAL (15-20 SEG)",
-                            colorClaro = if (videoTomado) Color(0xFFB9F6CA) else Color(0xFFFFF59D),
-                            colorMedio = if (videoTomado) Color(0xFF00C853) else Color(0xFFFFEB3B),
-                            colorOscuro = if (videoTomado) Color(0xFF00695C) else Color(0xFFFBC02D),
-                            colorTexto = Color.Black,
-                            onClick = { launcherVideo.launch("video/*") },
-                            modifier = Modifier.fillMaxWidth().height(50.dp),
-                            tamanioTexto = 14
-                        )
                     }
                 }
             }
@@ -483,16 +513,16 @@ Agradecemos su confianza.
                 colors = CardDefaults.cardColors(containerColor = Colores.FondoTarjeta),
                 elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
             ) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Text("3. FIRMA DIGITAL DEL CLIENTE", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         if (firmaCapturada) {
                             Spacer(modifier = Modifier.height(2.dp))
-                            Text("✅ FIRMADO Y ACEPTADO", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            Text("✅ FIRMADO Y ACEPTADO EN PANTALLA", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold, fontSize = 14.sp)
                         }
                     }
 
-                    Text("El cliente firma en pantalla confirmando el estado de recepción", fontSize = 13.sp, color = Colores.EtiquetaCampo)
+                    Text("El cliente firma en pantalla confirmando la recepción del auto:", fontSize = 13.sp, color = Colores.EtiquetaCampo)
 
                     Box(
                         modifier = Modifier
@@ -508,33 +538,33 @@ Agradecemos su confianza.
                                 .pointerInput(Unit) {
                                     detectDragGestures(
                                         onDragStart = { offset ->
-                                            val newPath = Path().apply { moveTo(offset.x, offset.y) }
-                                            currentPath = newPath
-                                            pathsFirma.add(newPath)
+                                            val nuevoTrazo = mutableStateListOf(offset)
+                                            trazosFirma.add(nuevoTrazo)
+                                            trazoActual = nuevoTrazo
                                             firmaCapturada = true
                                         },
                                         onDrag = { change, _ ->
                                             change.consume()
-                                            currentPath?.let { p ->
-                                                val lastOffset = change.position
-                                                p.lineTo(lastOffset.x, lastOffset.y)
-                                            }
+                                            trazoActual?.add(change.position)
                                         }
                                     )
                                 }
                         ) {
-                            pathsFirma.forEach { path ->
-                                drawPath(
-                                    path = path,
-                                    color = Color.Black,
-                                    style = Stroke(width = 6f)
-                                )
+                            trazosFirma.forEach { puntos ->
+                                for (i in 0 until puntos.size - 1) {
+                                    drawLine(
+                                        color = Color.Black,
+                                        start = puntos[i],
+                                        end = puntos[i + 1],
+                                        strokeWidth = 6f
+                                    )
+                                }
                             }
                         }
                     }
 
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                        TextButton(onClick = { pathsFirma.clear(); currentPath = null; firmaCapturada = false }) {
+                        TextButton(onClick = { trazosFirma.clear(); trazoActual = null; firmaCapturada = false }) {
                             Text("🗑️ BORRAR FIRMA", color = Color(0xFFFF5252), fontWeight = FontWeight.Bold)
                         }
                     }
@@ -543,7 +573,7 @@ Agradecemos su confianza.
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // 4. TEMPORIZADOR DE CONTEO REGRESIVO Y TIEMPO DE RETENCIÓN DE FOTOS
+            // 4. TEMPORIZADOR DE CONTEO REGRESIVO Y RETENCIÓN DE FOTOS
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
@@ -552,7 +582,7 @@ Agradecemos su confianza.
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("4. TEMPORIZADOR DE AUTO-ELIMINACIÓN DE FOTOS", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal)
-                    Text("Seleccione el periodo tras el cual la evidencia expira e inicia el conteo regresivo de depuración automática para no llenar la memoria del taller:", fontSize = 13.sp, color = Colores.EtiquetaCampo)
+                    Text("Seleccione el tiempo tras el cual la evidencia expira y se purga automáticamente:", fontSize = 13.sp, color = Colores.EtiquetaCampo)
 
                     Box(modifier = Modifier.fillMaxWidth()) {
                         OutlinedButton(
@@ -587,7 +617,21 @@ Agradecemos su confianza.
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // 5. BOTÓN CONSEJOS Y ASPECTOS LEGALES
+            // 5. BOTÓN VIDEO UBICADO DIRECTAMENTE ENCIMA DEL BOTÓN AMARILLO DE ASPECTOS LEGALES (TEXTO EN DOS LÍNEAS)
+            BotonModulo3D(
+                texto = if (videoTomado) "✅ VIDEO REGISTRADO" else "🎥 GRABAR VIDEO OPCIONAL\n(15-20 SEGUNDOS)",
+                colorClaro = if (videoTomado) Color(0xFFB9F6CA) else Color(0xFF80D8FF),
+                colorMedio = if (videoTomado) Color(0xFF00C853) else Color(0xFF00B8D4),
+                colorOscuro = if (videoTomado) Color(0xFF00695C) else Color(0xFF006064),
+                colorTexto = Color.Black,
+                onClick = { tomarVideo() },
+                modifier = Modifier.fillMaxWidth().height(62.dp),
+                tamanioTexto = 14
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 6. BOTÓN AMARILLO DE CONSEJOS Y ASPECTOS LEGALES
             BotonModulo3D(
                 texto = "💡 CONSEJOS Y ASPECTOS LEGALES",
                 colorClaro = Color(0xFFFFF59D),
@@ -687,8 +731,8 @@ Agradecemos su confianza.
                         Text("🔐 3. INTEGRIDAD HASH SHA-256:", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold)
                         Text("Cada acta genera una huella criptográfica SHA-256. Si alguien intenta alterar las fotos, la firma o los datos, el Hash cambia y demuestra manipulación en un juicio.", color = Color.White, fontSize = 14.sp)
 
-                        Text("⏳ 4. TIEMPO DE RETENCIÓN:", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold)
-                        Text("Se recomienda conservar la evidencia mínimo 2 años (tiempo legal de prescripción de disputas vehiculares).", color = Color.White, fontSize = 14.sp)
+                        Text("⏳ 4. TIEMPO DE RETENCIÓN Y TEMPORIZADOR:", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold)
+                        Text("Se recomienda conservar la evidencia mínimo 2 años (tiempo legal de prescripción de disputas vehiculares). Al cumplirse el periodo, el sistema purga automáticamente la evidencia para liberar memoria en el taller.", color = Color.White, fontSize = 14.sp)
                     }
                 },
                 confirmButton = {
