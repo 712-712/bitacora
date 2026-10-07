@@ -506,7 +506,7 @@ Agradecemos su confianza.
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // 3. LIENZO DE FIRMA DIGITAL TÁCTIL EN TIEMPO REAL
+            // 3. LIENZO DE FIRMA DIGITAL TÁCTIL EN TIEMPO REAL (ALTURA Y DISEÑO CONSTANTE)
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
@@ -514,14 +514,7 @@ Agradecemos su confianza.
                 elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Text("3. FIRMA DIGITAL DEL CLIENTE", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                        if (firmaCapturada) {
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text("✅ FIRMADO Y ACEPTADO EN PANTALLA", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                        }
-                    }
-
+                    Text("3. FIRMA DIGITAL DEL CLIENTE", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     Text("El cliente firma en pantalla confirmando la recepción del auto:", fontSize = 13.sp, color = Colores.EtiquetaCampo)
 
                     Box(
@@ -538,10 +531,9 @@ Agradecemos su confianza.
                                 .pointerInput(Unit) {
                                     detectDragGestures(
                                         onDragStart = { offset ->
-                                            val nuevoTrazo = mutableStateListOf(offset)
+                                            val nuevoTrazo = mutableListOf(offset)
                                             trazosFirma.add(nuevoTrazo)
                                             trazoActual = nuevoTrazo
-                                            firmaCapturada = true
                                         },
                                         onDrag = { change, _ ->
                                             change.consume()
@@ -563,7 +555,19 @@ Agradecemos su confianza.
                         }
                     }
 
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (firmaCapturada) {
+                            Text("✅ FIRMADO Y ACEPTADO", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        } else {
+                            TextButton(onClick = { if (trazosFirma.isNotEmpty()) firmaCapturada = true }) {
+                                Text("✅ ACEPTAR FIRMA", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            }
+                        }
+
                         TextButton(onClick = { trazosFirma.clear(); trazoActual = null; firmaCapturada = false }) {
                             Text("🗑️ BORRAR FIRMA", color = Color(0xFFFF5252), fontWeight = FontWeight.Bold)
                         }
@@ -731,7 +735,7 @@ Agradecemos su confianza.
                         Text("🔐 3. INTEGRIDAD HASH SHA-256:", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold)
                         Text("Cada acta genera una huella criptográfica SHA-256. Si alguien intenta alterar las fotos, la firma o los datos, el Hash cambia y demuestra manipulación en un juicio.", color = Color.White, fontSize = 14.sp)
 
-                        Text("⏳ 4. TIEMPO DE RETENCIÓN Y TEMPORIZADOR:", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold)
+                        Text("⏳ 4. TIEMPO DE RETENCIÓN:", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold)
                         Text("Se recomienda conservar la evidencia mínimo 2 años (tiempo legal de prescripción de disputas vehiculares). Al cumplirse el periodo, el sistema purga automáticamente la evidencia para liberar memoria en el taller.", color = Color.White, fontSize = 14.sp)
                     }
                 },
