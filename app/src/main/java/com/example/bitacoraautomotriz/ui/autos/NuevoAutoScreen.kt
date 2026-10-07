@@ -1,6 +1,7 @@
 package com.example.bitacoraautomotriz.ui.autos
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,6 +9,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.*
@@ -16,8 +18,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -40,6 +44,10 @@ fun NuevoAutoScreen(
     onRegresar: () -> Unit
 ) {
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val scope = rememberCoroutineScope()
+
     var marca by remember { mutableStateOf("") }
     var modelo by remember { mutableStateOf("") }
     var anio by remember { mutableStateOf("") }
@@ -56,9 +64,6 @@ fun NuevoAutoScreen(
     }
 
     var autoExistente by remember { mutableStateOf<Auto?>(null) }
-
-    val scope = rememberCoroutineScope()
-    val focusManager = LocalFocusManager.current
 
     val vinFocus = remember { FocusRequester() }
     val marcaFocus = remember { FocusRequester() }
@@ -117,6 +122,7 @@ fun NuevoAutoScreen(
             try {
                 AutoRepository.guardarAuto(nuevoAuto, context)
                 focusManager.clearFocus()
+                keyboardController?.hide()
                 onGuardar()
             } catch (e: Exception) {
                 mensaje = "ERROR: ${e.message}"
@@ -130,11 +136,17 @@ fun NuevoAutoScreen(
             .background(Colores.FondoPantalla)
             .statusBarsPadding()
             .navigationBarsPadding()
-            .imePadding()
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus()
+                    keyboardController?.hide()
+                })
+            }
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 84.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -183,6 +195,7 @@ fun NuevoAutoScreen(
                 onValueChange = { vin = it.uppercase(); mensaje = "" },
                 textStyle = estiloTexto,
                 colors = coloresCampo,
+                singleLine = true,
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(vinFocus),
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
@@ -197,6 +210,7 @@ fun NuevoAutoScreen(
                 onValueChange = { marca = it.uppercase(); mensaje = "" },
                 textStyle = estiloTexto,
                 colors = coloresCampo,
+                singleLine = true,
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(marcaFocus),
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
@@ -211,6 +225,7 @@ fun NuevoAutoScreen(
                 onValueChange = { modelo = it.uppercase(); mensaje = "" },
                 textStyle = estiloTexto,
                 colors = coloresCampo,
+                singleLine = true,
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(modeloFocus),
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
@@ -225,6 +240,7 @@ fun NuevoAutoScreen(
                 onValueChange = { anio = it.filter { char -> char.isDigit() }; mensaje = "" },
                 textStyle = estiloTexto,
                 colors = coloresCampo,
+                singleLine = true,
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(anioFocus),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
@@ -251,6 +267,7 @@ fun NuevoAutoScreen(
                 colors = coloresCampo.copy(
                     focusedIndicatorColor = if (autoExistente != null) Colores.TextoBoton else Colores.BordeBoton
                 ),
+                singleLine = true,
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(placaFocus),
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
@@ -270,6 +287,7 @@ fun NuevoAutoScreen(
                 onValueChange = { color = it.uppercase(); mensaje = "" },
                 textStyle = estiloTexto,
                 colors = coloresCampo,
+                singleLine = true,
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(colorFocus),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
@@ -284,10 +302,11 @@ fun NuevoAutoScreen(
                 onValueChange = { kilometraje = it.filter { char -> char.isDigit() }; mensaje = "" },
                 textStyle = estiloTexto,
                 colors = coloresCampo,
+                singleLine = true,
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth().height(72.dp).focusRequester(kmFocus),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
+                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus(); keyboardController?.hide() })
             )
 
             if (mensaje.isNotEmpty()) {
@@ -316,23 +335,32 @@ fun NuevoAutoScreen(
         }
 
         // BOTÓN REGRESAR FIJO E INMÓVIL AL FONDO DE LA PANTALLA
-        Box(
+        Surface(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .background(Colores.FondoPantalla)
-                .padding(horizontal = 24.dp, vertical = 12.dp)
+                .fillMaxWidth(),
+            color = Colores.FondoPantalla
         ) {
-            BotonModulo3D(
-                texto = "REGRESAR",
-                icono = "🔙",
-                colorClaro = Colores.RegresarClaro,
-                colorMedio = Colores.RegresarMedio,
-                colorOscuro = Colores.RegresarOscuro,
-                onClick = onRegresar,
-                modifier = Modifier.fillMaxWidth().height(58.dp),
-                colorTexto = Color.White
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 12.dp)
+            ) {
+                BotonModulo3D(
+                    texto = "REGRESAR",
+                    icono = "🔙",
+                    colorClaro = Colores.RegresarClaro,
+                    colorMedio = Colores.RegresarMedio,
+                    colorOscuro = Colores.RegresarOscuro,
+                    onClick = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
+                        onRegresar()
+                    },
+                    modifier = Modifier.fillMaxWidth().height(58.dp),
+                    colorTexto = Color.White
+                )
+            }
         }
     }
 }

@@ -1,36 +1,25 @@
 package com.example.bitacoraautomotriz.ui.autos
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -42,20 +31,19 @@ import com.example.bitacoraautomotriz.data.Auto
 import com.example.bitacoraautomotriz.repository.AutoRepository
 import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
 import com.example.bitacoraautomotriz.ui.theme.Colores
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-// ✅ FUNCIÓN AUXILIAR: Scroll automático inteligente al enfocar un campo
 @Composable
 fun Modifier.scrollAlEnfocar(
-    scrollState: androidx.compose.foundation.ScrollState,
-    scope: kotlinx.coroutines.CoroutineScope
+    scrollState: ScrollState,
+    scope: CoroutineScope
 ): Modifier {
     return this.onFocusChanged { focusState ->
         if (focusState.isFocused) {
             scope.launch {
-                delay(150) // Espera a que el teclado suba
-                // Avanza lo justo para mostrar el campo, sin irse al fondo
+                delay(150)
                 val nuevoValor = (scrollState.value + 280).coerceAtMost(scrollState.maxValue)
                 scrollState.animateScrollTo(nuevoValor)
             }
@@ -71,6 +59,7 @@ fun EditarAutoScreen(
 ) {
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
     val scrollState = rememberScrollState()
 
     val clienteFocus = remember { FocusRequester() }
@@ -148,6 +137,8 @@ fun EditarAutoScreen(
                         kilometraje = kmInt,
                     )
                 )
+                focusManager.clearFocus()
+                keyboardController?.hide()
                 onGuardado()
             } catch (e: Exception) {
                 error = "Error al guardar: ${e.message}"
@@ -173,188 +164,214 @@ fun EditarAutoScreen(
         unfocusedIndicatorColor = Colores.BordeBoton.copy(alpha = 0.5f)
     )
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Colores.FondoPantalla)
-            .verticalScroll(scrollState)
-            .imePadding()
-            .padding(start = 24.dp, end = 24.dp, top = 48.dp, bottom = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "EDITAR AUTO",
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Bold,
-            color = Colores.TituloPrincipal
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        if (cargando) {
-            CircularProgressIndicator(color = Colores.TituloPrincipal)
-        } else if (autoOriginal == null) {
-            Text("No se encontró el auto.", color = Colores.TextoBoton, fontSize = 18.sp)
-        } else {
-
-            // 1. CLIENTE
-            Text("CLIENTE:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
-            OutlinedTextField(
-                value = cliente,
-                onValueChange = { cliente = it.uppercase() },
-                textStyle = estiloCampo,
-                colors = coloresCampo,
-                shape = RoundedCornerShape(12.dp),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
-                keyboardActions = KeyboardActions(onNext = { marcaFocus.requestFocus() }),
-                modifier = Modifier.fillMaxWidth().focusRequester(clienteFocus).scrollAlEnfocar(scrollState, scope)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // 2. MARCA
-            Text("MARCA:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
-            OutlinedTextField(
-                value = marca,
-                onValueChange = { marca = it.uppercase() },
-                textStyle = estiloCampo,
-                colors = coloresCampo,
-                shape = RoundedCornerShape(12.dp),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
-                keyboardActions = KeyboardActions(onNext = { modeloFocus.requestFocus() }),
-                modifier = Modifier.fillMaxWidth().focusRequester(marcaFocus).scrollAlEnfocar(scrollState, scope)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // 3. MODELO
-            Text("MODELO:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
-            OutlinedTextField(
-                value = modelo,
-                onValueChange = { modelo = it.uppercase() },
-                textStyle = estiloCampo,
-                colors = coloresCampo,
-                shape = RoundedCornerShape(12.dp),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
-                keyboardActions = KeyboardActions(onNext = { anioFocus.requestFocus() }),
-                modifier = Modifier.fillMaxWidth().focusRequester(modeloFocus).scrollAlEnfocar(scrollState, scope)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // 4. AÑO
-            Text("AÑO:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
-            OutlinedTextField(
-                value = anio,
-                onValueChange = { anio = it.filter { char -> char.isDigit() } },
-                textStyle = estiloCampo,
-                colors = coloresCampo,
-                shape = RoundedCornerShape(12.dp),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
-                keyboardActions = KeyboardActions(onNext = { placaFocus.requestFocus() }),
-                modifier = Modifier.fillMaxWidth().focusRequester(anioFocus).scrollAlEnfocar(scrollState, scope)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // 5. PLACA
-            Text("PLACA:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
-            OutlinedTextField(
-                value = placa,
-                onValueChange = { placa = it.uppercase() },
-                textStyle = estiloCampo,
-                colors = coloresCampo,
-                shape = RoundedCornerShape(12.dp),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
-                keyboardActions = KeyboardActions(onNext = { vinFocus.requestFocus() }),
-                modifier = Modifier.fillMaxWidth().focusRequester(placaFocus).scrollAlEnfocar(scrollState, scope)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // 6. VIN
-            Text("VIN:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
-            OutlinedTextField(
-                value = vin,
-                onValueChange = { vin = it.uppercase() },
-                textStyle = estiloCampo,
-                colors = coloresCampo,
-                shape = RoundedCornerShape(12.dp),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
-                keyboardActions = KeyboardActions(onNext = { colorFocus.requestFocus() }),
-                modifier = Modifier.fillMaxWidth().focusRequester(vinFocus).scrollAlEnfocar(scrollState, scope)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // 7. COLOR
-            Text("COLOR:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
-            OutlinedTextField(
-                value = color,
-                onValueChange = { color = it.uppercase() },
-                textStyle = estiloCampo,
-                colors = coloresCampo,
-                shape = RoundedCornerShape(12.dp),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
-                keyboardActions = KeyboardActions(onNext = { kilometrajeFocus.requestFocus() }),
-                modifier = Modifier.fillMaxWidth().focusRequester(colorFocus).scrollAlEnfocar(scrollState, scope)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // 8. KILOMETRAJE
-            Text("KILOMETRAJE:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
-            OutlinedTextField(
-                value = kilometraje,
-                onValueChange = { kilometraje = it.filter { char -> char.isDigit() } },
-                textStyle = estiloCampo,
-                colors = coloresCampo,
-                shape = RoundedCornerShape(12.dp),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-                modifier = Modifier.fillMaxWidth().focusRequester(kilometrajeFocus).scrollAlEnfocar(scrollState, scope)
-            )
-
-            if (error != null) {
-                Spacer(modifier = Modifier.height(12.dp))
-                Text("⚠️ $error", color = Colores.TextoBoton, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus()
+                    keyboardController?.hide()
+                })
             }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .imePadding()
+                .verticalScroll(scrollState)
+                .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 84.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "EDITAR AUTO",
+                fontSize = 26.sp,
+                fontWeight = FontWeight.Bold,
+                color = Colores.TituloPrincipal
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            BotonModulo3D(
-                texto = if (guardando) "GUARDANDO..." else "GUARDAR CAMBIOS",
-                icono = "💾",
-                colorClaro = Color(0xFFB9F6CA),
-                colorMedio = Color(0xFF00C853),
-                colorOscuro = Color(0xFF00695C),
-                onClick = {
-                    focusManager.clearFocus()
-                    if (!guardando) guardar()
-                },
-                modifier = Modifier.fillMaxWidth(),
-                colorTexto = Color.Black
-            )
+            if (cargando) {
+                CircularProgressIndicator(color = Colores.TituloPrincipal)
+            } else if (autoOriginal == null) {
+                Text("No se encontró el auto.", color = Colores.TextoBoton, fontSize = 18.sp)
+            } else {
 
-            Spacer(modifier = Modifier.height(16.dp))
+                // 1. CLIENTE
+                Text("CLIENTE:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
+                OutlinedTextField(
+                    value = cliente,
+                    onValueChange = { cliente = it.uppercase() },
+                    textStyle = estiloCampo,
+                    colors = coloresCampo,
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(onNext = { marcaFocus.requestFocus() }),
+                    modifier = Modifier.fillMaxWidth().focusRequester(clienteFocus).scrollAlEnfocar(scrollState, scope)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
 
-            BotonModulo3D(
-                texto = "REGRESAR",
-                icono = "🔙",
-                colorClaro = Colores.RegresarClaro,
-                colorMedio = Colores.RegresarMedio,
-                colorOscuro = Colores.RegresarOscuro,
-                onClick = {
-                    focusManager.clearFocus()
-                    onRegresar()
-                },
-                modifier = Modifier.fillMaxWidth(),
-                colorTexto = Color.White
-            )
+                // 2. MARCA
+                Text("MARCA:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
+                OutlinedTextField(
+                    value = marca,
+                    onValueChange = { marca = it.uppercase() },
+                    textStyle = estiloCampo,
+                    colors = coloresCampo,
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(onNext = { modeloFocus.requestFocus() }),
+                    modifier = Modifier.fillMaxWidth().focusRequester(marcaFocus).scrollAlEnfocar(scrollState, scope)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
 
-            // ✅ Espacio grande final para que el scroll tenga recorrido suficiente
-            Spacer(modifier = Modifier.height(200.dp))
+                // 3. MODELO
+                Text("MODELO:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
+                OutlinedTextField(
+                    value = modelo,
+                    onValueChange = { modelo = it.uppercase() },
+                    textStyle = estiloCampo,
+                    colors = coloresCampo,
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(onNext = { anioFocus.requestFocus() }),
+                    modifier = Modifier.fillMaxWidth().focusRequester(modeloFocus).scrollAlEnfocar(scrollState, scope)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // 4. AÑO
+                Text("AÑO:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
+                OutlinedTextField(
+                    value = anio,
+                    onValueChange = { anio = it.filter { char -> char.isDigit() } },
+                    textStyle = estiloCampo,
+                    colors = coloresCampo,
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(onNext = { placaFocus.requestFocus() }),
+                    modifier = Modifier.fillMaxWidth().focusRequester(anioFocus).scrollAlEnfocar(scrollState, scope)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // 5. PLACA
+                Text("PLACA:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
+                OutlinedTextField(
+                    value = placa,
+                    onValueChange = { placa = it.uppercase() },
+                    textStyle = estiloCampo,
+                    colors = coloresCampo,
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(onNext = { vinFocus.requestFocus() }),
+                    modifier = Modifier.fillMaxWidth().focusRequester(placaFocus).scrollAlEnfocar(scrollState, scope)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // 6. VIN
+                Text("VIN:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
+                OutlinedTextField(
+                    value = vin,
+                    onValueChange = { vin = it.uppercase() },
+                    textStyle = estiloCampo,
+                    colors = coloresCampo,
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(onNext = { colorFocus.requestFocus() }),
+                    modifier = Modifier.fillMaxWidth().focusRequester(vinFocus).scrollAlEnfocar(scrollState, scope)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // 7. COLOR
+                Text("COLOR:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
+                OutlinedTextField(
+                    value = color,
+                    onValueChange = { color = it.uppercase() },
+                    textStyle = estiloCampo,
+                    colors = coloresCampo,
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(onNext = { kilometrajeFocus.requestFocus() }),
+                    modifier = Modifier.fillMaxWidth().focusRequester(colorFocus).scrollAlEnfocar(scrollState, scope)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // 8. KILOMETRAJE
+                Text("KILOMETRAJE:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal, modifier = Modifier.align(Alignment.Start))
+                OutlinedTextField(
+                    value = kilometraje,
+                    onValueChange = { kilometraje = it.filter { char -> char.isDigit() } },
+                    textStyle = estiloCampo,
+                    colors = coloresCampo,
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus(); keyboardController?.hide() }),
+                    modifier = Modifier.fillMaxWidth().focusRequester(kilometrajeFocus).scrollAlEnfocar(scrollState, scope)
+                )
+
+                if (error != null) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text("⚠️ $error", color = Colores.TextoBoton, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                BotonModulo3D(
+                    texto = if (guardando) "GUARDANDO..." else "GUARDAR CAMBIOS",
+                    icono = "💾",
+                    colorClaro = Color(0xFFB9F6CA),
+                    colorMedio = Color(0xFF00C853),
+                    colorOscuro = Color(0xFF00695C),
+                    onClick = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
+                        if (!guardando) guardar()
+                    },
+                    modifier = Modifier.fillMaxWidth().height(58.dp),
+                    colorTexto = Color.Black
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        // BOTÓN REGRESAR FIJO E INMÓVIL AL FONDO DE LA PANTALLA
+        Surface(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth(),
+            color = Colores.FondoPantalla
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 12.dp)
+            ) {
+                BotonModulo3D(
+                    texto = "REGRESAR",
+                    icono = "🔙",
+                    colorClaro = Colores.RegresarClaro,
+                    colorMedio = Colores.RegresarMedio,
+                    colorOscuro = Colores.RegresarOscuro,
+                    onClick = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
+                        onRegresar()
+                    },
+                    modifier = Modifier.fillMaxWidth().height(58.dp),
+                    colorTexto = Color.White
+                )
+            }
         }
     }
 }
