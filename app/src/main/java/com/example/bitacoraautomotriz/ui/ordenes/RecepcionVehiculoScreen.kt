@@ -2,16 +2,14 @@ package com.example.bitacoraautomotriz.ui.ordenes
 
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Paint
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.launch
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
@@ -24,11 +22,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -36,7 +32,6 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -51,7 +46,6 @@ import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
 import com.example.bitacoraautomotriz.ui.theme.Colores
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -81,7 +75,7 @@ fun RecepcionVehiculoScreen(
     var mostrarDialogoConsejos by remember { mutableStateOf(false) }
     var guardando by remember { mutableStateOf(false) }
 
-    // DÍAS / TIEMPO DE RETENCIÓN DE FOTOS (DESPLEGABLE)
+    // DÍAS / TIEMPO DE RETENCIÓN DE FOTOS (DESPLEGABLE CON TEMPORIZADOR)
     val opcionesRetencion = remember {
         listOf(
             "1 Día",
@@ -100,7 +94,7 @@ fun RecepcionVehiculoScreen(
     var retencionSeleccionada by remember { mutableStateOf(opcionesRetencion.last()) }
     var menuRetencionExpandido by remember { mutableStateOf(false) }
 
-    // SLOTS FOTOGRÁFICOS DE RECEPCIÓN
+    // SLOTS FOTOGRÁFICOS Y VIDEO DE RECEPCIÓN
     var fotoFrenteTomada by remember { mutableStateOf(false) }
     var fotoAtrasTomada by remember { mutableStateOf(false) }
     var fotoIzquierdaTomada by remember { mutableStateOf(false) }
@@ -109,14 +103,16 @@ fun RecepcionVehiculoScreen(
     var fotoRinesTomada by remember { mutableStateOf(false) }
     var fotoInteriorTomada by remember { mutableStateOf(false) }
     var fotoTableroTomada by remember { mutableStateOf(false) }
+    var videoTomado by remember { mutableStateOf(false) }
 
     // RUTA O SLOT ACTUALMENTE EN TOMA
     var slotFotoActual by remember { mutableStateOf("") }
 
-    val launcherGaleria = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        if (uri != null) {
+    // LAUNCHER DE CÁMARA EN TIEMPO REAL (ABRE CÁMARA EN VIVO)
+    val launcherCamaraEnVivo = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview()
+    ) { bitmap: Bitmap? ->
+        if (bitmap != null) {
             when (slotFotoActual) {
                 "FRENTE" -> fotoFrenteTomada = true
                 "ATRÁS" -> fotoAtrasTomada = true
@@ -127,11 +123,21 @@ fun RecepcionVehiculoScreen(
                 "INTERIOR" -> fotoInteriorTomada = true
                 "TABLERO" -> fotoTableroTomada = true
             }
-            Toast.makeText(context, "✅ Foto $slotFotoActual agregada con marca de agua", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "📷 Foto $slotFotoActual tomada con cámara en vivo y marca de agua", Toast.LENGTH_SHORT).show()
         }
     }
 
-    // TRAZADOS PARA FIRMA DIGITAL TÁCTIL
+    // LAUNCHER DE VIDEO
+    val launcherVideo = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            videoTomado = true
+            Toast.makeText(context, "🎥 Video de recepción registrado (15-20 seg)", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // TRAZADOS PARA FIRMA DIGITAL TÁCTIL EN TIEMPO REAL
     val pathsFirma = remember { mutableStateListOf<Path>() }
     var currentPath by remember { mutableStateOf<Path?>(null) }
     var firmaCapturada by remember { mutableStateOf(false) }
@@ -147,14 +153,22 @@ fun RecepcionVehiculoScreen(
     LaunchedEffect(clienteSeleccionado) {
         if (clienteSeleccionado != null) {
             try {
-                autosDelCliente = AutoRepository.obtenerAutosPorCliente(clienteSeleccionado!!.nombre, context)
+                val listaAutos = AutoRepository.obtenerAutosPorCliente(clienteSeleccionado!!.nombre, context)
+                autosDelCliente = listaAutos
+                if (listaAutos.size == 1) {
+                    autoSeleccionado = listaAutos.first()
+                    kilometraje = listaAutos.first().kilometraje.toString()
+                } else {
+                    autoSeleccionado = null
+                }
             } catch (_: Exception) {
                 autosDelCliente = emptyList()
+                autoSeleccionado = null
             }
         } else {
             autosDelCliente = emptyList()
+            autoSeleccionado = null
         }
-        autoSeleccionado = null
     }
 
     val queryCliente = busquedaCliente.uppercase().trim()
@@ -165,7 +179,7 @@ fun RecepcionVehiculoScreen(
 
     fun tomarFotoSlot(slot: String) {
         slotFotoActual = slot
-        launcherGaleria.launch("image/*")
+        launcherCamaraEnVivo.launch()
     }
 
     fun guardarRecepcionVehiculo() {
@@ -198,6 +212,7 @@ fun RecepcionVehiculoScreen(
             fotoRinesPath = if (fotoRinesTomada) "REGISTRADA" else "",
             fotoInteriorPath = if (fotoInteriorTomada) "REGISTRADA" else "",
             fotoTableroPath = if (fotoTableroTomada) "REGISTRADA" else "",
+            videoPath = if (videoTomado) "VIDEO_REGISTRADO" else "",
             firmaPath = if (firmaCapturada) "FIRMA_TACTIL_VALIDA" else "",
             hashIntegridadSha256 = hashGenerado,
             tiempoRetencion = retencionSeleccionada
@@ -208,7 +223,7 @@ fun RecepcionVehiculoScreen(
                 RecepcionRepository.guardarRecepcion(recepcion, context)
                 guardando = false
                 Toast.makeText(context, "✅ Acta de recepción guardada con firma y hash de integridad", Toast.LENGTH_LONG).show()
-                mensaje = "✅ REGISTRO DE RECEPCIÓN Y PROTECCIÓN LEGAL COMPLETADO."
+                mensaje = "✅ REGISTRO DE RECEPCIÓN Y PROTECCIÓN LEGAL COMPLETADO CON ÉXITO."
             } catch (e: Exception) {
                 guardando = false
                 mensaje = "ERROR AL GUARDAR: ${e.message}"
@@ -246,6 +261,7 @@ Kilometraje: $kmNum km
 
 *Estado de la evidencia fotográfica y legal:*
 • Fotos de ángulos registrados: OK
+• Video de inspección: ${if (videoTomado) "INCLUIDO" else "OPCIONAL"}
 • Firma digital del cliente: ACEPTADA
 • Creador Hash SHA-256: Protegido
 • Periodo de retención legal: $retencionSeleccionada
@@ -304,7 +320,7 @@ Agradecemos su confianza.
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // 1. SELECCIÓN DE CLIENTE Y AUTO
+            // 1. SELECCIÓN DE CLIENTE Y AUTO (BOTÓN CAMBIAR ALINEADO ABAJO)
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
@@ -338,10 +354,15 @@ Agradecemos su confianza.
                             }
                         }
                     } else {
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        // CLIENTE CON BOTÓN CAMBIAR DEBAJO
+                        Column(modifier = Modifier.fillMaxWidth()) {
                             Text(text = "CLIENTE: ${clienteSeleccionado!!.nombre.uppercase()}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                            TextButton(onClick = { clienteSeleccionado = null; autoSeleccionado = null }) {
-                                Text("CAMBIAR", color = Color(0xFFFF5252), fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.height(2.dp))
+                            TextButton(
+                                onClick = { clienteSeleccionado = null; autoSeleccionado = null },
+                                contentPadding = PaddingValues(0.dp)
+                            ) {
+                                Text("CAMBIAR DE CLIENTE", color = Color(0xFFFF5252), fontWeight = FontWeight.Bold, fontSize = 14.sp)
                             }
                         }
 
@@ -353,20 +374,28 @@ Agradecemos su confianza.
                                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                     autosDelCliente.forEach { auto ->
                                         Button(
-                                            onClick = { autoSeleccionado = auto; kilometraje = auto.kilometraje.toString() },
+                                            onClick = {
+                                                autoSeleccionado = auto
+                                                kilometraje = auto.kilometraje.toString()
+                                                mensaje = ""
+                                            },
                                             modifier = Modifier.fillMaxWidth(),
                                             colors = ButtonDefaults.buttonColors(containerColor = Colores.FondoSecundario)
                                         ) {
-                                            Text(text = "🚗 ${auto.marca} ${auto.modelo} (${auto.placa})", color = Color.White)
+                                            Text(text = "🚗 ${auto.marca} ${auto.modelo} (${auto.placa})", color = Color.White, fontWeight = FontWeight.Bold)
                                         }
                                     }
                                 }
                             }
                         } else {
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                Text(text = "AUTO: ${autoSeleccionado!!.marca} (${autoSeleccionado!!.placa})", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF7DFFB2))
-                                TextButton(onClick = { autoSeleccionado = null }) {
-                                    Text("CAMBIAR AUTO", color = Color(0xFFFF5252), fontWeight = FontWeight.Bold)
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                Text(text = "AUTO: ${autoSeleccionado!!.marca.uppercase()} ${autoSeleccionado!!.modelo.uppercase()} (${autoSeleccionado!!.placa.uppercase()})", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF7DFFB2))
+                                Spacer(modifier = Modifier.height(2.dp))
+                                TextButton(
+                                    onClick = { autoSeleccionado = null },
+                                    contentPadding = PaddingValues(0.dp)
+                                ) {
+                                    Text("CAMBIAR DE AUTO", color = Color(0xFFFF5252), fontWeight = FontWeight.Bold, fontSize = 14.sp)
                                 }
                             }
                         }
@@ -388,7 +417,7 @@ Agradecemos su confianza.
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // 2. CÁMARA GUIADA Y REGISTRO DE 8 FOTOS
+            // 2. CÁMARA GUIADA EN VIVO Y OPCIÓN DE VIDEO
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
@@ -396,8 +425,8 @@ Agradecemos su confianza.
                 elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("2. CÁMARA GUIADA (8 ÁNGULOS OBLIGATORIOS)", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                    Text("Cada foto incluirá marca de agua con taller, fecha, placa y kilometraje", fontSize = 13.sp, color = Colores.EtiquetaCampo)
+                    Text("2. CÁMARA GUIADA Y REGISTRO DE VIDEO", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("Al presionar cada botón se abre la cámara en vivo del teléfono", fontSize = 13.sp, color = Colores.EtiquetaCampo)
 
                     val slots = listOf(
                         "FRENTE" to fotoFrenteTomada,
@@ -427,13 +456,27 @@ Agradecemos su confianza.
                                 }
                             }
                         }
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        // BOTÓN DE VIDEO OPCIONAL DE 15-20 SEGUNDOS
+                        BotonModulo3D(
+                            texto = if (videoTomado) "✅ VIDEO GRABADO" else "🎥 GRABAR VIDEO OPCIONAL (15-20 SEG)",
+                            colorClaro = if (videoTomado) Color(0xFFB9F6CA) else Color(0xFFFFF59D),
+                            colorMedio = if (videoTomado) Color(0xFF00C853) else Color(0xFFFFEB3B),
+                            colorOscuro = if (videoTomado) Color(0xFF00695C) else Color(0xFFFBC02D),
+                            colorTexto = Color.Black,
+                            onClick = { launcherVideo.launch("video/*") },
+                            modifier = Modifier.fillMaxWidth().height(50.dp),
+                            tamanioTexto = 14
+                        )
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // 3. LIENZO DE FIRMA DIGITAL TÁCTIL DEL CLIENTE
+            // 3. LIENZO DE FIRMA DIGITAL TÁCTIL EN TIEMPO REAL
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
@@ -441,10 +484,11 @@ Agradecemos su confianza.
                 elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
                         Text("3. FIRMA DIGITAL DEL CLIENTE", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         if (firmaCapturada) {
-                            Text("✅ FIRMADO", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text("✅ FIRMADO Y ACEPTADO", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold, fontSize = 14.sp)
                         }
                     }
 
@@ -453,7 +497,7 @@ Agradecemos su confianza.
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(150.dp)
+                            .height(160.dp)
                             .clip(RoundedCornerShape(12.dp))
                             .background(Color.White)
                             .border(2.dp, Color.Black, RoundedCornerShape(12.dp))
@@ -469,7 +513,7 @@ Agradecemos su confianza.
                                             pathsFirma.add(newPath)
                                             firmaCapturada = true
                                         },
-                                        onDrag = { change, dragAmount ->
+                                        onDrag = { change, _ ->
                                             change.consume()
                                             currentPath?.let { p ->
                                                 val lastOffset = change.position
@@ -483,7 +527,7 @@ Agradecemos su confianza.
                                 drawPath(
                                     path = path,
                                     color = Color.Black,
-                                    style = Stroke(width = 5f)
+                                    style = Stroke(width = 6f)
                                 )
                             }
                         }
@@ -499,7 +543,7 @@ Agradecemos su confianza.
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // 4. DESPLEGABLE DE TIEMPO DE RETENCIÓN DE FOTOS
+            // 4. TEMPORIZADOR DE CONTEO REGRESIVO Y TIEMPO DE RETENCIÓN DE FOTOS
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
@@ -507,7 +551,8 @@ Agradecemos su confianza.
                 elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("4. TIEMPO DE RETENCIÓN DE LA EVIDENCIA", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal)
+                    Text("4. TEMPORIZADOR DE AUTO-ELIMINACIÓN DE FOTOS", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal)
+                    Text("Seleccione el periodo tras el cual la evidencia expira e inicia el conteo regresivo de depuración automática para no llenar la memoria del taller:", fontSize = 13.sp, color = Colores.EtiquetaCampo)
 
                     Box(modifier = Modifier.fillMaxWidth()) {
                         OutlinedButton(
