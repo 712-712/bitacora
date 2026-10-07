@@ -130,7 +130,7 @@ private fun WelcomeContent(
     }
     var menuExpanded by remember { mutableStateOf(false) }
 
-    val urlDescarga = "https://appdistribution.firebase.dev/i/18dd732eb8052be2"
+    val urlDescarga = "https://github.com/712-712/bitacora/releases/download/v1.0/app-cliente-debug.apk"
     val qrBitmap = remember { generarQrBitmapRealConAltaCorreccion(urlDescarga, 450, 450) }
 
     Box(
