@@ -17,6 +17,7 @@ import com.example.bitacoraautomotriz.ui.theme.Colores
 fun OrdenesScreen(
     onNuevaOrden: () -> Unit,
     onBuscarOrden: () -> Unit,
+    onRecepcionVehiculo: () -> Unit = {},
     onProgramarAlerta: () -> Unit = {},
     onRegresar: () -> Unit
 ) {
@@ -37,7 +38,7 @@ fun OrdenesScreen(
             maxLines = 1,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
-        Spacer(modifier = Modifier.height(36.dp))
+        Spacer(modifier = Modifier.height(28.dp))
 
         BotonModulo3D(
             texto = "NUEVA ORDEN DE COTIZACIÓN",
@@ -46,11 +47,25 @@ fun OrdenesScreen(
             colorMedio = Color(0xFF9B6B43),
             colorOscuro = Color(0xFF5D3A1A),
             onClick = { onNuevaOrden() },
-            tamanioTexto = 17,
+            tamanioTexto = 16,
             colorTexto = Color.Black
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // BOTÓN VERDE RECEPCIÓN Y PROTECCIÓN LEGAL DEL VEHÍCULO
+        BotonModulo3D(
+            texto = "RECEPCIÓN Y CHECK-IN VEHÍCULO",
+            icono = "📷",
+            colorClaro = Color(0xFFB9F6CA),
+            colorMedio = Color(0xFF00C853),
+            colorOscuro = Color(0xFF00695C),
+            onClick = { onRecepcionVehiculo() },
+            tamanioTexto = 15,
+            colorTexto = Color.Black
+        )
+
+        Spacer(modifier = Modifier.height(14.dp))
 
         BotonModulo3D(
             texto = "SEGUIMIENTO DE COTIZACIONES",
@@ -63,7 +78,7 @@ fun OrdenesScreen(
             colorTexto = Color.Black
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(14.dp))
 
         BotonModulo3D(
             texto = "PROGRAMAR ALERTA DE REVISIÓN",

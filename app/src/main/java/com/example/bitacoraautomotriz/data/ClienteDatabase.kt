@@ -1,4 +1,3 @@
-
 package com.example.bitacoraautomotriz.data
 
 import android.content.Context
@@ -13,48 +12,21 @@ import androidx.room.RoomDatabase
         OrdenServicio::class,
         Repuesto::class,
         Gasto::class,
-        Factura::class
+        Factura::class,
+        RecepcionVehiculo::class
     ],
-    version = 8,
+    version = 9,
     exportSchema = false
 )
 abstract class ClienteDatabase : RoomDatabase() {
 
-    // =========================================
-    // DAO CLIENTES
-    // =========================================
-
     abstract fun clienteDao(): ClienteDao
-
-    // =========================================
-    // DAO AUTOS
-    // =========================================
-
     abstract fun autoDao(): AutoDao
-
-    // =========================================
-    // DAO ÓRDENES DE SERVICIO
-    // =========================================
-
     abstract fun ordenServicioDao(): OrdenServicioDao
-
-    // =========================================
-    // DAO REPUESTOS
-    // =========================================
-
     abstract fun repuestoDao(): RepuestoDao
-
-    // =========================================
-    // DAO GASTOS
-    // =========================================
-
     abstract fun gastoDao(): GastoDao
-
-    // =========================================
-    // DAO FACTURAS
-    // =========================================
-
     abstract fun facturaDao(): FacturaDao
+    abstract fun recepcionVehiculoDao(): RecepcionVehiculoDao
 
     companion object {
 
@@ -62,9 +34,7 @@ abstract class ClienteDatabase : RoomDatabase() {
         private var INSTANCE: ClienteDatabase? = null
 
         fun obtenerDatabase(context: Context): ClienteDatabase {
-
             return INSTANCE ?: synchronized(this) {
-
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     ClienteDatabase::class.java,
@@ -74,10 +44,8 @@ abstract class ClienteDatabase : RoomDatabase() {
                     .build()
 
                 INSTANCE = instance
-
                 instance
             }
         }
     }
 }
-
