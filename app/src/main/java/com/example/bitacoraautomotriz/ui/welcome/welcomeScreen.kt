@@ -28,7 +28,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -247,7 +246,12 @@ private fun WelcomeContent(
                     buttonLabel = stringResource(id = R.string.ingresar),
                     accentColor = Color(0xFF43A047),
                     accentColorDark = Color(0xFF1B5E20),
-                    onClick = onClienteClick,
+                    onClick = {
+                        try {
+                            AudioUtils.reproducirSonidoMotorUnaVez(context)
+                        } catch (_: Exception) {}
+                        onClienteClick()
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
@@ -260,7 +264,12 @@ private fun WelcomeContent(
                     buttonLabel = stringResource(id = R.string.ingresar),
                     accentColor = Color(0xFF1E88E5),
                     accentColorDark = Color(0xFF0D47A1),
-                    onClick = onTallerClick,
+                    onClick = {
+                        try {
+                            AudioUtils.reproducirSonidoMotorUnaVez(context)
+                        } catch (_: Exception) {}
+                        onTallerClick()
+                    },
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth()
@@ -353,7 +362,12 @@ private fun WelcomeContent(
                             modifier = Modifier.weight(1f)
                         )
                         Button(
-                            onClick = onClienteClick,
+                            onClick = {
+                                try {
+                                    AudioUtils.reproducirSonidoMotorUnaVez(context)
+                                } catch (_: Exception) {}
+                                onClienteClick()
+                            },
                             shape = RoundedCornerShape(50),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF43A047)),
                             contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp)
