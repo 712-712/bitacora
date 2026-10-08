@@ -8,7 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,8 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -83,51 +80,95 @@ fun VerClientesScreen(
             } else {
                 clientes.forEach { cliente ->
                     Card(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
-                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 6.dp),
+                        shape = RoundedCornerShape(14.dp),
                         colors = CardDefaults.cardColors(containerColor = Colores.FondoTarjeta),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
                     ) {
-                        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "ID CLIENTE: ${cliente.id}",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF7DFFB2)
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = cliente.nombre.uppercase(),
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
 
-                            Text(text = cliente.nombre, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Spacer(modifier = Modifier.height(6.dp))
 
                             Text(
-                                text = "📞 ${cliente.telefono}   |   ID: ${cliente.id}",
-                                fontSize = 22.sp,
-                                color = Color.Black,
+                                text = "TELÉFONO DEL CLIENTE:",
+                                fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                modifier = Modifier
-                                    .clickable {
-                                        val intent = Intent(Intent.ACTION_DIAL).apply {
-                                            data = Uri.parse("tel:${cliente.telefono}")
-                                        }
-                                        context.startActivity(intent)
+                                color = Color.Black
+                            )
+                            Text(
+                                text = "📞 ${cliente.telefono}",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF0033FF),
+                                textDecoration = TextDecoration.Underline,
+                                modifier = Modifier.clickable {
+                                    val intent = Intent(Intent.ACTION_DIAL).apply {
+                                        data = Uri.parse("tel:${cliente.telefono}")
                                     }
-                                    .padding(top = 4.dp)
+                                    try { context.startActivity(intent) } catch (_: Exception) {}
+                                }
                             )
 
                             if (cliente.correo.isNotBlank()) {
-                                ClickableText(
-                                    text = buildAnnotatedString {
-                                        append("✉️ ")
-                                        pushStyle(SpanStyle(color = Color(0xFF0033FF), textDecoration = TextDecoration.Underline, fontWeight = FontWeight.Bold))
-                                        append(cliente.correo)
-                                        pop()
-                                    },
-                                    onClick = {
-                                        val intent = Intent(Intent.ACTION_SENDTO).apply { data = Uri.parse("mailto:${cliente.correo}") }
-                                        context.startActivity(intent)
-                                    },
-                                    modifier = Modifier.padding(top = 4.dp)
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = "CORREO ELECTRÓNICO:",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Black
+                                )
+                                Text(
+                                    text = "✉️ ${cliente.correo.lowercase()}",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF0033FF),
+                                    textDecoration = TextDecoration.Underline,
+                                    modifier = Modifier.clickable {
+                                        val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                            data = Uri.parse("mailto:${cliente.correo}")
+                                        }
+                                        try { context.startActivity(intent) } catch (_: Exception) {}
+                                    }
                                 )
                             }
 
                             if (cliente.direccion.isNotBlank()) {
-                                Text(text = "📍 ${cliente.direccion}", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = Color.Black, modifier = Modifier.padding(top = 4.dp))
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = "DIRECCIÓN REGISTRADA:",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Black
+                                )
+                                Text(
+                                    text = "📍 ${cliente.direccion.uppercase()}",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
                             }
 
-                            Spacer(modifier = Modifier.height(12.dp))
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Color(0xFF004D33))
 
                             Column(
                                 modifier = Modifier.fillMaxWidth(),
@@ -144,7 +185,6 @@ fun VerClientesScreen(
                                     colorTexto = Color.Black
                                 )
 
-                                // BOTÓN ELIMINAR CON ADVERTENCIA DE ELIMINACIÓN EN CASCADA
                                 BotonModulo3D(
                                     texto = "ELIMINAR",
                                     colorClaro = Color(0xFFEF9A9A),
@@ -223,6 +263,7 @@ fun VerClientesScreen(
                     colorOscuro = Colores.RegresarOscuro,
                     onClick = onRegresar,
                     modifier = Modifier.fillMaxWidth().height(58.dp),
+                    tamanioTexto = 16,
                     colorTexto = Color.White
                 )
             }

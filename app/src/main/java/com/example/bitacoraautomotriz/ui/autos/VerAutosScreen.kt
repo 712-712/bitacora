@@ -157,31 +157,69 @@ fun VerAutosScreen(
             } else {
                 autosFiltrados.forEach { auto ->
                     Card(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
-                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 6.dp),
+                        shape = RoundedCornerShape(14.dp),
                         colors = CardDefaults.cardColors(containerColor = Colores.FondoTarjeta),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
                     ) {
-                        Column(modifier = Modifier.fillMaxWidth().padding(19.dp)) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
                             Text(
-                                text = "${auto.marca.orEmpty()} ${auto.modelo.orEmpty()} (${auto.anio})",
-                                fontSize = 19.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.Black
-                            )
-                            Text(
-                                text = "Placa: ${auto.placa.orEmpty()}",
+                                text = "ID AUTO: ${auto.id}",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.Black
+                                color = Color(0xFF7DFFB2)
                             )
+                            Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "Cliente: ${auto.cliente.orEmpty()}",
-                                fontSize = 18.sp,
+                                text = "${auto.marca.orEmpty()} ${auto.modelo.orEmpty()} (${auto.anio})".uppercase(),
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+
+                            Text(
+                                text = "PLACA: ${auto.placa.orEmpty().uppercase()}   |   VIN: ${auto.vin.orEmpty().ifBlank { "N/A" }.uppercase()}",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF7DFFB2)
+                            )
+
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            Text(
+                                text = "CLIENTE PROPIETARIO:",
+                                fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.Black
                             )
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = auto.cliente.orEmpty().uppercase(),
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+
+                            Text(
+                                text = "KILOMETRAJE REGISTRADO:",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
+                            Text(
+                                text = "${auto.kilometraje} km",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Color(0xFF004D33))
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -257,12 +295,9 @@ fun VerAutosScreen(
                     colorClaro = Colores.RegresarClaro,
                     colorMedio = Colores.RegresarMedio,
                     colorOscuro = Colores.RegresarOscuro,
-                    onClick = {
-                        focusManager.clearFocus()
-                        keyboardController?.hide()
-                        onRegresar()
-                    },
+                    onClick = onRegresar,
                     modifier = Modifier.fillMaxWidth().height(58.dp),
+                    tamanioTexto = 16,
                     colorTexto = Color.White
                 )
             }
