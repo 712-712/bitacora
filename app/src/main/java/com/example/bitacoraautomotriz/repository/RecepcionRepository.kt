@@ -18,6 +18,11 @@ object RecepcionRepository {
         return db.recepcionVehiculoDao().obtenerTodas()
     }
 
+    suspend fun eliminarRecepcion(recepcion: RecepcionVehiculo, context: Context) {
+        val db = ClienteDatabase.obtenerDatabase(context)
+        db.recepcionVehiculoDao().eliminar(recepcion)
+    }
+
     fun calcularHashSha256(texto: String): String {
         return try {
             val digest = MessageDigest.getInstance("SHA-256")

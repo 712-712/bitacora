@@ -28,6 +28,7 @@ fun ReportesScreen(
     onReporteInventario: () -> Unit,
     onReporteGastos: () -> Unit,
     onReporteFacturacion: () -> Unit,
+    onReporteRecepciones: () -> Unit = {},
     onRegresar: () -> Unit
 ) {
 
@@ -56,6 +57,18 @@ fun ReportesScreen(
         Spacer(
             modifier = Modifier.height(24.dp)
         )
+
+        // BOTÓN VERDE DESTACADO DE REPORTE DE RECEPCIONES Y CHECK-IN
+        BotonModulo3D(
+            texto = "REPORTE RECEPCIÓN Y CHECK-IN",
+            colorClaro = Color(0xFFB9F6CA),
+            colorMedio = Color(0xFF00C853),
+            colorOscuro = Color(0xFF00695C),
+            onClick = onReporteRecepciones,
+            colorTexto = Color.Black
+        )
+
+        Spacer(modifier = Modifier.height(14.dp))
 
         BotonModulo3D(
             texto = "REPORTE DE CLIENTES",

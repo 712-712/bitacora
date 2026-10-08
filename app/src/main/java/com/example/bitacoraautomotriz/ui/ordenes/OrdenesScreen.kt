@@ -18,6 +18,7 @@ fun OrdenesScreen(
     onNuevaOrden: () -> Unit,
     onBuscarOrden: () -> Unit,
     onRecepcionVehiculo: () -> Unit = {},
+    onVerRecepciones: () -> Unit = {},
     onProgramarAlerta: () -> Unit = {},
     onRegresar: () -> Unit
 ) {
@@ -38,7 +39,7 @@ fun OrdenesScreen(
             maxLines = 1,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
-        Spacer(modifier = Modifier.height(28.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         BotonModulo3D(
             texto = "NUEVA ORDEN DE COTIZACIÓN",
@@ -51,7 +52,7 @@ fun OrdenesScreen(
             colorTexto = Color.Black
         )
 
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         // BOTÓN VERDE RECEPCIÓN Y PROTECCIÓN LEGAL DEL VEHÍCULO
         BotonModulo3D(
@@ -65,7 +66,21 @@ fun OrdenesScreen(
             colorTexto = Color.Black
         )
 
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // BOTÓN VERDE HISTORIAL DE RECEPCIONES Y PROTECCIÓN LEGAL
+        BotonModulo3D(
+            texto = "HISTORIAL DE RECEPCIONES Y CHECK-IN",
+            icono = "📜",
+            colorClaro = Color(0xFFB9F6CA),
+            colorMedio = Color(0xFF00C853),
+            colorOscuro = Color(0xFF00695C),
+            onClick = { onVerRecepciones() },
+            tamanioTexto = 14,
+            colorTexto = Color.Black
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         BotonModulo3D(
             texto = "SEGUIMIENTO DE COTIZACIONES",
@@ -78,7 +93,7 @@ fun OrdenesScreen(
             colorTexto = Color.Black
         )
 
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         BotonModulo3D(
             texto = "PROGRAMAR ALERTA DE REVISIÓN",
@@ -91,7 +106,7 @@ fun OrdenesScreen(
             colorTexto = Color.Black
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         BotonModulo3D(
             texto = "REGRESAR",
