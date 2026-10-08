@@ -24,6 +24,7 @@ import com.example.bitacoraautomotriz.repository.FirebaseSyncManager
 import com.example.bitacoraautomotriz.repository.OrdenServicioRepository
 import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
 import com.example.bitacoraautomotriz.ui.theme.Colores
+import com.example.bitacoraautomotriz.utils.AudioUtils
 
 @Composable
 fun EstadoReparacionScreen(
@@ -41,9 +42,16 @@ fun EstadoReparacionScreen(
             if (lista.isNotEmpty()) {
                 val ultima = lista.last()
                 ordenSeleccionada = ultima
+                try {
+                    AudioUtils.reproducirSonidoMotorTresVeces(context)
+                } catch (_: Exception) {}
+
                 // ESCUCHAR EN TIEMPO REAL DESDE FIREBASE REALTIME DATABASE (<1 SEG SEGUNDO)
                 FirebaseSyncManager.escucharOrdenEnTiempoReal(ultima.id) { ordenDescargada ->
                     ordenSeleccionada = ordenDescargada
+                    try {
+                        AudioUtils.reproducirSonidoMotorTresVeces(context)
+                    } catch (_: Exception) {}
                 }
             }
         } catch (_: Exception) {

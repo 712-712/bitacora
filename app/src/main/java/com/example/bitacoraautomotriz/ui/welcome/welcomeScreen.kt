@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.os.LocaleListCompat
 import com.example.bitacoraautomotriz.R
+import com.example.bitacoraautomotriz.utils.AudioUtils
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.MultiFormatWriter
@@ -86,9 +87,13 @@ fun WelcomeScreen(
     onTallerClick: () -> Unit,
     onClienteClick: () -> Unit,
 ) {
+    val context = LocalContext.current
     var showSplash by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
+        try {
+            AudioUtils.reproducirSonidoMotorUnaVez(context)
+        } catch (_: Exception) {}
         delay(2200L)
         showSplash = false
     }

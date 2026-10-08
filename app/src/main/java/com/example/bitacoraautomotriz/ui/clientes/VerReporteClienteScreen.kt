@@ -29,6 +29,7 @@ import com.example.bitacoraautomotriz.repository.OrdenServicioRepository
 import com.example.bitacoraautomotriz.repository.RecepcionRepository
 import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
 import com.example.bitacoraautomotriz.ui.theme.Colores
+import com.example.bitacoraautomotriz.utils.AudioUtils
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -62,9 +63,16 @@ fun VerReporteClienteScreen(
                 orden = ordenEncontrada
                 ordenEncontrada?.let { o ->
                     estadoSeleccionado = o.estado
+                    try {
+                        AudioUtils.reproducirSonidoMotorTresVeces(context)
+                    } catch (_: Exception) {}
+
                     FirebaseSyncManager.escucharOrdenEnTiempoReal(o.id) { ordenDescargada ->
                         orden = ordenDescargada
                         estadoSeleccionado = ordenDescargada.estado
+                        try {
+                            AudioUtils.reproducirSonidoMotorTresVeces(context)
+                        } catch (_: Exception) {}
                     }
 
                     try {
