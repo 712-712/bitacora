@@ -9,6 +9,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -209,17 +210,31 @@ private fun WelcomeContent(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // ---------- Logo / Título ----------
+            // ---------- Logo / Título con Contorno Azul (Taller) / Verde (Cliente) ----------
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Icon(
-                    imageVector = if (esAppCliente) Icons.Default.Person else Icons.Default.Build,
-                    contentDescription = "Acceso Taller",
-                    tint = if (esAppCliente) Color(0xFF43A047) else Color(0xFF3FA9F5),
-                    modifier = Modifier.size(40.dp)
-                )
+                Surface(
+                    shape = CircleShape,
+                    color = Color(0xFF102338),
+                    border = BorderStroke(2.dp, if (esAppCliente) Color(0xFF43A047) else Color(0xFF3FA9F5)),
+                    shadowElevation = 8.dp,
+                    modifier = Modifier.padding(bottom = 6.dp)
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.padding(10.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (esAppCliente) Icons.Default.Person else Icons.Default.Build,
+                            contentDescription = "Ícono App",
+                            tint = if (esAppCliente) Color(0xFF7DFFB2) else Color(0xFF3FA9F5),
+                            modifier = Modifier.size(36.dp)
+                        )
+                    }
+                }
+
                 Text(
                     text = stringResource(id = R.string.brand_bitacora),
                     color = Color.White,
