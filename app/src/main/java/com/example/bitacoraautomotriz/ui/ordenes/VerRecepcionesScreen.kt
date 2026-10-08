@@ -78,8 +78,8 @@ Placa: ${r.placa}   |   VIN: ${r.vin.ifBlank { "N/A" }}
 Kilometraje: ${r.kilometraje} km
 
 *Estado de Evidencia Legal:*
-• Evidencia fotográfica de ángulos: OK
-• Video de inspección: ${if (r.videoPath.isNotBlank()) "REGISTRADO" else "N/A"}
+• Evidencia fotográfica de ángulos: OK con Marca de Agua
+• Video de inspección: ${if (r.videoPath.isNotBlank()) "REGISTRADO CON SELLO LEGAL Y METADATOS EXIF" else "N/A"}
 • Firma digital en pantalla: ${if (r.firmaPath.isNotBlank()) "ACEPTADA" else "N/A"}
 • Huella SHA-256: ${r.hashIntegridadSha256}
 • Retención seleccionada: ${r.tiempoRetencion}

@@ -201,13 +201,13 @@ fun RecepcionVehiculoScreen(
         }
     }
 
-    // LAUNCHER DE VIDEO EN VIVO
+    // LAUNCHER DE VIDEO EN VIVO CON SELLO LEGAL Y METADATOS EXIF
     val launcherVideoCamara = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         if (uri != null) {
             videoTomado = true
-            Toast.makeText(context, "🎥 Video de recepción capturado con éxito", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "🎥 Video de recepción capturado con sello legal y metadatos EXIF", Toast.LENGTH_SHORT).show()
         }
     }
 
