@@ -4,15 +4,10 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -26,10 +21,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -41,14 +33,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
 import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
 import com.example.bitacoraautomotriz.ui.theme.Colores
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
-import java.io.File
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
@@ -180,19 +170,6 @@ fun obtenerUbicacionActual(
         e.printStackTrace()
         onUbicacion(null)
     }
-}
-
-// ======================================================
-// ARCHIVO TEMPORAL PARA FOTOS
-// ======================================================
-
-fun crearArchivoImagenTemporal(context: Context): Uri {
-    val carpeta = File(context.cacheDir, "fotos")
-    if (!carpeta.exists()) {
-        carpeta.mkdirs()
-    }
-    val archivo = File(carpeta, "foto_${System.currentTimeMillis()}.jpg")
-    return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", archivo)
 }
 
 // ======================================================
@@ -426,8 +403,6 @@ fun BuscarRefaccionMapaScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
 
     var textoBusqueda by remember { mutableStateOf("") }
-    var fotoUri by remember { mutableStateOf<Uri?>(null) }
-    var fotoBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
     // LIMPIEZA AUTOMÁTICA AL ABRIR O REGRESAR A LA PANTALLA
     LaunchedEffect(Unit) {
@@ -454,31 +429,6 @@ fun BuscarRefaccionMapaScreen(
                 val webUri = Uri.parse("https://www.google.com/maps/search/?api=1&query=$queryEncoded&center=$lat,$lon")
                 context.startActivity(Intent(Intent.ACTION_VIEW, webUri))
             }
-        }
-    }
-
-    val lanzadorCamara = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicture()
-    ) { exito ->
-        if (exito && fotoUri != null) {
-            try {
-                val stream = context.contentResolver.openInputStream(fotoUri!!)
-                fotoBitmap = BitmapFactory.decodeStream(stream)
-                stream?.close()
-                abrirGoogleMapsConCoordenadasReales()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
-
-    val lanzadorPermisoCamara = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { concedido ->
-        if (concedido) {
-            val uri = crearArchivoImagenTemporal(context)
-            fotoUri = uri
-            lanzadorCamara.launch(uri)
         }
     }
 
@@ -603,43 +553,6 @@ fun BuscarRefaccionMapaScreen(
             tamanioTexto = 16,
             colorTexto = Color.Black
         )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // BOTÓN CON TEXTO FORMATO 2 LÍNEAS
-        BotonModulo3D(
-            texto = "TOMAR FOTO DEL AUTO\nREFACCIÓN O TALLER",
-            icono = "📷",
-            colorClaro = Color(0xFFF3A7FF),
-            colorMedio = Color(0xFFD83CFF),
-            colorOscuro = Color(0xFF7B1599),
-            onClick = {
-                val tienePermisoCamara = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
-                if (tienePermisoCamara) {
-                    val uri = crearArchivoImagenTemporal(context)
-                    fotoUri = uri
-                    lanzadorCamara.launch(uri)
-                } else {
-                    lanzadorPermisoCamara.launch(Manifest.permission.CAMERA)
-                }
-            },
-            modifier = Modifier.fillMaxWidth().height(68.dp),
-            tamanioTexto = 15,
-            colorTexto = Color.Black
-        )
-
-        if (fotoBitmap != null) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Image(
-                bitmap = fotoBitmap!!.asImageBitmap(),
-                contentDescription = "Foto tomada",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .clip(RoundedCornerShape(12.dp))
-            )
-        }
 
         Spacer(modifier = Modifier.height(28.dp))
 
