@@ -80,7 +80,7 @@ fun ReporteAutosScreen(
                 )
             } else {
                 Row {
-                    Text(text = "Total de autos: ", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text(text = "TOTAL DE AUTOS: ", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     Text(text = "${autos.size}", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
                 }
 
@@ -90,43 +90,65 @@ fun ReporteAutosScreen(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 12.dp),
-                        shape = RoundedCornerShape(12.dp),
+                            .padding(vertical = 6.dp),
+                        shape = RoundedCornerShape(14.dp),
                         colors = CardDefaults.cardColors(containerColor = Colores.FondoTarjeta),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
                     ) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                                .padding(20.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Row {
-                                Text(text = "VEHÍCULO: ", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                                Text(text = "${auto.marca.uppercase()} ${auto.modelo.uppercase()}", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                            }
+                            Text(
+                                text = "ID AUTO: ${auto.id}",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF7DFFB2)
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "${auto.marca.uppercase()} ${auto.modelo.uppercase()} (${auto.anio})",
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
 
-                            Row {
-                                Text(text = "AÑO: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                                Text(text = "${auto.anio}", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                            }
+                            Text(
+                                text = "PLACA: ${auto.placa.uppercase()}   |   VIN: ${auto.vin.ifBlank { "N/A" }.uppercase()}",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF7DFFB2)
+                            )
 
-                            Row {
-                                Text(text = "PLACA: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                                Text(text = auto.placa.uppercase(), fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                            }
+                            Spacer(modifier = Modifier.height(6.dp))
 
-                            Row {
-                                Text(text = "CLIENTE: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                                Text(text = auto.cliente.uppercase(), fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                            }
+                            Text(
+                                text = "CLIENTE PROPIETARIO:",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
+                            Text(
+                                text = auto.cliente.uppercase(),
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
 
-                            if (auto.vin.isNotBlank()) {
-                                Row {
-                                    Text(text = "VIN: ", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                                    Text(text = auto.vin.uppercase(), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                                }
-                            }
+                            Text(
+                                text = "KILOMETRAJE REGISTRADO:",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
+                            Text(
+                                text = "${auto.kilometraje} km",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
                         }
                     }
                 }

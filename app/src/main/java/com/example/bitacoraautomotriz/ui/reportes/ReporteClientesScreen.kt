@@ -107,7 +107,7 @@ fun ReporteClientesScreen(
                 )
             } else {
                 Row {
-                    Text(text = "Total de clientes: ", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text(text = "TOTAL DE CLIENTES: ", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     Text(text = "${clientes.size}", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
                 }
 
@@ -117,58 +117,80 @@ fun ReporteClientesScreen(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 12.dp),
-                        shape = RoundedCornerShape(12.dp),
+                            .padding(vertical = 6.dp),
+                        shape = RoundedCornerShape(14.dp),
                         colors = CardDefaults.cardColors(containerColor = Colores.FondoTarjeta),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
                     ) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                                .padding(20.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Row {
-                                Text(text = "ID: ", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                                Text(text = "${cliente.id}", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                            }
+                            Text(
+                                text = "ID CLIENTE: ${cliente.id}",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF7DFFB2)
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = cliente.nombre.uppercase(),
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
 
-                            Row {
-                                Text(text = "NOMBRE: ", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                                Text(text = cliente.nombre.uppercase(), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                            }
+                            Spacer(modifier = Modifier.height(6.dp))
 
-                            Row {
-                                Text(text = "TELÉFONO: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(
+                                text = "TELÉFONO DEL CLIENTE:",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
+                            Text(
+                                text = "📞 ${cliente.telefono}",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF0033FF),
+                                textDecoration = TextDecoration.Underline,
+                                modifier = Modifier.clickable { abrirTelefono(cliente.telefono) }
+                            )
+
+                            if (cliente.correo.isNotBlank()) {
+                                Spacer(modifier = Modifier.height(6.dp))
                                 Text(
-                                    text = cliente.telefono,
-                                    fontSize = 17.sp,
+                                    text = "CORREO ELECTRÓNICO:",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Black
+                                )
+                                Text(
+                                    text = "✉️ ${cliente.correo.lowercase()}",
+                                    fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF0033FF),
                                     textDecoration = TextDecoration.Underline,
-                                    modifier = Modifier.clickable { abrirTelefono(cliente.telefono) }
+                                    modifier = Modifier.clickable { abrirCorreo(cliente.correo) }
                                 )
                             }
 
-                            if (cliente.correo.isNotBlank()) {
-                                Row {
-                                    Text(text = "CORREO: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                                    Text(
-                                        text = cliente.correo,
-                                        fontSize = 17.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF0033FF),
-                                        textDecoration = TextDecoration.Underline,
-                                        modifier = Modifier.clickable { abrirCorreo(cliente.correo) }
-                                    )
-                                }
-                            }
-
                             if (cliente.direccion.isNotBlank()) {
-                                Row {
-                                    Text(text = "DIRECCIÓN: ", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                                    Text(text = cliente.direccion.uppercase(), fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                                }
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = "DIRECCIÓN REGISTRADA:",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Black
+                                )
+                                Text(
+                                    text = "📍 ${cliente.direccion.uppercase()}",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
                             }
                         }
                     }
