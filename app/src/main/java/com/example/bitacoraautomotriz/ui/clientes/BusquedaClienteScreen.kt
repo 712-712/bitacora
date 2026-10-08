@@ -6,19 +6,21 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -43,6 +45,8 @@ fun BusquedaClienteScreen(
     onRegresar: () -> Unit
 ) {
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
     val scope = rememberCoroutineScope()
 
     var clientes by remember { mutableStateOf<List<Cliente>>(value = emptyList()) }
@@ -72,11 +76,17 @@ fun BusquedaClienteScreen(
             .background(Colores.FondoPantalla)
             .statusBarsPadding()
             .navigationBarsPadding()
-            .imePadding()
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus()
+                    keyboardController?.hide()
+                })
+            }
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 84.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -102,6 +112,7 @@ fun BusquedaClienteScreen(
                 value = busqueda,
                 onValueChange = { busqueda = it.uppercase() },
                 textStyle = TextStyle(color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold),
+                singleLine = true,
                 shape = RoundedCornerShape(12.dp),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Colores.FondoSecundario,
@@ -113,7 +124,7 @@ fun BusquedaClienteScreen(
                     unfocusedIndicatorColor = Colores.BordeBoton.copy(alpha = 0.5f),
                     cursorColor = Color.White
                 ),
-                modifier = Modifier.fillMaxWidth().height(70.dp)
+                modifier = Modifier.fillMaxWidth().height(60.dp)
             )
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -136,87 +147,121 @@ fun BusquedaClienteScreen(
             } else {
                 clientesFiltrados.forEach { cliente ->
                     Card(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                        shape = RoundedCornerShape(18.dp),
-                        colors = CardDefaults.cardColors(containerColor = Colores.FondoTarjeta)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 6.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = CardDefaults.cardColors(containerColor = Colores.FondoTarjeta),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
                     ) {
-                        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "ID CLIENTE: ${cliente.id}",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF7DFFB2)
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = cliente.nombre.orEmpty().uppercase(),
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
 
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text(text = "NOMBRE:", fontSize = 18.sp, fontWeight = FontWeight.Black, color = Color.Black)
-                                Text(text = cliente.nombre.orEmpty().uppercase(), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                            }
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(6.dp))
 
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text(text = "ID:", fontSize = 17.sp, fontWeight = FontWeight.Black, color = Color.Black)
-                                Text(text = "${cliente.id}", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                            }
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                Text(text = "TELÉFONO:", fontSize = 16.sp, fontWeight = FontWeight.Black, color = Color.Black)
-
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    if (cliente.telefono.isNotBlank()) {
-                                        IconButton(
-                                            onClick = { WhatsAppUtils.abrirWhatsApp(context, cliente.telefono) },
-                                            modifier = Modifier.padding(end = 4.dp).size(36.dp)
-                                        ) {
-                                            Icon(
-                                                painter = painterResource(id = R.drawable.ic_whatsapp_logo),
-                                                contentDescription = "Enviar WhatsApp",
-                                                tint = Color.Unspecified,
-                                                modifier = Modifier.size(32.dp)
-                                            )
-                                        }
+                            Text(
+                                text = "TELÉFONO DEL CLIENTE:",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                if (cliente.telefono.isNotBlank()) {
+                                    IconButton(
+                                        onClick = { WhatsAppUtils.abrirWhatsApp(context, cliente.telefono) },
+                                        modifier = Modifier.padding(end = 6.dp).size(36.dp)
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.ic_whatsapp_logo),
+                                            contentDescription = "Enviar WhatsApp",
+                                            tint = Color.Unspecified,
+                                            modifier = Modifier.size(32.dp)
+                                        )
                                     }
-
-                                    Text(
-                                        text = cliente.telefono.orEmpty(),
-                                        fontSize = 17.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.Black
-                                    )
                                 }
-                            }
-                            Spacer(modifier = Modifier.height(8.dp))
 
-                            Text(text = "CORREO:", fontSize = 17.sp, fontWeight = FontWeight.Black, color = Color.Black)
+                                Text(
+                                    text = "📞 ${cliente.telefono}",
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF0033FF),
+                                    textDecoration = TextDecoration.Underline,
+                                    modifier = Modifier.clickable {
+                                        val intent = Intent(Intent.ACTION_DIAL).apply {
+                                            data = Uri.parse("tel:${cliente.telefono}")
+                                        }
+                                        try { context.startActivity(intent) } catch (_: Exception) {}
+                                    }
+                                )
+                            }
 
                             if (cliente.correo.isNotBlank()) {
-                                ClickableText(
-                                    text = AnnotatedString(" ${cliente.correo}"),
-                                    onClick = {
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = "CORREO ELECTRÓNICO:",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Black
+                                )
+                                Text(
+                                    text = "✉️ ${cliente.correo.lowercase()}",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF0033FF),
+                                    textDecoration = TextDecoration.Underline,
+                                    modifier = Modifier.clickable {
                                         val intent = Intent(Intent.ACTION_SENDTO).apply {
                                             data = Uri.parse("mailto:${cliente.correo}")
-                                            putExtra(Intent.EXTRA_SUBJECT, "Contacto desde Taller Bitácora Automotriz")
                                         }
-                                        try { context.startActivity(intent) } catch (_: Exception) { Toast.makeText(context, "No hay app de correo instalada", Toast.LENGTH_LONG).show() }
-                                    },
-                                    style = TextStyle(color = Color(0xFF0033FF), fontSize = 17.sp, fontWeight = FontWeight.Bold, textDecoration = TextDecoration.Underline)
+                                        try { context.startActivity(intent) } catch (_: Exception) {}
+                                    }
                                 )
-                            } else {
-                                Text(text = "Sin correo registrado", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black.copy(alpha = 0.6f))
-                            }
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text(text = "DIRECCIÓN:", fontSize = 17.sp, fontWeight = FontWeight.Black, color = Color.Black)
-                                Text(text = if (cliente.direccion.isNotBlank()) cliente.direccion.uppercase() else "SIN DIRECCIÓN", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                             }
 
-                            Spacer(modifier = Modifier.height(20.dp))
+                            if (cliente.direccion.isNotBlank()) {
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = "DIRECCIÓN REGISTRADA:",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Black
+                                )
+                                Text(
+                                    text = "📍 ${cliente.direccion.uppercase()}",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
 
-                            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Color(0xFF004D33))
+
+                            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                 BotonModulo3D(
                                     texto = "EDITAR CLIENTE",
                                     icono = "✏️",
-                                    colorClaro = Color(0xFF80D8FF),
-                                    colorMedio = Color(0xFF00B8D4),
-                                    colorOscuro = Color(0xFF006064),
+                                    colorClaro = Color(0xFF90CAF9),
+                                    colorMedio = Color(0xFF1976D2),
+                                    colorOscuro = Color(0xFF0D47A1),
                                     onClick = { onEditarCliente(cliente.id) },
-                                    modifier = Modifier.fillMaxWidth().height(54.dp),
+                                    modifier = Modifier.fillMaxWidth().height(52.dp),
                                     tamanioTexto = 15,
                                     colorTexto = Color.Black
                                 )
@@ -255,7 +300,7 @@ fun BusquedaClienteScreen(
                                             }
                                         }
                                     },
-                                    modifier = Modifier.fillMaxWidth().height(54.dp),
+                                    modifier = Modifier.fillMaxWidth().height(52.dp),
                                     tamanioTexto = 15,
                                     colorTexto = Color.Black
                                 )
@@ -270,7 +315,7 @@ fun BusquedaClienteScreen(
                                         val nombreCodificado = URLEncoder.encode(cliente.nombre.orEmpty(), StandardCharsets.UTF_8.toString())
                                         onClienteSeleccionado(cliente.id, nombreCodificado)
                                     },
-                                    modifier = Modifier.fillMaxWidth().height(54.dp),
+                                    modifier = Modifier.fillMaxWidth().height(52.dp),
                                     tamanioTexto = 15,
                                     colorTexto = Color.Black
                                 )
@@ -279,26 +324,36 @@ fun BusquedaClienteScreen(
                     }
                 }
             }
+            Spacer(modifier = Modifier.height(12.dp))
         }
 
-        // BOTÓN REGRESAR FIJO E INMÓVIL AL FONDO
-        Box(
+        // BOTÓN REGRESAR FIJO E INMÓVIL AL FONDO DE LA PANTALLA
+        Surface(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .background(Colores.FondoPantalla)
-                .padding(horizontal = 24.dp, vertical = 12.dp)
+                .fillMaxWidth(),
+            color = Colores.FondoPantalla
         ) {
-            BotonModulo3D(
-                texto = "REGRESAR",
-                icono = "🔙",
-                colorClaro = Colores.RegresarClaro,
-                colorMedio = Colores.RegresarMedio,
-                colorOscuro = Colores.RegresarOscuro,
-                onClick = onRegresar,
-                modifier = Modifier.fillMaxWidth().height(58.dp),
-                colorTexto = Color.White
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 12.dp)
+            ) {
+                BotonModulo3D(
+                    texto = "REGRESAR",
+                    icono = "🔙",
+                    colorClaro = Colores.RegresarClaro,
+                    colorMedio = Colores.RegresarMedio,
+                    colorOscuro = Colores.RegresarOscuro,
+                    onClick = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
+                        onRegresar()
+                    },
+                    modifier = Modifier.fillMaxWidth().height(58.dp),
+                    colorTexto = Color.White
+                )
+            }
         }
     }
 }
