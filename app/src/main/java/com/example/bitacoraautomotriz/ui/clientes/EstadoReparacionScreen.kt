@@ -32,7 +32,6 @@ fun EstadoReparacionScreen(
     val context = LocalContext.current
     var ordenes by remember { mutableStateOf<List<OrdenServicio>>(emptyList()) }
     var ordenSeleccionada by remember { mutableStateOf<OrdenServicio?>(null) }
-    var porcentajeAvanceManual by remember { mutableStateOf<Int?>(null) }
     var cargando by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
@@ -55,7 +54,7 @@ fun EstadoReparacionScreen(
     }
 
     val ordenActual = ordenSeleccionada
-    val avanceActual = porcentajeAvanceManual ?: (ordenActual?.porcentajeAvance?.coerceIn(0, 100) ?: 50)
+    val avanceActual = ordenActual?.porcentajeAvance?.coerceIn(0, 100) ?: 50
 
     // COLOR CROMÁTICO SEGÚN EL PORCENTAJE (ROJO 0% ➡️ VERDE 100%)
     val colorCromaticoAvance = when {
@@ -76,219 +75,202 @@ fun EstadoReparacionScreen(
         else -> "100% - REPARACIÓN COMPLETADA"
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Colores.FondoPantalla)
             .statusBarsPadding()
-            .verticalScroll(rememberScrollState())
-            .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 28.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
+            .navigationBarsPadding()
     ) {
-        // TÍTULO DE LA PANTALLA
-        Text(
-            text = "ESTADO DE REPARACIÓN DE MI AUTO",
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            color = Colores.TituloPrincipal,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(6.dp))
-
-        Text(
-            text = "Sincronizado en tiempo real con el taller",
-            fontSize = 15.sp,
-            fontWeight = FontWeight.Bold,
-            color = Colores.EtiquetaCampo,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        if (cargando) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = Color.White)
-            }
-        } else {
-            // TARJETA PRINCIPAL DEL ESTADO DE REPARACIÓN
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp),
-                colors = CardDefaults.cardColors(containerColor = Colores.FondoTarjeta),
-                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    if (ordenActual != null) {
-                        Text(
-                            text = "VEHÍCULO: ${ordenActual.auto.uppercase()}",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "CLIENTE: ${ordenActual.cliente.uppercase()}   |   FOLIO: #${ordenActual.id}",
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF7DFFB2),
-                            textAlign = TextAlign.Center
-                        )
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Color(0xFF004D33))
-                    } else {
-                        Text(
-                            text = "DEMOSTRACIÓN DE ESTADO DE SERVICIO",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                    }
-
-                    // PORCENTAJE CROMÁTICO
-                    Text(
-                        text = "$avanceActual%",
-                        fontSize = 42.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = colorBarraAnimado,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // BARRA DE PROGRESO CROMÁTICA (ROJO A VERDE)
-                    LinearProgressIndicator(
-                        progress = { avanceActual / 100f },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(22.dp)
-                            .clip(RoundedCornerShape(11.dp)),
-                        color = colorBarraAnimado,
-                        trackColor = Color.Black.copy(alpha = 0.3f),
-                        strokeCap = StrokeCap.Round
-                    )
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    // DESCRIPCIÓN DE LA ETAPA
-                    Text(
-                        text = etapaTexto,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        textAlign = TextAlign.Center
-                    )
-
-                    // SI LLEGA AL 100%, MUESTRA "LISTO PARA SU ENTREGA" Y BOTÓN VERDE "ENTERADO"
-                    if (avanceActual >= 100) {
-                        Spacer(modifier = Modifier.height(18.dp))
-
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(10.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFF00C853))
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(14.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "✨ LISTO PARA SU ENTREGA ✨",
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.Black,
-                                    textAlign = TextAlign.Center
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // BOTÓN COLOR VERDE "ENTERADO"
-                        BotonModulo3D(
-                            texto = "ENTERADO",
-                            icono = "✅",
-                            colorClaro = Color(0xFFB9F6CA),
-                            colorMedio = Color(0xFF00C853),
-                            colorOscuro = Color(0xFF00695C),
-                            colorTexto = Color.Black,
-                            onClick = {
-                                Toast.makeText(context, "✅ Notificación confirmada por el cliente", Toast.LENGTH_SHORT).show()
-                            },
-                            modifier = Modifier.fillMaxWidth().height(54.dp),
-                            tamanioTexto = 16
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // SELECCIÓN INTERACTIVA DE PORCENTAJES (0%, 25%, 50%, 75%, 100%)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .imePadding()
+                .verticalScroll(rememberScrollState())
+                .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 84.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
+        ) {
+            // TÍTULO DE LA PANTALLA
             Text(
-                text = "SELECCIONAR PORCENTAJE DE PRUEBA:",
+                text = "ESTADO DE REPARACIÓN DE MI AUTO",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = Colores.TituloPrincipal,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = "Sincronizado en tiempo real con el taller",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
                 color = Colores.EtiquetaCampo,
-                modifier = Modifier.align(Alignment.Start)
+                textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                val pasos = listOf(0, 25, 50, 75, 100)
-                pasos.forEach { paso ->
-                    val esActivo = avanceActual == paso
-                    BotonModulo3D(
-                        texto = "$paso%",
-                        colorClaro = if (esActivo) Color(0xFFB9F6CA) else Color(0xFFD5E1E6),
-                        colorMedio = if (esActivo) Color(0xFF00C853) else Color(0xFF90A4AE),
-                        colorOscuro = if (esActivo) Color(0xFF00695C) else Color(0xFF455A64),
-                        onClick = { porcentajeAvanceManual = paso },
+            if (cargando) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Color.White)
+                }
+            } else {
+                // TARJETA PRINCIPAL DEL ESTADO DE REPARACIÓN (SÓLO LECTURA PARA EL CLIENTE)
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = Colores.FondoTarjeta),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+                ) {
+                    Column(
                         modifier = Modifier
-                            .weight(1f)
-                            .height(48.dp),
-                        tamanioTexto = 13,
-                        colorTexto = if (esActivo) Color.Black else Color.White
-                    )
+                            .fillMaxWidth()
+                            .padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        if (ordenActual != null) {
+                            Text(
+                                text = "VEHÍCULO: ${ordenActual.auto.uppercase()}",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "CLIENTE: ${ordenActual.cliente.uppercase()}   |   FOLIO: #${ordenActual.id}",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF7DFFB2),
+                                textAlign = TextAlign.Center
+                            )
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Color(0xFF004D33))
+                        } else {
+                            Text(
+                                text = "ESTADO DE SERVICIO DEL VEHÍCULO",
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+
+                        // PORCENTAJE CROMÁTICO
+                        Text(
+                            text = "$avanceActual%",
+                            fontSize = 42.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = colorBarraAnimado,
+                            textAlign = TextAlign.Center
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // BARRA DE PROGRESO CROMÁTICA (ROJO A VERDE)
+                        LinearProgressIndicator(
+                            progress = { avanceActual / 100f },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(22.dp)
+                                .clip(RoundedCornerShape(11.dp)),
+                            color = colorBarraAnimado,
+                            trackColor = Color.Black.copy(alpha = 0.3f),
+                            strokeCap = StrokeCap.Round
+                        )
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        // DESCRIPCIÓN DE LA ETAPA
+                        Text(
+                            text = etapaTexto,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            textAlign = TextAlign.Center
+                        )
+
+                        // SI LLEGA AL 100%, MUESTRA "LISTO PARA SU ENTREGA" Y BOTÓN VERDE "ENTERADO"
+                        if (avanceActual >= 100) {
+                            Spacer(modifier = Modifier.height(18.dp))
+
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(10.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFF00C853))
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(14.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "✨ LISTO PARA SU ENTREGA ✨",
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.Black,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // BOTÓN COLOR VERDE "ENTERADO"
+                            BotonModulo3D(
+                                texto = "ENTERADO",
+                                icono = "✅",
+                                colorClaro = Color(0xFFB9F6CA),
+                                colorMedio = Color(0xFF00C853),
+                                colorOscuro = Color(0xFF00695C),
+                                colorTexto = Color.Black,
+                                onClick = {
+                                    Toast.makeText(context, "✅ Notificación confirmada por el cliente", Toast.LENGTH_SHORT).show()
+                                },
+                                modifier = Modifier.fillMaxWidth().height(54.dp),
+                                tamanioTexto = 16
+                            )
+                        }
+                    }
                 }
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
         }
 
-        Spacer(modifier = Modifier.height(28.dp))
-
-        // BOTÓN REGRESAR
-        BotonModulo3D(
-            texto = "REGRESAR",
-            icono = "🔙",
-            colorClaro = Colores.RegresarClaro,
-            colorMedio = Colores.RegresarMedio,
-            colorOscuro = Colores.RegresarOscuro,
-            colorTexto = Color.White,
-            onClick = onRegresar,
-            modifier = Modifier.fillMaxWidth().height(58.dp),
-            tamanioTexto = 16
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
+        // BOTÓN REGRESAR FIJO E INMÓVIL AL FONDO DE LA PANTALLA
+        Surface(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth(),
+            color = Colores.FondoPantalla
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 12.dp)
+            ) {
+                BotonModulo3D(
+                    texto = "REGRESAR",
+                    icono = "🔙",
+                    colorClaro = Colores.RegresarClaro,
+                    colorMedio = Colores.RegresarMedio,
+                    colorOscuro = Colores.RegresarOscuro,
+                    colorTexto = Color.White,
+                    onClick = onRegresar,
+                    modifier = Modifier.fillMaxWidth().height(58.dp),
+                    tamanioTexto = 16
+                )
+            }
+        }
     }
 }
