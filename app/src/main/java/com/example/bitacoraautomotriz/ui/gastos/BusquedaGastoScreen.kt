@@ -193,28 +193,22 @@ fun BusquedaGastoScreen(
                                     .padding(18.dp),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                // ENCABEZADO DE TARJETA: NOMBRE Y FOLIO
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = if (esEditando) "EDITANDO GASTO" else gasto.concepto.uppercase(),
-                                        fontSize = 20.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    Text(
-                                        text = "FOLIO: #${String.format(Locale.US, "%04d", gasto.id)}",
-                                        fontSize = 18.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF7DFFB2)
-                                    )
-                                }
+                                // ENCABEZADO DE TARJETA: NOMBRE EN BLANCO Y FOLIO EN MENTA BRILLANTE
+                                Text(
+                                    text = "FOLIO GASTO: #${String.format(Locale.US, "%04d", gasto.id)}",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF7DFFB2)
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = if (esEditando) "EDITANDO GASTO" else gasto.concepto.uppercase(),
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
 
-                                HorizontalDivider(color = Color(0xFF004D33))
+                                HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp), color = Color(0xFF004D33))
 
                                 if (esEditando) {
                                     Text(text = "CONCEPTO", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Colores.EtiquetaCampo)
@@ -343,38 +337,28 @@ fun BusquedaGastoScreen(
                                     }
 
                                 } else {
-                                    // MODO LECTURA NORMAL
+                                    // MODO LECTURA NORMAL (ETIQUETAS EN NEGRO Y VALORES EN BLANCO)
                                     val total = if (gasto.monto.isNaN() || gasto.monto < 0) 0.0 else gasto.monto
                                     val precioBase = total / 1.16
                                     val iva = total - precioBase
 
-                                    Text(
-                                        text = "CATEGORÍA: ${gasto.categoria.uppercase()}",
-                                        fontSize = 17.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.Black
-                                    )
-                                    Text(
-                                        text = "FECHA: ${gasto.fecha}",
-                                        fontSize = 17.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.Black
-                                    )
+                                    Text(text = "CATEGORÍA DEL GASTO:", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                    Text(text = gasto.categoria.uppercase(), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+
+                                    Text(text = "FECHA DE REGISTRO:", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                    Text(text = gasto.fecha, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+
                                     if (gasto.descripcion.isNotBlank()) {
-                                        Text(
-                                            text = "DESCRIPCIÓN: ${gasto.descripcion.uppercase()}",
-                                            fontSize = 16.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = Color.Black
-                                        )
+                                        Text(text = "DESCRIPCIÓN DEL GASTO:", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                        Text(text = gasto.descripcion.uppercase(), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
                                     }
 
                                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Text(text = "PRECIO / BASE:", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                        Text(text = "PRECIO / BASE:", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                                         Text(text = String.format(Locale.US, "$ %,.2f", precioBase), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
                                     }
                                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Text(text = "I.V.A. (16%):", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                        Text(text = "I.V.A. (16%):", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                                         Text(text = String.format(Locale.US, "$ %,.2f", iva), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
                                     }
                                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
