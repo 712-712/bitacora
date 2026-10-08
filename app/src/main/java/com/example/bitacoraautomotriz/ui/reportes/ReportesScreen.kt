@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -60,11 +61,13 @@ fun ReportesScreen(
 
         // BOTÓN VERDE DESTACADO DE REPORTE DE RECEPCIÓN E INSPECCIÓN DEL VEHÍCULO
         BotonModulo3D(
-            texto = "REPORTE RECEPCIÓN E INSPECCIÓN DEL VEHÍCULO",
+            texto = "REPORTE RECEPCIÓN E\nINSPECCIÓN DEL VEHÍCULO",
             colorClaro = Color(0xFFB9F6CA),
             colorMedio = Color(0xFF00C853),
             colorOscuro = Color(0xFF00695C),
             onClick = onReporteRecepciones,
+            modifier = Modifier.fillMaxWidth().height(68.dp),
+            tamanioTexto = 15,
             colorTexto = Color.Black
         )
 
