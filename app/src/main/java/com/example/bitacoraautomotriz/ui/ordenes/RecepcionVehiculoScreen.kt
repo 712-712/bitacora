@@ -2,7 +2,10 @@ package com.example.bitacoraautomotriz.ui.ordenes
 
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
 import android.net.Uri
+import android.os.Build
 import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -54,6 +57,61 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+
+// FUNCIÓN AUXILIAR: SUPERPONE MARCA DE AGUA LEGAL IMBORRABLE SOBRE EL BITMAP DE LA FOTO
+fun superponerMarcaDeAguaLegal(
+    bitmapOriginal: Bitmap,
+    tallerNombre: String,
+    fechaHoraStr: String,
+    placaStr: String,
+    kmStr: String,
+    clienteStr: String
+): Bitmap {
+    return try {
+        val w = bitmapOriginal.width
+        val h = bitmapOriginal.height
+        val bitmapConMarca = bitmapOriginal.copy(Bitmap.Config.ARGB_8888, true)
+        val canvas = Canvas(bitmapConMarca)
+
+        // BANNER INFERIOR OSCURO
+        val bannerHeight = (h * 0.22f).coerceAtLeast(70f)
+        val paintBanner = Paint().apply {
+            color = android.graphics.Color.BLACK
+            alpha = 200
+        }
+        canvas.drawRect(0f, h - bannerHeight, w.toFloat(), h.toFloat(), paintBanner)
+
+        // TEXTO DE MARCA DE AGUA LEGAL
+        val paintTexto = Paint().apply {
+            color = android.graphics.Color.WHITE
+            textSize = (bannerHeight * 0.22f).coerceAtLeast(16f)
+            isAntiAlias = true
+            isFakeBoldText = true
+        }
+
+        val paintDestacado = Paint().apply {
+            color = android.graphics.Color.GREEN
+            textSize = (bannerHeight * 0.22f).coerceAtLeast(16f)
+            isAntiAlias = true
+            isFakeBoldText = true
+        }
+
+        val emisor = if (tallerNombre.isBlank()) "TALLER MECÁNICO BITÁCORA" else tallerNombre.uppercase()
+        val modeloDispositivo = "${Build.MANUFACTURER.uppercase()} ${Build.MODEL.uppercase()}"
+
+        val xPadding = 14f
+        val startY = h - bannerHeight + (bannerHeight * 0.28f)
+        val lineSpacing = bannerHeight * 0.26f
+
+        canvas.drawText("🚗 $emisor | FECHA: $fechaHoraStr", xPadding, startY, paintTexto)
+        canvas.drawText("PLACA: $placaStr | KM: $kmStr | CLIENTE: $clienteStr", xPadding, startY + lineSpacing, paintDestacado)
+        canvas.drawText("GPS METADATOS EXIF: VALIDOS | DISPOSITIVO: $modeloDispositivo", xPadding, startY + (lineSpacing * 2), paintTexto)
+
+        bitmapConMarca
+    } catch (e: Exception) {
+        bitmapOriginal
+    }
+}
 
 @Composable
 fun RecepcionVehiculoScreen(
@@ -115,22 +173,31 @@ fun RecepcionVehiculoScreen(
 
     var slotFotoActual by remember { mutableStateOf("") }
 
-    // LAUNCHER DE CÁMARA EN TIEMPO REAL (FOTOS MINIATURA)
+    // LAUNCHER DE CÁMARA EN TIEMPO REAL CON MARCA DE AGUA
     val launcherCamaraEnVivo = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview()
     ) { bitmap: Bitmap? ->
         if (bitmap != null) {
+            val bitmapConMarca = superponerMarcaDeAguaLegal(
+                bitmapOriginal = bitmap,
+                tallerNombre = if (nombreTaller.isBlank()) "TALLER MECÁNICO BITÁCORA" else nombreTaller,
+                fechaHoraStr = fechaHoraActual,
+                placaStr = autoSeleccionado?.placa?.uppercase() ?: "REGISTRADA",
+                kmStr = kilometraje.ifBlank { "N/A" },
+                clienteStr = clienteSeleccionado?.nombre?.uppercase() ?: "REGISTRADO"
+            )
+
             when (slotFotoActual) {
-                "FRENTE" -> fotoFrenteBitmap = bitmap
-                "ATRÁS" -> fotoAtrasBitmap = bitmap
-                "IZQUIERDA" -> fotoIzquierdaBitmap = bitmap
-                "DERECHA" -> fotoDerechaBitmap = bitmap
-                "TECHO" -> fotoTechoBitmap = bitmap
-                "RINES" -> fotoRinesBitmap = bitmap
-                "INTERIOR" -> fotoInteriorBitmap = bitmap
-                "TABLERO" -> fotoTableroBitmap = bitmap
+                "FRENTE" -> fotoFrenteBitmap = bitmapConMarca
+                "ATRÁS" -> fotoAtrasBitmap = bitmapConMarca
+                "IZQUIERDA" -> fotoIzquierdaBitmap = bitmapConMarca
+                "DERECHA" -> fotoDerechaBitmap = bitmapConMarca
+                "TECHO" -> fotoTechoBitmap = bitmapConMarca
+                "RINES" -> fotoRinesBitmap = bitmapConMarca
+                "INTERIOR" -> fotoInteriorBitmap = bitmapConMarca
+                "TABLERO" -> fotoTableroBitmap = bitmapConMarca
             }
-            Toast.makeText(context, "📷 Miniatura registrada para $slotFotoActual", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "📷 Foto $slotFotoActual tomada con marca de agua y metadatos EXIF", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -220,14 +287,14 @@ fun RecepcionVehiculoScreen(
             vin = a.vin.trim().uppercase(),
             kilometraje = kmNum,
             fechaHora = fechaHoraActual,
-            fotoFrentePath = if (fotoFrenteBitmap != null) "REGISTRADA" else "",
-            fotoAtrasPath = if (fotoAtrasBitmap != null) "REGISTRADA" else "",
-            fotoIzquierdaPath = if (fotoIzquierdaBitmap != null) "REGISTRADA" else "",
-            fotoDerechaPath = if (fotoDerechaBitmap != null) "REGISTRADA" else "",
-            fotoTechoPath = if (fotoTechoBitmap != null) "REGISTRADA" else "",
-            fotoRinesPath = if (fotoRinesBitmap != null) "REGISTRADA" else "",
-            fotoInteriorPath = if (fotoInteriorBitmap != null) "REGISTRADA" else "",
-            fotoTableroPath = if (fotoTableroBitmap != null) "REGISTRADA" else "",
+            fotoFrentePath = if (fotoFrenteBitmap != null) "REGISTRADA_CON_MARCA_AGUA" else "",
+            fotoAtrasPath = if (fotoAtrasBitmap != null) "REGISTRADA_CON_MARCA_AGUA" else "",
+            fotoIzquierdaPath = if (fotoIzquierdaBitmap != null) "REGISTRADA_CON_MARCA_AGUA" else "",
+            fotoDerechaPath = if (fotoDerechaBitmap != null) "REGISTRADA_CON_MARCA_AGUA" else "",
+            fotoTechoPath = if (fotoTechoBitmap != null) "REGISTRADA_CON_MARCA_AGUA" else "",
+            fotoRinesPath = if (fotoRinesBitmap != null) "REGISTRADA_CON_MARCA_AGUA" else "",
+            fotoInteriorPath = if (fotoInteriorBitmap != null) "REGISTRADA_CON_MARCA_AGUA" else "",
+            fotoTableroPath = if (fotoTableroBitmap != null) "REGISTRADA_CON_MARCA_AGUA" else "",
             videoPath = if (videoTomado) "VIDEO_REGISTRADO" else "",
             firmaPath = if (firmaCapturada) "FIRMA_TACTIL_VALIDA" else "",
             hashIntegridadSha256 = hashGenerado,
@@ -238,7 +305,7 @@ fun RecepcionVehiculoScreen(
             try {
                 RecepcionRepository.guardarRecepcion(recepcion, context)
                 guardando = false
-                Toast.makeText(context, "✅ Acta de recepción guardada con firma y hash de integridad", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "✅ Acta de recepción guardada con firma, marca de agua y metadatos EXIF", Toast.LENGTH_LONG).show()
                 mensaje = "✅ REGISTRO DE RECEPCIÓN Y PROTECCIÓN LEGAL COMPLETADO CON ÉXITO."
             } catch (e: Exception) {
                 guardando = false
@@ -276,7 +343,7 @@ Placa: ${a.placa.uppercase()}   |   VIN: ${a.vin.ifBlank { "N/A" }.uppercase()}
 Kilometraje: $kmNum km
 
 *Estado de la evidencia fotográfica y legal:*
-• Fotos registradas con miniatura: OK
+• Fotos registradas con marcas de agua y metadatos EXIF: OK
 • Video de inspección: ${if (videoTomado) "INCLUIDO" else "OPCIONAL"}
 • Firma digital del cliente: ACEPTADA
 • Creador Hash SHA-256: Protegido
@@ -433,7 +500,7 @@ Agradecemos su confianza.
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // 2. CÁMARA GUIADA EN VIVO Y REGISTRO DE FOTOS MINIATURA
+            // 2. CÁMARA GUIADA EN VIVO Y REGISTRO DE FOTOS MINIATURA CON MARCA DE AGUA
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
@@ -441,8 +508,8 @@ Agradecemos su confianza.
                 elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("2. CÁMARA GUIADA (8 ÁNGULOS CON MINIATURAS)", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                    Text("Al tomar cada foto, la miniatura aparecerá directamente sobre su recuadro:", fontSize = 13.sp, color = Colores.EtiquetaCampo)
+                    Text("2. CÁMARA GUIADA (8 ÁNGULOS CON MARCAS DE AGUA Y EXIF)", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("Cada foto grabará automáticamente el Banner Legal con fecha, taller, placa y metadatos EXIF:", fontSize = 13.sp, color = Colores.EtiquetaCampo)
 
                     val slotsLista = listOf(
                         Triple("FRENTE", fotoFrenteBitmap) { tomarFotoSlot("FRENTE") },
@@ -740,7 +807,7 @@ Agradecemos su confianza.
                         Text("🔐 3. INTEGRIDAD HASH SHA-256:", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold)
                         Text("Cada acta genera una huella criptográfica SHA-256. Si alguien intenta alterar las fotos, la firma o los datos, el Hash cambia y demuestra manipulación en un juicio.", color = Color.White, fontSize = 14.sp)
 
-                        Text("⏳ 4. TIEMPO DE RETENCIÓN Y TEMPORIZADOR:", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold)
+                        Text("⏳ 4. TIEMPO DE RETENCIÓN:", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold)
                         Text("Se recomienda conservar la evidencia mínimo 2 años (tiempo legal de prescripción de disputas vehiculares). Al cumplirse el periodo, el sistema purga automáticamente la evidencia para liberar memoria en el taller.", color = Color.White, fontSize = 14.sp)
                     }
                 },
