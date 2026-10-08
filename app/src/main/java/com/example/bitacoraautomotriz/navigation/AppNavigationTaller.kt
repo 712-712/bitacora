@@ -53,6 +53,7 @@ import com.example.bitacoraautomotriz.ui.inventario.MapaRutaScreen
 import com.example.bitacoraautomotriz.ui.inventario.NuevoRepuestoScreen
 import com.example.bitacoraautomotriz.ui.inventario.VerInventarioScreen
 import com.example.bitacoraautomotriz.ui.ordenes.BuscarOrdenScreen
+import com.example.bitacoraautomotriz.ui.ordenes.EnviarInformesClienteScreen
 import com.example.bitacoraautomotriz.ui.ordenes.NuevaOrdenScreen
 import com.example.bitacoraautomotriz.ui.ordenes.OrdenesScreen
 import com.example.bitacoraautomotriz.ui.ordenes.ProgramarAlertaScreen
@@ -93,6 +94,7 @@ fun AppNavigationTaller() {
                 onClientesClick = { navController.navigate("clientes") },
                 onAreaClienteClick = { navController.navigate("area_cliente") },
                 onOrdenesClick = { navController.navigate("ordenes") },
+                onCentroNotificacionesClick = { navController.navigate("centro_notificaciones/0") },
                 onInventarioClick = { navController.navigate("inventario") },
                 onGastosClick = { navController.navigate("gastos") },
                 onFacturacionClick = { navController.navigate("facturacion") },
@@ -391,6 +393,13 @@ fun AppNavigationTaller() {
         composable("ver_recepciones") {
             VerRecepcionesScreen(onRegresar = { navController.popBackStack() })
         }
+        composable(
+            route = "centro_notificaciones/{ordenId}",
+            arguments = listOf(navArgument("ordenId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val ordenId = backStackEntry.arguments?.getInt("ordenId") ?: 0
+            EnviarInformesClienteScreen(ordenIdInicial = ordenId, onRegresar = { navController.popBackStack() })
+        }
         composable("programar_alerta") {
             ProgramarAlertaScreen(onRegresar = { navController.popBackStack() })
         }
@@ -408,7 +417,11 @@ fun AppNavigationTaller() {
             arguments = listOf(navArgument("ordenId") { type = NavType.IntType })
         ) { backStackEntry ->
             val ordenId = backStackEntry.arguments?.getInt("ordenId") ?: 0
-            SeguimientoReparacionScreen(ordenId = ordenId, onRegresar = { navController.popBackStack() })
+            SeguimientoReparacionScreen(
+                ordenId = ordenId,
+                onCentroNotificaciones = { id -> navController.navigate("centro_notificaciones/$id") },
+                onRegresar = { navController.popBackStack() }
+            )
         }
 
         composable("gastos") {

@@ -46,6 +46,7 @@ import java.util.Locale
 @Composable
 fun SeguimientoReparacionScreen(
     ordenId: Int,
+    onCentroNotificaciones: (Int) -> Unit = {},
     onRegresar: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
@@ -325,6 +326,21 @@ Fecha de cotización: ${o.fecha}
                         Text(text = "TOTAL: $ " + String.format(Locale.US, "%,.2f", o.total), fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
                     }
                 }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // BOTÓN VERDE CENTRO DE NOTIFICACIONES Y AVISOS AL CLIENTE
+                BotonModulo3D(
+                    texto = "CENTRO DE NOTIFICACIONES AL CLIENTE",
+                    icono = "📱",
+                    colorClaro = Color(0xFFB9F6CA),
+                    colorMedio = Color(0xFF00C853),
+                    colorOscuro = Color(0xFF00695C),
+                    onClick = { onCentroNotificaciones(o.id) },
+                    modifier = Modifier.fillMaxWidth().height(58.dp),
+                    tamanioTexto = 15,
+                    colorTexto = Color.Black
+                )
 
                 Spacer(modifier = Modifier.height(24.dp))
 

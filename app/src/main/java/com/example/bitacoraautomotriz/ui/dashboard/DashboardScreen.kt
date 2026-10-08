@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -26,6 +25,7 @@ fun DashboardScreen(
     onClientesClick: () -> Unit,
     onAreaClienteClick: () -> Unit,
     onOrdenesClick: () -> Unit,
+    onCentroNotificacionesClick: () -> Unit = {},
     onInventarioClick: () -> Unit,
     onGastosClick: () -> Unit,
     onFacturacionClick: () -> Unit,
@@ -42,12 +42,11 @@ fun DashboardScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
-        // ✅ TÍTULO PRINCIPAL AHORA USA EL AZUL GLOBAL
         Text(
             text = "BITÁCORA AUTOMOTRIZ",
             fontSize = 28.sp,
             fontWeight = FontWeight.ExtraBold,
-            color = Colores.TituloPrincipal // <-- AQUÍ ESTABA EL ERROR, YA CORREGIDO
+            color = Colores.TituloPrincipal
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -56,7 +55,7 @@ fun DashboardScreen(
             text = "Administración de Taller",
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
-            color = Colores.TituloPrincipal // También unificado
+            color = Colores.TituloPrincipal
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -65,6 +64,10 @@ fun DashboardScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         BotonModulo3D(texto = "COTIZACIONES DE SERVICIOS", colorClaro = Color(0xFFD7B899), colorMedio = Color(0xFF9B6B43), colorOscuro = Color(0xFF5D3A1A), onClick = onOrdenesClick)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // BOTÓN VERDE CENTRO DE AVISOS Y NOTIFICACIONES AL CLIENTE
+        BotonModulo3D(texto = "CENTRO DE AVISOS AL CLIENTE", icono = "📱", colorClaro = Color(0xFFB9F6CA), colorMedio = Color(0xFF00C853), colorOscuro = Color(0xFF00695C), onClick = onCentroNotificacionesClick)
         Spacer(modifier = Modifier.height(16.dp))
 
         BotonModulo3D(texto = "INVENTARIO DEL TALLER", colorClaro = Color(0xFFF3A7FF), colorMedio = Color(0xFFD83CFF), colorOscuro = Color(0xFF7B1599), onClick = onInventarioClick)
@@ -95,5 +98,4 @@ fun DashboardScreen(
         )
         Spacer(modifier = Modifier.height(16.dp))
     }
-
 }
