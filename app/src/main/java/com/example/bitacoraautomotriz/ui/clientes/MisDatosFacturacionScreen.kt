@@ -30,6 +30,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.bitacoraautomotriz.repository.FirebaseSyncManager
 import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
 import com.example.bitacoraautomotriz.ui.theme.Colores
 
@@ -100,8 +101,24 @@ fun MisDatosFacturacionScreen(
             putString("correoElectronico", correoElectronico.trim().lowercase())
             apply()
         }
+
+        // TRANSMITIR DATOS A FIREBASE EN LA RUTA DE SERVICIOS
+        val datosFacturaMap = mapOf(
+            "rfc" to rfc.trim().uppercase(),
+            "razonSocial" to razonSocial.trim().uppercase(),
+            "direccionFiscal" to direccionFiscal.trim().uppercase(),
+            "codigoPostalFiscal" to codigoPostalFiscal.trim(),
+            "regimenFiscal" to regimenFiscal.trim(),
+            "usoCfdi" to usoCfdi.trim(),
+            "formaPago" to formaPago.trim(),
+            "metodoPago" to metodoPago.trim(),
+            "correoElectronico" to correoElectronico.trim().lowercase()
+        )
+        val clienteKey = if (razonSocial.isNotBlank()) razonSocial else "cliente"
+        FirebaseSyncManager.publicarRespuestaClienteConPush(clienteKey, datosFacturaMap)
+
         editando = false
-        Toast.makeText(context, "✅ Datos de facturación guardados exitosamente", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "✅ Datos de facturación guardados y transmitidos al taller vía Firebase", Toast.LENGTH_SHORT).show()
     }
 
     fun abrirAppCorreo() {
@@ -109,7 +126,7 @@ fun MisDatosFacturacionScreen(
             val email = correoElectronico.trim().lowercase()
             val intent = Intent(Intent.ACTION_SENDTO).apply {
                 data = Uri.parse("mailto:$email")
-                putExtra(Intent.EXTRA_SUBJECT, "Datos de Facturación - Taller Bitácora Automotriz")
+                putExtra(Intent.EXTRA_SUBJECT, "Datos de Facturación SAT - Taller Bitácora Automotriz")
                 putExtra(
                     Intent.EXTRA_TEXT,
                     "DATOS DE FACTURACIÓN SAT:\n\n" +
@@ -120,7 +137,6 @@ fun MisDatosFacturacionScreen(
                             "Régimen Fiscal: $regimenFiscal\n" +
                             "Uso CFDI: $usoCfdi\n\n" +
                             "DATOS OPERATIVOS:\n" +
-                            "Dato Operativo: $datoOperativo\n" +
                             "Forma de Pago: $formaPago\n" +
                             "Método de Pago: $metodoPago\n" +
                             "Correo: $email"
@@ -244,7 +260,7 @@ fun MisDatosFacturacionScreen(
                 // 3. DIRECCIÓN FISCAL (OPCIONAL)
                 Column {
                     Text(
-                        text = "direccion fiscal (opcional ) :",
+                        text = "Dirección Fiscal (Opcional):",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = Colores.EtiquetaCampo,
@@ -487,7 +503,7 @@ fun MisDatosFacturacionScreen(
                 colorTexto = Color.Black,
                 onClick = {
                     editando = true
-                    Toast.makeText(context, "✏️ Edición habilitada", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "✏️ Edición de datos fiscales habilitada", Toast.LENGTH_SHORT).show()
                 },
                 modifier = Modifier
                     .weight(1f)
