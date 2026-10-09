@@ -66,6 +66,8 @@ fun VerReporteClienteScreen(
                         estadoSeleccionado = ultima.estado
                         cargando = false
 
+                        Toast.makeText(context, "🔥 Conectado con Firebase: Orden #${ultima.id} recibida", Toast.LENGTH_SHORT).show()
+
                         try {
                             AudioUtils.reproducirSonidoMotorTresVeces(context)
                         } catch (_: Exception) {}
