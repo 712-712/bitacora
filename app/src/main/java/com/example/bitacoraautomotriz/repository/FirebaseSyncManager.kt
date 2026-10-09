@@ -20,12 +20,18 @@ data class AlertaMantenimiento(
 object FirebaseSyncManager {
 
     private val TAG = "FirebaseSyncManager"
+    private const val FIREBASE_URL = "https://bitacoraautomotriz-default-rtdb.firebaseio.com"
 
     private val dbRef by lazy {
         try {
-            FirebaseDatabase.getInstance().reference
-        } catch (_: Exception) {
-            null
+            FirebaseDatabase.getInstance(FIREBASE_URL).reference
+        } catch (e1: Exception) {
+            try {
+                FirebaseDatabase.getInstance().reference
+            } catch (e2: Exception) {
+                Log.e(TAG, "Error inicializando FirebaseDatabase: ${e2.message}")
+                null
+            }
         }
     }
 
