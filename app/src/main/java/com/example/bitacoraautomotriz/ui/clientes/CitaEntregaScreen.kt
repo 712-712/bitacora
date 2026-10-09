@@ -1,5 +1,6 @@
 package com.example.bitacoraautomotriz.ui.clientes
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,9 +27,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.bitacoraautomotriz.repository.FirebaseSyncManager
 import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
 import com.example.bitacoraautomotriz.ui.theme.Colores
 import java.text.SimpleDateFormat
@@ -40,6 +43,7 @@ import java.util.Locale
 fun CitaEntregaScreen(
     onRegresar: () -> Unit,
 ) {
+    val context = LocalContext.current
     var mostrarCalendario by remember { mutableStateOf(value = false) }
     var mostrarHorarios by remember { mutableStateOf(value = false) }
     var fechaSeleccionada by remember { mutableStateOf(value = "No seleccionada") }
@@ -170,7 +174,17 @@ fun CitaEntregaScreen(
             colorTexto = Color.Black,
             onClick = {
                 if ((fechaSeleccionada != "No seleccionada") && (horarioSeleccionado != "No seleccionado")) {
+                    val citaMap = mapOf(
+                        "tipo" to "CITA_INGRESO",
+                        "fecha" to fechaSeleccionada,
+                        "horario" to horarioSeleccionado,
+                        "timestamp" to System.currentTimeMillis()
+                    )
+                    FirebaseSyncManager.publicarRespuestaClienteConPush("cliente", citaMap)
                     citaConfirmada = true
+                    Toast.makeText(context, "✅ Cita transmitida en tiempo real al taller vía Firebase", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, "Seleccione fecha y horario primero", Toast.LENGTH_SHORT).show()
                 }
             },
             modifier = Modifier.fillMaxWidth()
@@ -287,7 +301,7 @@ fun CitaEntregaScreen(
             },
             text = {
                 Text(
-                    text = "Su cita de ingreso ha sido programada para:\n\n" +
+                    text = "Su cita de ingreso ha sido programada y enviada al taller:\n\n" +
                             "Fecha: $fechaSeleccionada\n" +
                             "Horario: $horarioSeleccionado",
                     fontSize = 17.sp
