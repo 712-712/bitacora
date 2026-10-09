@@ -9,25 +9,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,11 +41,6 @@ fun SeguimientoReparacionScreen(
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val focusManager = LocalFocusManager.current
-
-    val tallerFocusRequester = remember { FocusRequester() }
-    val minDiasFocusRequester = remember { FocusRequester() }
-    val maxDiasFocusRequester = remember { FocusRequester() }
 
     var orden by remember { mutableStateOf<OrdenServicio?>(null) }
     var autoDetalle by remember { mutableStateOf<Auto?>(null) }
@@ -69,24 +53,6 @@ fun SeguimientoReparacionScreen(
     var fechaIngreso by remember { mutableStateOf("") }
     var fechaEntrega by remember { mutableStateOf("") }
     var guardando by remember { mutableStateOf(false) }
-
-    var nombreTallerMecanico by remember { mutableStateOf("") }
-    var diasMinimos by remember { mutableStateOf("") }
-    var diasMaximos by remember { mutableStateOf("") }
-
-    val coloresCamposTexto = TextFieldDefaults.colors(
-        focusedContainerColor = Colores.FondoPantalla,
-        unfocusedContainerColor = Colores.FondoPantalla,
-        disabledContainerColor = Colores.FondoPantalla,
-        focusedTextColor = Color.White,
-        unfocusedTextColor = Color.White,
-        disabledTextColor = Color.White,
-        cursorColor = Color.White,
-        selectionColors = TextSelectionColors(
-            handleColor = Color.White,
-            backgroundColor = Color(0xFF90CAF9).copy(alpha = 0.4f)
-        )
-    )
 
     LaunchedEffect(ordenId) {
         scope.launch {
@@ -295,7 +261,7 @@ fun SeguimientoReparacionScreen(
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Text(
-                            text = "ACTUALIZAR AVANCE DE REPARACIÓN (TRANSMISIÓN DIRETA A FIREBASE)",
+                            text = "ACTUALIZAR AVANCE DE REPARACIÓN (TRANSMISIÓN DIRECTA A FIREBASE)",
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                             color = Colores.TituloPrincipal
