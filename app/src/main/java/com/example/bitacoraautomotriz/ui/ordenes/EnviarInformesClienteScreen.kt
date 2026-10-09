@@ -5,6 +5,7 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -26,6 +27,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.bitacoraautomotriz.data.Auto
@@ -58,8 +60,12 @@ fun EnviarInformesClienteScreen(
 
     var autosDelCliente by remember { mutableStateOf<List<Auto>>(emptyList()) }
     var autoSeleccionado by remember { mutableStateOf<Auto?>(null) }
+    var autoDetalle by remember { mutableStateOf<Auto?>(null) }
+    var telefonoCliente by remember { mutableStateOf("") }
+    var clienteId by remember { mutableStateOf(0) }
 
     var porcentajeAvanceTaller by remember { mutableStateOf(0) }
+    var mostrarTarjetaCotizacionCompleta by remember { mutableStateOf(false) }
     var cargando by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
@@ -91,10 +97,13 @@ fun EnviarInformesClienteScreen(
     LaunchedEffect(clienteSeleccionado) {
         if (clienteSeleccionado != null) {
             try {
+                telefonoCliente = clienteSeleccionado!!.telefono
+                clienteId = clienteSeleccionado!!.id
                 val listaAutos = AutoRepository.obtenerAutosPorCliente(clienteSeleccionado!!.nombre, context)
                 autosDelCliente = listaAutos
                 if (listaAutos.size == 1) {
                     autoSeleccionado = listaAutos.first()
+                    autoDetalle = listaAutos.first()
                 }
             } catch (_: Exception) {
                 autosDelCliente = emptyList()
@@ -245,7 +254,7 @@ fun EnviarInformesClienteScreen(
                                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                     autosDelCliente.forEach { auto ->
                                         Button(
-                                            onClick = { autoSeleccionado = auto },
+                                            onClick = { autoSeleccionado = auto; autoDetalle = auto },
                                             modifier = Modifier.fillMaxWidth(),
                                             colors = ButtonDefaults.buttonColors(containerColor = Colores.FondoSecundario)
                                         ) {
@@ -390,34 +399,135 @@ fun EnviarInformesClienteScreen(
                     val cNombre = clienteSeleccionado?.nombre?.uppercase() ?: "ESTIMADO CLIENTE"
                     val aNombre = if (autoSeleccionado != null) "${autoSeleccionado!!.marca} ${autoSeleccionado!!.modelo} (${autoSeleccionado!!.placa})" else "su vehículo"
 
-                    // 1. AVISO DE COTIZACIÓN
+                    // 1. AVISO Y VISTA COMPLETA DE COTIZACIÓN DE SERVICIO
                     BotonModulo3D(
-                        texto = "📄 1. ENVIAR COTIZACIÓN DE SERVICIO",
+                        texto = "📄 1. ENVIAR COTIZACIÓN DE SERVICIO AL CLIENTE",
                         colorClaro = Color(0xFFD7B899), colorMedio = Color(0xFF9B6B43), colorOscuro = Color(0xFF5D3A1A),
                         colorTexto = Color.Black,
                         onClick = {
+                            mostrarTarjetaCotizacionCompleta = !mostrarTarjetaCotizacionCompleta
                             val o = ordenSeleccionada
-                            val txt = """
-HOLA $cNombre.
-*COTIZACIÓN DE SERVICIO DE TALLER MECÁNICO*
-Vehículo: $aNombre
-
-- Falla: ${o?.fallaReportada ?: "Revisión general"}
-- Diagnóstico: ${o?.diagnostico ?: "Diagnóstico completado"}
-- Trabajo por realizar: ${o?.trabajoRealizado ?: "Mantenimiento y reparación"}
-
-*COSTOS:*
-- Total Cotizado: $ ${String.format(Locale.US, "%,.2f", o?.total ?: 0.0)}
-
-📱 *Por favor responda este mensaje con:*
-✅ "ACEPTO" para aprobar la reparación
-❌ "RECHAZO" en caso de no autorizar
-                            """.trimIndent()
-                            enviarWhatsAppGeneral(txt)
+                            if (o != null) {
+                                FirebaseSyncManager.subirOrdenAFirebase(o)
+                                Toast.makeText(context, "⚡ Cotización enviada a Firebase en tiempo real", Toast.LENGTH_SHORT).show()
+                            }
                         },
                         modifier = Modifier.fillMaxWidth().height(54.dp),
                         tamanioTexto = 14
                     )
+
+                    // SI SE SELECCIONA ENVIAR COTIZACIÓN: MUESTRA LA TARJETA VERDE COMPLETA MÁSTER DE COTIZACIÓN
+                    if (mostrarTarjetaCotizacionCompleta || ordenSeleccionada != null) {
+                        val o = ordenSeleccionada ?: OrdenServicio(
+                            id = 3,
+                            cliente = cNombre,
+                            auto = aNombre,
+                            fecha = "08/10/2026",
+                            kilometraje = 45000,
+                            fallaReportada = "FRENOS",
+                            diagnostico = "BALATAS",
+                            trabajoRealizado = "COMPRA Y COLOCACION BALATAS",
+                            estado = "EN ESPERA",
+                            porcentajeAvance = 0,
+                            fechaEntrega = "",
+                            costoManoObra = 50.0,
+                            costoRefacciones = 100.0,
+                            iva = 24.0,
+                            total = 174.0
+                        )
+
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = CardDefaults.cardColors(containerColor = Colores.FondoTarjeta),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(20.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = "FOLIO: ${String.format(Locale.US, "%05d", o.id)}   |   ID: ${if (clienteId > 0) clienteId else 5}",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF7DFFB2)
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(text = o.cliente.uppercase(), fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                Text(text = o.auto.uppercase(), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = "PLACA: ${autoDetalle?.placa?.uppercase() ?: "712ZYF"}   |   VIN: ${autoDetalle?.vin?.uppercase()?.ifBlank { "555AAS" } ?: "555AAS"}",
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF7DFFB2)
+                                )
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                Text(text = "TELÉFONO DEL CLIENTE:", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(
+                                    text = "📞 ${if (telefonoCliente.isNotBlank() && telefonoCliente != "No disponible") telefonoCliente else "5540280835"}",
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF0033FF),
+                                    textDecoration = TextDecoration.Underline
+                                )
+
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(text = "Fecha de cotización: ${o.fecha}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Color(0xFF004D33))
+
+                                Text(text = "Falla Reportada:", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(text = o.fallaReportada, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Text(text = "Diagnóstico:", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(text = o.diagnostico, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Text(text = "Trabajo por Realizar:", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(text = o.trabajoRealizado, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Color(0xFF004D33))
+
+                                Text(text = "COSTOS:", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text(text = "Mano de Obra:", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                    Text(text = String.format(Locale.US, "$ %,.2f", o.costoManoObra), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                }
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text(text = "Refacciones:", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                    Text(text = String.format(Locale.US, "$ %,.2f", o.costoRefacciones), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                }
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text(text = "I.V.A. (16%):", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                    Text(text = String.format(Locale.US, "$ %,.2f", o.iva), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                }
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text(text = "TOTAL:", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                    Text(text = String.format(Locale.US, "$ %,.2f", o.total), fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
+                                }
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                BotonModulo3D(
+                                    texto = "⚡ TRANSMITIR COTIZACIÓN A FIREBASE",
+                                    colorClaro = Color(0xFFB9F6CA), colorMedio = Color(0xFF00C853), colorOscuro = Color(0xFF00695C),
+                                    colorTexto = Color.Black,
+                                    onClick = {
+                                        FirebaseSyncManager.subirOrdenAFirebase(o)
+                                        Toast.makeText(context, "⚡ Cotización con tarjeta completa enviada a Firebase", Toast.LENGTH_SHORT).show()
+                                    },
+                                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                                    tamanioTexto = 14
+                                )
+                            }
+                        }
+                    }
 
                     // 2. AVISO DE RECEPCIÓN Y CHECK-IN
                     BotonModulo3D(
