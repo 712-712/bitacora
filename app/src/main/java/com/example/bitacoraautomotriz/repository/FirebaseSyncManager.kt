@@ -34,6 +34,9 @@ object FirebaseSyncManager {
         try {
             if (orden.id > 0) {
                 dbRef?.child("ordenes")?.child(orden.id.toString())?.setValue(orden)
+            } else {
+                val key = dbRef?.child("ordenes")?.push()?.key ?: return
+                dbRef?.child("ordenes")?.child(key)?.setValue(orden)
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -89,6 +92,61 @@ object FirebaseSyncManager {
 
                     override fun onCancelled(error: DatabaseError) {}
                 })
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    fun escucharTodasLasOrdenesEnTiempoReal(onOrdenesActualizadas: (List<OrdenServicio>) -> Unit) {
+        try {
+            dbRef?.child("ordenes")?.addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val lista = mutableListOf<OrdenServicio>()
+                    for (child in snapshot.children) {
+                        try {
+                            val ordenMap = child.value as? Map<*, *> ?: continue
+                            val id = (ordenMap["id"] as? Long)?.toInt() ?: 0
+                            val cliente = ordenMap["cliente"] as? String ?: ""
+                            val auto = ordenMap["auto"] as? String ?: ""
+                            val fecha = ordenMap["fecha"] as? String ?: ""
+                            val kilometraje = (ordenMap["kilometraje"] as? Long)?.toInt() ?: 0
+                            val fallaReportada = ordenMap["fallaReportada"] as? String ?: ""
+                            val diagnostico = ordenMap["diagnostico"] as? String ?: ""
+                            val trabajoRealizado = ordenMap["trabajoRealizado"] as? String ?: ""
+                            val estado = ordenMap["estado"] as? String ?: "EN ESPERA"
+                            val porcentajeAvance = (ordenMap["porcentajeAvance"] as? Long)?.toInt() ?: 0
+                            val fechaEntrega = ordenMap["fechaEntrega"] as? String ?: ""
+                            val costoManoObra = (ordenMap["costoManoObra"] as? Number)?.toDouble() ?: 0.0
+                            val costoRefacciones = (ordenMap["costoRefacciones"] as? Number)?.toDouble() ?: 0.0
+                            val iva = (ordenMap["iva"] as? Number)?.toDouble() ?: 0.0
+                            val total = (ordenMap["total"] as? Number)?.toDouble() ?: 0.0
+
+                            lista.add(
+                                OrdenServicio(
+                                    id = id,
+                                    cliente = cliente,
+                                    auto = auto,
+                                    fecha = fecha,
+                                    kilometraje = kilometraje,
+                                    fallaReportada = fallaReportada,
+                                    diagnostico = diagnostico,
+                                    trabajoRealizado = trabajoRealizado,
+                                    estado = estado,
+                                    porcentajeAvance = porcentajeAvance,
+                                    fechaEntrega = fechaEntrega,
+                                    costoManoObra = costoManoObra,
+                                    costoRefacciones = costoRefacciones,
+                                    iva = iva,
+                                    total = total
+                                )
+                            )
+                        } catch (_: Exception) {}
+                    }
+                    onOrdenesActualizadas(lista)
+                }
+
+                override fun onCancelled(error: DatabaseError) {}
+            })
         } catch (e: Exception) {
             e.printStackTrace()
         }

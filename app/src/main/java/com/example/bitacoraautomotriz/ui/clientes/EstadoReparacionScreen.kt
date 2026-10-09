@@ -25,14 +25,19 @@ import com.example.bitacoraautomotriz.repository.OrdenServicioRepository
 import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
 import com.example.bitacoraautomotriz.ui.theme.Colores
 import com.example.bitacoraautomotriz.utils.AudioUtils
+import kotlinx.coroutines.launch
 
 @Composable
 fun EstadoReparacionScreen(
     onRegresar: () -> Unit,
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val esAppCliente = remember { context.packageName.lowercase().contains("cliente") }
+
     var ordenes by remember { mutableStateOf<List<OrdenServicio>>(emptyList()) }
     var ordenSeleccionada by remember { mutableStateOf<OrdenServicio?>(null) }
+    var porcentajeAvanceManual by remember { mutableStateOf<Int?>(null) }
     var cargando by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
@@ -45,10 +50,14 @@ fun EstadoReparacionScreen(
                 try {
                     AudioUtils.reproducirSonidoMotorTresVeces(context)
                 } catch (_: Exception) {}
+            }
 
-                // ESCUCHAR EN TIEMPO REAL DESDE FIREBASE REALTIME DATABASE (<1 SEG SEGUNDO)
-                FirebaseSyncManager.escucharOrdenEnTiempoReal(ultima.id) { ordenDescargada ->
-                    ordenSeleccionada = ordenDescargada
+            // ESCUCHAR TODAS LAS ÓRDENES DESDE FIREBASE REALTIME DATABASE EN TIEMPO REAL (<1 SEG)
+            FirebaseSyncManager.escucharTodasLasOrdenesEnTiempoReal { ordenesFirebase ->
+                if (ordenesFirebase.isNotEmpty()) {
+                    val ultima = ordenesFirebase.last()
+                    ordenSeleccionada = ultima
+                    cargando = false
                     try {
                         AudioUtils.reproducirSonidoMotorTresVeces(context)
                     } catch (_: Exception) {}
@@ -62,7 +71,28 @@ fun EstadoReparacionScreen(
     }
 
     val ordenActual = ordenSeleccionada
-    val avanceActual = ordenActual?.porcentajeAvance?.coerceIn(0, 100) ?: 50
+    val avanceActual = porcentajeAvanceManual ?: (ordenActual?.porcentajeAvance?.coerceIn(0, 100) ?: 50)
+
+    fun guardarAvanceTaller(nuevoPorcentaje: Int) {
+        val o = ordenActual ?: return
+        porcentajeAvanceManual = nuevoPorcentaje
+        scope.launch {
+            try {
+                val ordenActualizada = o.copy(porcentajeAvance = nuevoPorcentaje)
+                OrdenServicioRepository.actualizarEstadoYAvance(
+                    o.id,
+                    o.estado,
+                    nuevoPorcentaje,
+                    o.fechaEntrega,
+                    context
+                )
+                FirebaseSyncManager.subirOrdenAFirebase(ordenActualizada)
+                Toast.makeText(context, "✅ Avance del $nuevoPorcentaje% guardado y transmitido al cliente", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     // COLOR CROMÁTICO SEGÚN EL PORCENTAJE (ROJO 0% ➡️ VERDE 100%)
     val colorCromaticoAvance = when {
@@ -112,7 +142,7 @@ fun EstadoReparacionScreen(
             Spacer(modifier = Modifier.height(6.dp))
 
             Text(
-                text = "Sincronizado en tiempo real con el taller",
+                text = "Sincronizado en tiempo real con Firebase",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
                 color = Colores.EtiquetaCampo,
@@ -131,7 +161,7 @@ fun EstadoReparacionScreen(
                     CircularProgressIndicator(color = Color.White)
                 }
             } else {
-                // TARJETA PRINCIPAL DEL ESTADO DE REPARACIÓN (SÓLO LECTURA PARA EL CLIENTE)
+                // TARJETA PRINCIPAL DEL ESTADO DE REPARACIÓN
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp),
@@ -233,7 +263,6 @@ fun EstadoReparacionScreen(
 
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            // BOTÓN COLOR VERDE "ENTERADO"
                             BotonModulo3D(
                                 texto = "ENTERADO",
                                 icono = "✅",
@@ -246,6 +275,43 @@ fun EstadoReparacionScreen(
                                 },
                                 modifier = Modifier.fillMaxWidth().height(54.dp),
                                 tamanioTexto = 16
+                            )
+                        }
+                    }
+                }
+
+                // SI SE EJECUTA DESDE LA APP TALLER O ÁREA TALLER, MUESTRA LOS BOTONES INTERACTIVOS DE SELECCIÓN DE PORCENTAJE
+                if (!esAppCliente) {
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Text(
+                        text = "ACTUALIZAR AVANCE DE REPARACIÓN (TALLER):",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Colores.EtiquetaCampo,
+                        modifier = Modifier.align(Alignment.Start)
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        val pasos = listOf(0, 25, 50, 75, 100)
+                        pasos.forEach { paso ->
+                            val esActivo = avanceActual == paso
+                            BotonModulo3D(
+                                texto = "$paso%",
+                                colorClaro = if (esActivo) Color(0xFFB9F6CA) else Color(0xFFD5E1E6),
+                                colorMedio = if (esActivo) Color(0xFF00C853) else Color(0xFF90A4AE),
+                                colorOscuro = if (esActivo) Color(0xFF00695C) else Color(0xFF455A64),
+                                onClick = { guardarAvanceTaller(paso) },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(48.dp),
+                                tamanioTexto = 13,
+                                colorTexto = if (esActivo) Color.Black else Color.White
                             )
                         }
                     }
