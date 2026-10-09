@@ -32,11 +32,19 @@ object FirebaseSyncManager {
 
     fun subirOrdenAFirebase(orden: OrdenServicio) {
         try {
-            if (orden.id > 0) {
-                dbRef?.child("ordenes")?.child(orden.id.toString())?.setValue(orden)
-            } else {
-                val key = dbRef?.child("ordenes")?.push()?.key ?: return
-                dbRef?.child("ordenes")?.child(key)?.setValue(orden)
+            val key = if (orden.id > 0) orden.id.toString() else (dbRef?.child("ordenes")?.push()?.key ?: return)
+            
+            // 1.1 RUTA DIRECTA DE ÓRDENES
+            dbRef?.child("ordenes")?.child(key)?.setValue(orden)
+
+            // 1.2 RUTA ESTRUCTURADA POR CLIENTE Y SERVICIO EN NODO /servicios
+            val clienteCleanKey = orden.cliente.lowercase().replace(Regex("[^a-z0-9]"), "_")
+            if (clienteCleanKey.isNotBlank()) {
+                dbRef?.child("servicios")
+                    ?.child(clienteCleanKey)
+                    ?.child("informes_taller")
+                    ?.child("informe_$key")
+                    ?.setValue(orden)
             }
         } catch (e: Exception) {
             e.printStackTrace()
