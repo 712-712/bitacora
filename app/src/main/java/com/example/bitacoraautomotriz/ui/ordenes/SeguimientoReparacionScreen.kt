@@ -162,72 +162,12 @@ fun SeguimientoReparacionScreen(
                     context
                 )
                 FirebaseSyncManager.subirOrdenAFirebase(ordenActualizada)
-                Toast.makeText(context, "✅ Avance y datos transmitidos a la App Cliente", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "✅ Avance y datos transmitidos a la App Cliente en Firebase", Toast.LENGTH_SHORT).show()
                 guardando = false
             } catch (e: Exception) {
                 Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
                 guardando = false
             }
-        }
-    }
-
-    fun enviarWhatsApp() {
-        val o = orden ?: return
-        if (telefonoCliente == "No disponible" || telefonoCliente.isBlank()) {
-            Toast.makeText(context, "No hay teléfono registrado", Toast.LENGTH_LONG).show()
-            return
-        }
-        val telefonoLimpio = telefonoCliente.replace(Regex("[^0-9]"), "")
-
-        val emisor = if (nombreTallerMecanico.isBlank()) "su mecánico / taller" else nombreTallerMecanico.trim().uppercase()
-        val minD = if (diasMinimos.isBlank()) "1" else diasMinimos.trim()
-        val maxD = if (diasMaximos.isBlank()) "3" else diasMaximos.trim()
-
-        val leyendaInicial = """
-HOLA, soy $emisor.
-
-Normalmente este tipo de reparaciones terminadas, toman entre $minD y $maxD días, pero prefiero confirmarle el tiempo exacto de entrega mañana una vez que hayamos revisado a fondo su vehículo y verifiquemos la disponibilidad de las piezas. En cuanto tenga esta confirmación le enviaré el tiempo de entrega.
-        """.trimIndent()
-
-        val mensaje = """
-$leyendaInicial
-
-────────────────────
-*COTIZACIÓN DE SERVICIO*
-Folio: ${String.format(Locale.US, "%05d", o.id)}   |   ID: $clienteId
-Cliente: ${o.cliente}
-Auto: ${o.auto}
-Placa: ${autoDetalle?.placa ?: "N/A"}   |   VIN: ${autoDetalle?.vin?.ifBlank { "N/A" } ?: "N/A"}
-
-*Detalles:*
-- Falla: ${o.fallaReportada}
-- Diagnóstico: ${o.diagnostico}
-- Trabajo: ${o.trabajoRealizado}
-
-*COSTOS:*
-- Mano de Obra: $ ${String.format(Locale.US, "%,.2f", o.costoManoObra)}
-- Refacciones: $ ${String.format(Locale.US, "%,.2f", o.costoRefacciones)}
-- I.V.A. (16%): $ ${String.format(Locale.US, "%,.2f", o.iva)}
-*TOTAL: $ ${String.format(Locale.US, "%,.2f", o.total)}*
-
-Fecha de cotización: ${o.fecha}
-
-────────────────────
-📱 *Por favor responde a este mensaje con:*
-✅ "ACEPTO" para aprobar
-❌ "RECHAZO" si no está de acuerdo
-────────────────────
-        """.trimIndent()
-
-        // SUBIR MÁS RECIENTE A FIREBASE ANTES DE ENVIAR WHATSAPP
-        FirebaseSyncManager.subirOrdenAFirebase(o)
-
-        val intent = Intent(Intent.ACTION_VIEW)
-        intent.data = Uri.parse("https://wa.me/52$telefonoLimpio?text=${Uri.encode(mensaje)}")
-        try {
-            context.startActivity(intent)
-        } catch (_: Exception) {
-            Toast.makeText(context, "No se pudo abrir WhatsApp", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -266,7 +206,7 @@ Fecha de cotización: ${o.fecha}
             } else {
                 val o = orden!!
                 Text(
-                    text = "ENVIAR REPORTE AL CLIENTE",
+                    text = "SEGUIMIENTO DE REPARACIÓN (TALLER)",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = Colores.TituloPrincipal,
@@ -274,7 +214,7 @@ Fecha de cotización: ${o.fecha}
                     maxLines = 1,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -292,7 +232,7 @@ Fecha de cotización: ${o.fecha}
                         Text(text = o.cliente.uppercase(), fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         Text(text = o.auto.uppercase(), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
 
-                        // PLACA Y VIN DEL VEHÍCULO SOLICITADOS
+                        // PLACA Y VIN DEL VEHÍCULO
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
                             text = "PLACA: ${autoDetalle?.placa?.uppercase() ?: "N/A"}   |   VIN: ${autoDetalle?.vin?.uppercase()?.ifBlank { "N/A" } ?: "N/A"}",
@@ -339,7 +279,61 @@ Fecha de cotización: ${o.fecha}
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // 🎛️ BOTONES PROMINENTES DE PORCENTAJE DE AVANCE (TALLER SELECCIONA Y TRANSMITE A FIREBASE)
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = Colores.FondoSecundario),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(18.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Text(
+                            text = "ACTUALIZAR AVANCE DE REPARACIÓN (TRANSMISIÓN DIRETA A FIREBASE)",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Colores.TituloPrincipal
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            val pasos = listOf(0, 25, 50, 75, 100)
+                            pasos.forEach { paso ->
+                                val esActivo = porcentajeAvanceTaller == paso
+                                BotonModulo3D(
+                                    texto = "$paso%",
+                                    colorClaro = if (esActivo) Color(0xFFB9F6CA) else Color(0xFFD5E1E6),
+                                    colorMedio = if (esActivo) Color(0xFF00C853) else Color(0xFF90A4AE),
+                                    colorOscuro = if (esActivo) Color(0xFF00695C) else Color(0xFF455A64),
+                                    onClick = {
+                                        porcentajeAvanceTaller = paso
+                                        scope.launch {
+                                            val ordenActualizada = o.copy(porcentajeAvance = paso)
+                                            OrdenServicioRepository.actualizarEstadoYAvance(o.id, o.estado, paso, o.fechaEntrega, context)
+                                            FirebaseSyncManager.subirOrdenAFirebase(ordenActualizada)
+                                            Toast.makeText(context, "⚡ Avance del $paso% transmitido a la App Cliente en Firebase", Toast.LENGTH_SHORT).show()
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(52.dp),
+                                    tamanioTexto = 14,
+                                    colorTexto = if (esActivo) Color.Black else Color.White
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
 
                 // BOTÓN VERDE CENTRO DE NOTIFICACIONES Y AVISOS AL CLIENTE
                 BotonModulo3D(
@@ -354,132 +348,7 @@ Fecha de cotización: ${o.fecha}
                     colorTexto = Color.Black
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // 🎛️ BARRAS / BOTONES DE PORCENTAJE DE AVANCE DE REPARACIÓN (CONTROL TALLER)
-                Text(
-                    text = "ACTUALIZAR AVANCE DE REPARACIÓN (TALLER):",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Colores.EtiquetaCampo,
-                    modifier = Modifier.align(Alignment.Start)
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    val pasos = listOf(0, 25, 50, 75, 100)
-                    pasos.forEach { paso ->
-                        val esActivo = porcentajeAvanceTaller == paso
-                        BotonModulo3D(
-                            texto = "$paso%",
-                            colorClaro = if (esActivo) Color(0xFFB9F6CA) else Color(0xFFD5E1E6),
-                            colorMedio = if (esActivo) Color(0xFF00C853) else Color(0xFF90A4AE),
-                            colorOscuro = if (esActivo) Color(0xFF00695C) else Color(0xFF455A64),
-                            onClick = {
-                                porcentajeAvanceTaller = paso
-                                scope.launch {
-                                    val ordenActualizada = o.copy(porcentajeAvance = paso)
-                                    OrdenServicioRepository.actualizarEstadoYAvance(o.id, o.estado, paso, o.fechaEntrega, context)
-                                    FirebaseSyncManager.subirOrdenAFirebase(ordenActualizada)
-                                    Toast.makeText(context, "✅ Avance del $paso% transmitido en tiempo real a Firebase", Toast.LENGTH_SHORT).show()
-                                }
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp),
-                            tamanioTexto = 13,
-                            colorTexto = if (esActivo) Color.Black else Color.White
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // CAMPOS PERSONALIZADOS PARA EL REPORTE DE WHATSAPP
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(containerColor = Colores.FondoSecundario)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(18.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Text(
-                            text = "DATOS PARA MENSAJE WHATSAPP",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Colores.TituloPrincipal
-                        )
-
-                        Text(text = "NOMBRE DEL TALLER O MECÁNICO", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Colores.EtiquetaCampo)
-                        OutlinedTextField(
-                            value = nombreTallerMecanico,
-                            onValueChange = { nombreTallerMecanico = it.uppercase() },
-                            placeholder = { Text("EJ: TALLER LOS PINOS / JUAN PÉREZ", color = Color.Gray, fontSize = 15.sp) },
-                            textStyle = TextStyle(color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold),
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
-                            keyboardActions = KeyboardActions(onNext = { minDiasFocusRequester.requestFocus() }),
-                            shape = RoundedCornerShape(10.dp),
-                            colors = coloresCamposTexto,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .focusRequester(tallerFocusRequester)
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(text = "DÍAS MÍNIMOS", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
-                                Spacer(modifier = Modifier.height(4.dp))
-                                OutlinedTextField(
-                                    value = diasMinimos,
-                                    onValueChange = { if (it.all { c -> c.isDigit() }) diasMinimos = it },
-                                    placeholder = { Text("Ej: 1", color = Color.Gray, fontSize = 15.sp) },
-                                    textStyle = TextStyle(color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold),
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
-                                    keyboardActions = KeyboardActions(onNext = { maxDiasFocusRequester.requestFocus() }),
-                                    singleLine = true,
-                                    shape = RoundedCornerShape(10.dp),
-                                    colors = coloresCamposTexto,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .focusRequester(minDiasFocusRequester)
-                                )
-                            }
-
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(text = "DÍAS MÁXIMOS", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
-                                Spacer(modifier = Modifier.height(4.dp))
-                                OutlinedTextField(
-                                    value = diasMaximos,
-                                    onValueChange = { if (it.all { c -> c.isDigit() }) diasMaximos = it },
-                                    placeholder = { Text("Ej: 3", color = Color.Gray, fontSize = 15.sp) },
-                                    textStyle = TextStyle(color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold),
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
-                                    keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-                                    singleLine = true,
-                                    shape = RoundedCornerShape(10.dp),
-                                    colors = coloresCamposTexto,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .focusRequester(maxDiasFocusRequester)
-                                )
-                            }
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 Text(
                     text = "ESTADO DE LA COTIZACIÓN:",
@@ -526,7 +395,7 @@ Fecha de cotización: ${o.fecha}
                     )
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 if (estadoSeleccionado == "ACEPTADO") {
                     Text(
@@ -545,28 +414,21 @@ Fecha de cotización: ${o.fecha}
                         modifier = Modifier.fillMaxWidth(),
                         colorTexto = Color.Black
                     )
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
                 }
 
                 BotonModulo3D(
-                    texto = if (guardando) "GUARDANDO..." else "💾 GUARDAR CAMBIOS",
-                    colorClaro = Color(0xFFD7B899), colorMedio = Color(0xFF9B6B43), colorOscuro = Color(0xFF5D3A1A),
+                    texto = if (guardando) "TRANSMITIENDO A FIREBASE..." else "⚡ TRANSMITIR CAMBIOS A FIREBASE",
+                    colorClaro = Color(0xFFB9F6CA), colorMedio = Color(0xFF00C853), colorOscuro = Color(0xFF00695C),
                     onClick = { guardarCambios() },
-                    colorTexto = Color.Black
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-
-                BotonModulo3D(
-                    texto = "📱 ENVIAR AL CLIENTE",
-                    colorClaro = Color(0xFFD7B899), colorMedio = Color(0xFF9B6B43), colorOscuro = Color(0xFF5D3A1A),
-                    onClick = { enviarWhatsApp() },
-                    colorTexto = Color.Black
+                    colorTexto = Color.Black,
+                    modifier = Modifier.fillMaxWidth().height(58.dp)
                 )
             }
             Spacer(modifier = Modifier.height(12.dp))
         }
 
-        // BOTÓN REGRESAR FIJO E INMÓVIL AL FONDO DE LA PANTALLA (DETRÁS DEL TECLADO)
+        // BOTÓN REGRESAR FIJO E INMÓVIL AL FONDO DE LA PANTALLA
         Surface(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
