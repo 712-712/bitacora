@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -30,6 +31,9 @@ fun AreaClienteScreen(
     onHistorial: () -> Unit,
     onRegresar: () -> Unit
 ) {
+    val context = LocalContext.current
+    val esAppCliente = remember { context.packageName.lowercase().contains("cliente") }
+
     var alertasEnTiempoReal by remember { mutableStateOf<List<AlertaMantenimiento>>(emptyList()) }
 
     LaunchedEffect(Unit) {
@@ -102,36 +106,39 @@ fun AreaClienteScreen(
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Medium
                         )
-                        Spacer(modifier = Modifier.height(14.dp))
-                        BotonModulo3D(
-                            texto = "📅 AGENDAR CITA DE INGRESO",
-                            icono = "📅",
-                            colorClaro = Color(0xFFB9F6CA),
-                            colorMedio = Color(0xFF00C853),
-                            colorOscuro = Color(0xFF00695C),
-                            colorTexto = Color.Black,
-                            onClick = onCitaEntrega,
-                            modifier = Modifier.fillMaxWidth().height(48.dp),
-                            tamanioTexto = 14
-                        )
+                        if (esAppCliente) {
+                            Spacer(modifier = Modifier.height(14.dp))
+                            BotonModulo3D(
+                                texto = "📅 AGENDAR CITA DE INGRESO",
+                                icono = "📅",
+                                colorClaro = Color(0xFFB9F6CA),
+                                colorMedio = Color(0xFF00C853),
+                                colorOscuro = Color(0xFF00695C),
+                                colorTexto = Color.Black,
+                                onClick = onCitaEntrega,
+                                modifier = Modifier.fillMaxWidth().height(48.dp),
+                                tamanioTexto = 14
+                            )
+                        }
                     }
                 }
             }
 
-            // BOTÓN VERDE CENTRO DE NOTIFICACIONES Y AVISOS AL CLIENTE (MOVIDO A ESTA PANTALLA)
-            BotonModulo3D(
-                texto = "CENTRO DE AVISOS Y NOTIFICACIONES AL CLIENTE",
-                icono = "📱",
-                colorClaro = Color(0xFFB9F6CA),
-                colorMedio = Color(0xFF00C853),
-                colorOscuro = Color(0xFF00695C),
-                colorTexto = Color.Black,
-                onClick = onCentroNotificacionesClick,
-                modifier = Modifier.fillMaxWidth().height(62.dp),
-                tamanioTexto = 14
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
+            // BOTÓN VERDE CENTRO DE NOTIFICACIONES Y AVISOS AL CLIENTE (SÓLO VISIBLE EN APP TALLER)
+            if (!esAppCliente) {
+                BotonModulo3D(
+                    texto = "CENTRO DE AVISOS Y NOTIFICACIONES AL CLIENTE",
+                    icono = "📱",
+                    colorClaro = Color(0xFFB9F6CA),
+                    colorMedio = Color(0xFF00C853),
+                    colorOscuro = Color(0xFF00695C),
+                    colorTexto = Color.Black,
+                    onClick = onCentroNotificacionesClick,
+                    modifier = Modifier.fillMaxWidth().height(62.dp),
+                    tamanioTexto = 14
+                )
+                Spacer(modifier = Modifier.height(14.dp))
+            }
 
             // 1. MIS AUTOS
             BotonModulo3D(
@@ -148,20 +155,21 @@ fun AreaClienteScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // 2. MIS DATOS DE FACTURACIÓN
-            BotonModulo3D(
-                texto = "MIS DATOS DE FACTURACIÓN",
-                icono = "📄",
-                colorClaro = Color(0xFFD7B899),
-                colorMedio = Color(0xFF9B6B43),
-                colorOscuro = Color(0xFF5D3A1A),
-                onClick = onDatosFacturacion,
-                modifier = Modifier.fillMaxWidth().height(58.dp),
-                tamanioTexto = 16,
-                colorTexto = Color.Black
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
+            // 2. MIS DATOS DE FACTURACIÓN (SÓLO PARA LA APP CLIENTE)
+            if (esAppCliente) {
+                BotonModulo3D(
+                    texto = "MIS DATOS DE FACTURACIÓN",
+                    icono = "📄",
+                    colorClaro = Color(0xFFD7B899),
+                    colorMedio = Color(0xFF9B6B43),
+                    colorOscuro = Color(0xFF5D3A1A),
+                    onClick = onDatosFacturacion,
+                    modifier = Modifier.fillMaxWidth().height(58.dp),
+                    tamanioTexto = 16,
+                    colorTexto = Color.Black
+                )
+                Spacer(modifier = Modifier.height(14.dp))
+            }
 
             // 3. ESTADO DE MI REPARACIÓN
             BotonModulo3D(
@@ -193,20 +201,21 @@ fun AreaClienteScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // 5. CITA DE INGRESO AL TALLER
-            BotonModulo3D(
-                texto = "CITA DE INGRESO AL TALLER",
-                icono = "📅",
-                colorClaro = Color(0xFFD7B899),
-                colorMedio = Color(0xFF9B6B43),
-                colorOscuro = Color(0xFF5D3A1A),
-                onClick = onCitaEntrega,
-                modifier = Modifier.fillMaxWidth().height(58.dp),
-                tamanioTexto = 16,
-                colorTexto = Color.Black
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
+            // 5. CITA DE INGRESO AL TALLER (SÓLO PARA LA APP CLIENTE)
+            if (esAppCliente) {
+                BotonModulo3D(
+                    texto = "CITA DE INGRESO AL TALLER",
+                    icono = "📅",
+                    colorClaro = Color(0xFFD7B899),
+                    colorMedio = Color(0xFF9B6B43),
+                    colorOscuro = Color(0xFF5D3A1A),
+                    onClick = onCitaEntrega,
+                    modifier = Modifier.fillMaxWidth().height(58.dp),
+                    tamanioTexto = 16,
+                    colorTexto = Color.Black
+                )
+                Spacer(modifier = Modifier.height(14.dp))
+            }
 
             // 6. HISTORIAL
             BotonModulo3D(
