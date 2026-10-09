@@ -41,6 +41,7 @@ fun VerReporteClienteScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
+    var todasLasOrdenesFirebase by remember { mutableStateOf<List<OrdenServicio>>(emptyList()) }
     var orden by remember { mutableStateOf<OrdenServicio?>(null) }
     var autoDetalle by remember { mutableStateOf<Auto?>(null) }
     var recepcionDetalle by remember { mutableStateOf<RecepcionVehiculo?>(null) }
@@ -55,18 +56,17 @@ fun VerReporteClienteScreen(
             try {
                 // ESCUCHAR DIRECTA Y PRIORITARIAMENTE DESDE FIREBASE REALTIME DATABASE EN TIEMPO REAL
                 FirebaseSyncManager.escucharTodasLasOrdenesEnTiempoReal { ordenesFirebase ->
+                    todasLasOrdenesFirebase = ordenesFirebase
                     if (ordenesFirebase.isNotEmpty()) {
-                        val ultima = if (ordenId > 0) {
+                        val seleccionada = if (ordenId > 0) {
                             ordenesFirebase.find { it.id == ordenId } ?: ordenesFirebase.last()
                         } else {
                             ordenesFirebase.last()
                         }
 
-                        orden = ultima
-                        estadoSeleccionado = ultima.estado
+                        orden = seleccionada
+                        estadoSeleccionado = seleccionada.estado
                         cargando = false
-
-                        Toast.makeText(context, "🔥 Conectado con Firebase: Orden #${ultima.id} recibida", Toast.LENGTH_SHORT).show()
 
                         try {
                             AudioUtils.reproducirSonidoMotorTresVeces(context)
@@ -75,7 +75,7 @@ fun VerReporteClienteScreen(
                         scope.launch {
                             try {
                                 val clientes = ClienteRepository.obtenerClientes(context)
-                                val c = clientes.find { it.nombre.trim().equals(ultima.cliente.trim(), ignoreCase = true) }
+                                val c = clientes.find { it.nombre.trim().equals(seleccionada.cliente.trim(), ignoreCase = true) }
                                 telefonoCliente = c?.telefono ?: "No disponible"
                                 clienteId = c?.id ?: 0
                             } catch (_: Exception) {
@@ -84,7 +84,7 @@ fun VerReporteClienteScreen(
                             }
 
                             try {
-                                val partes = ultima.auto.split("-")
+                                val partes = seleccionada.auto.split("-")
                                 val placaStr = partes.lastOrNull()?.trim() ?: ""
                                 if (placaStr.isNotBlank()) {
                                     autoDetalle = AutoRepository.obtenerAutoPorPlaca(placaStr, context)
@@ -95,13 +95,13 @@ fun VerReporteClienteScreen(
 
                             try {
                                 val recepciones = RecepcionRepository.obtenerRecepciones(context)
-                                recepcionDetalle = recepciones.find { r -> r.cliente.equals(ultima.cliente, ignoreCase = true) } ?: recepciones.lastOrNull()
+                                recepcionDetalle = recepciones.find { r -> r.cliente.equals(seleccionada.cliente, ignoreCase = true) } ?: recepciones.lastOrNull()
                             } catch (_: Exception) {
                                 recepcionDetalle = null
                             }
                         }
                     } else {
-                        // SI FIREBASE ESTÁ VACÍO, CONSULTA LOCAL ROOM COMO RESPALDO
+                        // RESPALDO LOCAL ROOM
                         scope.launch {
                             try {
                                 val listaLocal = OrdenServicioRepository.obtenerOrdenes(context)
@@ -144,7 +144,43 @@ fun VerReporteClienteScreen(
                 color = Colores.TituloPrincipal
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // SELECTOR DE COTIZACIONES SI EXISTEN VARIAS ÓRDENES EN FIREBASE
+            if (todasLasOrdenesFirebase.size > 1) {
+                Text(
+                    text = "SELECCIONE SU VEHÍCULO O COTIZACIÓN:",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Colores.EtiquetaCampo,
+                    modifier = Modifier.align(Alignment.Start)
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    todasLasOrdenesFirebase.take(4).forEach { oItem ->
+                        val esSeleccionada = orden?.id == oItem.id
+                        Button(
+                            onClick = {
+                                orden = oItem
+                                estadoSeleccionado = oItem.estado
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (esSeleccionada) Color(0xFF00C853) else Colores.FondoSecundario
+                            )
+                        ) {
+                            Text(
+                                text = "🚗 FOLIO #${oItem.id}: ${oItem.cliente} (${oItem.auto})",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
 
             if (cargando) {
                 Box(
