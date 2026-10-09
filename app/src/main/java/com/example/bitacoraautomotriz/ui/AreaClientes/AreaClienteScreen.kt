@@ -124,7 +124,7 @@ fun AreaClienteScreen(
                 }
             }
 
-            // BOTÓN VERDE CENTRO DE NOTIFICACIONES Y AVISOS AL CLIENTE (SÓLO VISIBLE EN APP TALLER)
+            // BOTÓN VERDE CENTRO DE NOTIFICACIONES Y AVISOS AL CLIENTE (PANTALLA DE CONTROL AVANCE TALLER)
             if (!esAppCliente) {
                 BotonModulo3D(
                     texto = "CENTRO DE AVISOS Y NOTIFICACIONES AL CLIENTE",
@@ -133,7 +133,7 @@ fun AreaClienteScreen(
                     colorMedio = Color(0xFF00C853),
                     colorOscuro = Color(0xFF00695C),
                     colorTexto = Color.Black,
-                    onClick = onCentroNotificacionesClick,
+                    onClick = onEstadoReparacion,
                     modifier = Modifier.fillMaxWidth().height(62.dp),
                     tamanioTexto = 14
                 )
@@ -171,16 +171,16 @@ fun AreaClienteScreen(
                 Spacer(modifier = Modifier.height(14.dp))
             }
 
-            // 3. ESTADO DE MI REPARACIÓN
+            // 3. ESTADO DE LA REPARACIÓN DEL VEHÍCULO DEL CLIENTE (TEXTO ALINEADO DOS LÍNEAS)
             BotonModulo3D(
-                texto = "ESTADO DE MI REPARACIÓN",
+                texto = "ESTADO DE LA REPARACIÓN\nDEL VEHÍCULO DEL CLIENTE",
                 icono = "🔧",
                 colorClaro = Color(0xFFD7B899),
                 colorMedio = Color(0xFF9B6B43),
                 colorOscuro = Color(0xFF5D3A1A),
                 onClick = onEstadoReparacion,
-                modifier = Modifier.fillMaxWidth().height(58.dp),
-                tamanioTexto = 16,
+                modifier = Modifier.fillMaxWidth().height(62.dp),
+                tamanioTexto = 14,
                 colorTexto = Color.Black
             )
 
