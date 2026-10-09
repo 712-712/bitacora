@@ -3,6 +3,7 @@ package com.example.bitacoraautomotriz.ui.ordenes
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
@@ -14,7 +15,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -30,6 +33,7 @@ import com.example.bitacoraautomotriz.data.Cliente
 import com.example.bitacoraautomotriz.data.OrdenServicio
 import com.example.bitacoraautomotriz.repository.AutoRepository
 import com.example.bitacoraautomotriz.repository.ClienteRepository
+import com.example.bitacoraautomotriz.repository.FirebaseSyncManager
 import com.example.bitacoraautomotriz.repository.OrdenServicioRepository
 import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
 import com.example.bitacoraautomotriz.ui.theme.Colores
@@ -55,6 +59,7 @@ fun EnviarInformesClienteScreen(
     var autosDelCliente by remember { mutableStateOf<List<Auto>>(emptyList()) }
     var autoSeleccionado by remember { mutableStateOf<Auto?>(null) }
 
+    var porcentajeAvanceTaller by remember { mutableStateOf(0) }
     var cargando by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
@@ -66,8 +71,14 @@ fun EnviarInformesClienteScreen(
                     val encontrada = ordenes.find { it.id == ordenIdInicial } ?: ordenes.lastOrNull()
                     ordenSeleccionada = encontrada
                     encontrada?.let { o ->
+                        porcentajeAvanceTaller = o.porcentajeAvance
                         clienteSeleccionado = todosLosClientes.find { c -> c.nombre.equals(o.cliente, ignoreCase = true) }
                     }
+                } else if (ordenes.isNotEmpty()) {
+                    val ultima = ordenes.last()
+                    ordenSeleccionada = ultima
+                    porcentajeAvanceTaller = ultima.porcentajeAvance
+                    clienteSeleccionado = todosLosClientes.find { c -> c.nombre.equals(ultima.cliente, ignoreCase = true) }
                 }
             } catch (_: Exception) {
                 todosLosClientes = emptyList()
@@ -97,6 +108,26 @@ fun EnviarInformesClienteScreen(
     val clientesFiltrados = todosLosClientes.filter { c ->
         c.nombre.uppercase().contains(queryCliente, ignoreCase = true) ||
                 c.id.toString().contains(queryCliente, ignoreCase = true)
+    }
+
+    val avanceActual = porcentajeAvanceTaller.coerceIn(0, 100)
+
+    val colorCromaticoAvance = when {
+        avanceActual <= 10 -> Color(0xFFD32F2F)
+        avanceActual <= 35 -> Color(0xFFF57C00)
+        avanceActual <= 65 -> Color(0xFFFFB300)
+        avanceActual <= 89 -> Color(0xFF7CB342)
+        else -> Color(0xFF00C853)
+    }
+
+    val colorBarraAnimado by animateColorAsState(targetValue = colorCromaticoAvance, label = "ColorAvance")
+
+    val etapaTexto = when {
+        avanceActual == 0 -> "0% - EN ESPERA / DIAGNÓSTICO INICIAL"
+        avanceActual <= 25 -> "25% - INICIO DE REPARACIÓN Y DESARME"
+        avanceActual <= 50 -> "50% - MONTAJE DE REFACCIONES Y SERVICIO"
+        avanceActual <= 75 -> "75% - FASE FINAL Y PRUEBAS DE MANEJO"
+        else -> "100% - REPARACIÓN COMPLETADA"
     }
 
     fun enviarWhatsAppGeneral(textoMensaje: String) {
@@ -154,7 +185,7 @@ fun EnviarInformesClienteScreen(
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = "Envíos directos formateados por WhatsApp y Firebase al cliente",
+                text = "Envíos directos y barra de avance sincronizados con Firebase",
                 fontSize = 14.sp,
                 color = Colores.EtiquetaCampo,
                 textAlign = TextAlign.Center
@@ -162,7 +193,7 @@ fun EnviarInformesClienteScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // CARD 1: SELECCIÓN DE CLIENTE Y AUTO
+            // CARD 1: RECEPTOR DE LA NOTIFICACIÓN
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
@@ -241,7 +272,112 @@ fun EnviarInformesClienteScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // CARD 2: CONSOLA DE NOTIFICACIONES RÁPIDAS
+            // CARD 2: TARJETA DE ESTADO DE REPARACIÓN Y BARRA CROMÁTICA CON BOTONES 0% A 100%
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = Colores.FondoTarjeta),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(18.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "ESTADO DE REPARACIÓN Y AVANCE",
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Text(
+                        text = "$avanceActual%",
+                        fontSize = 42.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = colorBarraAnimado,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    LinearProgressIndicator(
+                        progress = { avanceActual / 100f },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(22.dp)
+                            .clip(RoundedCornerShape(11.dp)),
+                        color = colorBarraAnimado,
+                        trackColor = Color.Black.copy(alpha = 0.3f),
+                        strokeCap = StrokeCap.Round
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(
+                        text = etapaTexto,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // BOTONES DENTRO DE LA TARJETA DE AVANCE (0%, 25%, 50%, 75%, 100%)
+                    Text(
+                        text = "ACTUALIZAR AVANCE EN FIREBASE:",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF7DFFB2),
+                        modifier = Modifier.align(Alignment.Start)
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        val pasos = listOf(0, 25, 50, 75, 100)
+                        pasos.forEach { paso ->
+                            val esActivo = avanceActual == paso
+                            BotonModulo3D(
+                                texto = "$paso%",
+                                colorClaro = if (esActivo) Color(0xFFB9F6CA) else Color(0xFFD5E1E6),
+                                colorMedio = if (esActivo) Color(0xFF00C853) else Color(0xFF90A4AE),
+                                colorOscuro = if (esActivo) Color(0xFF00695C) else Color(0xFF455A64),
+                                onClick = {
+                                    porcentajeAvanceTaller = paso
+                                    val o = ordenSeleccionada
+                                    if (o != null) {
+                                        scope.launch {
+                                            val ordenActualizada = o.copy(porcentajeAvance = paso)
+                                            OrdenServicioRepository.actualizarEstadoYAvance(o.id, o.estado, paso, o.fechaEntrega, context)
+                                            FirebaseSyncManager.subirOrdenAFirebase(ordenActualizada)
+                                            Toast.makeText(context, "⚡ Avance del $paso% transmitido a la App Cliente", Toast.LENGTH_SHORT).show()
+                                        }
+                                    } else {
+                                        Toast.makeText(context, "Avance del $paso% fijado", Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(46.dp),
+                                tamanioTexto = 13,
+                                colorTexto = if (esActivo) Color.Black else Color.White
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // CARD 3: CONSOLA DE AVISOS Y NOTIFICACIONES COMPLETA RESTAURADA
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
@@ -249,7 +385,7 @@ fun EnviarInformesClienteScreen(
                 elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    Text("2. CONSOLA DE AVISOS Y NOTIFICACIONES", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("3. CONSOLA DE AVISOS Y NOTIFICACIONES", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
 
                     val cNombre = clienteSeleccionado?.nombre?.uppercase() ?: "ESTIMADO CLIENTE"
                     val aNombre = if (autoSeleccionado != null) "${autoSeleccionado!!.marca} ${autoSeleccionado!!.modelo} (${autoSeleccionado!!.placa})" else "su vehículo"
@@ -313,7 +449,7 @@ Su vehículo ha ingresado a nuestras instalaciones con éxito.
                         colorTexto = Color.Black,
                         onClick = {
                             val o = ordenSeleccionada
-                            val pct = o?.porcentajeAvance ?: 50
+                            val pct = o?.porcentajeAvance ?: avanceActual
                             val txt = """
 🔧 *REPORTE DE AVANCE DE REPARACIÓN EN TIEMPO REAL*
 Cliente: $cNombre

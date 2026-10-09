@@ -24,7 +24,7 @@ import com.example.bitacoraautomotriz.ui.theme.Colores
 fun AreaClienteScreen(
     onDatosClienteAutos: () -> Unit,
     onDatosFacturacion: () -> Unit,
-    onEstadoReparacion: () -> Unit,
+    onEstadoReparacion: () -> Unit = {},
     onVerReporteCliente: () -> Unit = {},
     onCentroNotificacionesClick: () -> Unit = {},
     onCitaEntrega: () -> Unit,
@@ -124,7 +124,7 @@ fun AreaClienteScreen(
                 }
             }
 
-            // BOTÓN VERDE CENTRO DE NOTIFICACIONES Y AVISOS AL CLIENTE (PANTALLA DE CONTROL AVANCE TALLER)
+            // BOTÓN VERDE CENTRO DE NOTIFICACIONES Y AVISOS AL CLIENTE (PANTALLA CONSOLA Y CONTROL AVANCE TALLER)
             if (!esAppCliente) {
                 BotonModulo3D(
                     texto = "CENTRO DE AVISOS Y NOTIFICACIONES AL CLIENTE",
@@ -133,7 +133,7 @@ fun AreaClienteScreen(
                     colorMedio = Color(0xFF00C853),
                     colorOscuro = Color(0xFF00695C),
                     colorTexto = Color.Black,
-                    onClick = onEstadoReparacion,
+                    onClick = onCentroNotificacionesClick,
                     modifier = Modifier.fillMaxWidth().height(62.dp),
                     tamanioTexto = 14
                 )
@@ -171,22 +171,7 @@ fun AreaClienteScreen(
                 Spacer(modifier = Modifier.height(14.dp))
             }
 
-            // 3. ESTADO DE LA REPARACIÓN DEL VEHÍCULO DEL CLIENTE (TEXTO ALINEADO DOS LÍNEAS)
-            BotonModulo3D(
-                texto = "ESTADO DE LA REPARACIÓN\nDEL VEHÍCULO DEL CLIENTE",
-                icono = "🔧",
-                colorClaro = Color(0xFFD7B899),
-                colorMedio = Color(0xFF9B6B43),
-                colorOscuro = Color(0xFF5D3A1A),
-                onClick = onEstadoReparacion,
-                modifier = Modifier.fillMaxWidth().height(62.dp),
-                tamanioTexto = 14,
-                colorTexto = Color.Black
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // 4. REPORTE DE COTIZACIÓN Y SERVICIO
+            // 3. REPORTE DE COTIZACIÓN Y SERVICIO (PANTALLA RECEPTORA CLIENTE)
             BotonModulo3D(
                 texto = "REPORTE DE COTIZACIÓN Y SERVICIO",
                 icono = "📋",
@@ -201,7 +186,7 @@ fun AreaClienteScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // 5. CITA DE INGRESO AL TALLER (SÓLO PARA LA APP CLIENTE)
+            // 4. CITA DE INGRESO AL TALLER (SÓLO PARA LA APP CLIENTE)
             if (esAppCliente) {
                 BotonModulo3D(
                     texto = "CITA DE INGRESO AL TALLER",
@@ -217,7 +202,7 @@ fun AreaClienteScreen(
                 Spacer(modifier = Modifier.height(14.dp))
             }
 
-            // 6. HISTORIAL
+            // 5. HISTORIAL
             BotonModulo3D(
                 texto = "HISTORIAL",
                 icono = "📜",
