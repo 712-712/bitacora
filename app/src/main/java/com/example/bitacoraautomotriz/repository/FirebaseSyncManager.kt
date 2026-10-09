@@ -1,5 +1,6 @@
 package com.example.bitacoraautomotriz.repository
 
+import android.util.Log
 import com.example.bitacoraautomotriz.data.Auto
 import com.example.bitacoraautomotriz.data.OrdenServicio
 import com.google.firebase.database.DataSnapshot
@@ -18,11 +19,29 @@ data class AlertaMantenimiento(
 
 object FirebaseSyncManager {
 
+    private val TAG = "FirebaseSyncManager"
+
     private val dbRef by lazy {
         try {
             FirebaseDatabase.getInstance().reference
         } catch (_: Exception) {
             null
+        }
+    }
+
+    private fun parsearInt(valor: Any?): Int {
+        return when (valor) {
+            is Number -> valor.toInt()
+            is String -> valor.toIntOrNull() ?: 0
+            else -> 0
+        }
+    }
+
+    private fun parsearDouble(valor: Any?): Double {
+        return when (valor) {
+            is Number -> valor.toDouble()
+            is String -> valor.toDoubleOrNull() ?: 0.0
+            else -> 0.0
         }
     }
 
@@ -34,21 +53,26 @@ object FirebaseSyncManager {
         try {
             val key = if (orden.id > 0) orden.id.toString() else (dbRef?.child("ordenes")?.push()?.key ?: return)
             
-            // 1.1 RUTA DIRECTA DE ÓRDENES
+            // 1.1 RUTA DIRECTA DE ÓRDENES EN NODO /ordenes/key
             dbRef?.child("ordenes")?.child(key)?.setValue(orden)
+                ?.addOnSuccessListener {
+                    Log.d(TAG, "✅ Orden #${orden.id} subida exitosamente a /ordenes/$key")
+                }
+                ?.addOnFailureListener { err ->
+                    Log.e(TAG, "❌ Error al subir orden a Firebase: ${err.message}")
+                }
 
-            // 1.2 RUTA ESTRUCTURADA POR CLIENTE Y SERVICIO EN NODO /servicios CON CLAVE .push()
+            // 1.2 RUTA ESTRUCTURADA POR CLIENTE Y SERVICIO EN NODO /servicios
             val clienteCleanKey = orden.cliente.lowercase().replace(Regex("[^a-z0-9]"), "_")
             if (clienteCleanKey.isNotBlank()) {
                 val informesRef = dbRef?.child("servicios")?.child(clienteCleanKey)?.child("informes_taller")
                 informesRef?.child("informe_$key")?.setValue(orden)
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "Error en subirOrdenAFirebase: ${e.message}")
         }
     }
 
-    // PUBLICAR INFORMES TALLER USANDO PUSH() CON CLAVE ÚNICA DE FIREBASE
     fun publicarInformeTallerConPush(clienteNombre: String, informeMap: Map<String, Any>) {
         try {
             val clienteCleanKey = clienteNombre.lowercase().replace(Regex("[^a-z0-9]"), "_")
@@ -61,7 +85,6 @@ object FirebaseSyncManager {
         }
     }
 
-    // PUBLICAR RESPUESTAS DEL CLIENTE USANDO PUSH() CON CLAVE ÚNICA DE FIREBASE
     fun publicarRespuestaClienteConPush(clienteNombre: String, respuestaMap: Map<String, Any>) {
         try {
             val clienteCleanKey = clienteNombre.lowercase().replace(Regex("[^a-z0-9]"), "_")
@@ -74,7 +97,6 @@ object FirebaseSyncManager {
         }
     }
 
-    // ESCUCHAR EN TIEMPO REAL TODOS LOS INFORMES DEL CLIENTE DENTRO DE /servicios/id_cliente/informes_taller
     fun escucharInformesClienteEnTiempoReal(
         clienteNombre: String,
         onInformesActualizados: (List<Map<String, Any>>) -> Unit
@@ -96,7 +118,9 @@ object FirebaseSyncManager {
                     onInformesActualizados(listaInformes)
                 }
 
-                override fun onCancelled(error: DatabaseError) {}
+                override fun onCancelled(error: DatabaseError) {
+                    Log.e(TAG, "Error en escucharInformesClienteEnTiempoReal: ${error.message}")
+                }
             })
         } catch (e: Exception) {
             e.printStackTrace()
@@ -111,21 +135,21 @@ object FirebaseSyncManager {
                     override fun onDataChange(snapshot: DataSnapshot) {
                         try {
                             val ordenMap = snapshot.value as? Map<*, *> ?: return
-                            val id = (ordenMap["id"] as? Long)?.toInt() ?: ordenId
+                            val id = parsearInt(ordenMap["id"]).let { if (it == 0) ordenId else it }
                             val cliente = ordenMap["cliente"] as? String ?: ""
                             val auto = ordenMap["auto"] as? String ?: ""
                             val fecha = ordenMap["fecha"] as? String ?: ""
-                            val kilometraje = (ordenMap["kilometraje"] as? Long)?.toInt() ?: 0
+                            val kilometraje = parsearInt(ordenMap["kilometraje"])
                             val fallaReportada = ordenMap["fallaReportada"] as? String ?: ""
                             val diagnostico = ordenMap["diagnostico"] as? String ?: ""
                             val trabajoRealizado = ordenMap["trabajoRealizado"] as? String ?: ""
                             val estado = ordenMap["estado"] as? String ?: "EN ESPERA"
-                            val porcentajeAvance = (ordenMap["porcentajeAvance"] as? Long)?.toInt() ?: 0
+                            val porcentajeAvance = parsearInt(ordenMap["porcentajeAvance"])
                             val fechaEntrega = ordenMap["fechaEntrega"] as? String ?: ""
-                            val costoManoObra = (ordenMap["costoManoObra"] as? Number)?.toDouble() ?: 0.0
-                            val costoRefacciones = (ordenMap["costoRefacciones"] as? Number)?.toDouble() ?: 0.0
-                            val iva = (ordenMap["iva"] as? Number)?.toDouble() ?: 0.0
-                            val total = (ordenMap["total"] as? Number)?.toDouble() ?: 0.0
+                            val costoManoObra = parsearDouble(ordenMap["costoManoObra"])
+                            val costoRefacciones = parsearDouble(ordenMap["costoRefacciones"])
+                            val iva = parsearDouble(ordenMap["iva"])
+                            val total = parsearDouble(ordenMap["total"])
 
                             val ordenDescargada = OrdenServicio(
                                 id = id,
@@ -146,11 +170,13 @@ object FirebaseSyncManager {
                             )
                             onOrdenActualizada(ordenDescargada)
                         } catch (e: Exception) {
-                            e.printStackTrace()
+                            Log.e(TAG, "Error al deserializar orden $ordenId: ${e.message}")
                         }
                     }
 
-                    override fun onCancelled(error: DatabaseError) {}
+                    override fun onCancelled(error: DatabaseError) {
+                        Log.e(TAG, "Error en escucharOrdenEnTiempoReal: ${error.message}")
+                    }
                 })
         } catch (e: Exception) {
             e.printStackTrace()
@@ -161,25 +187,27 @@ object FirebaseSyncManager {
         try {
             dbRef?.child("ordenes")?.addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
+                    Log.d(TAG, "📥 snapshot de /ordenes recibido. Hijos: ${snapshot.childrenCount}")
                     val lista = mutableListOf<OrdenServicio>()
                     for (child in snapshot.children) {
                         try {
                             val ordenMap = child.value as? Map<*, *> ?: continue
-                            val id = (ordenMap["id"] as? Long)?.toInt() ?: 0
+                            val keyId = child.key?.toIntOrNull() ?: 0
+                            val id = parsearInt(ordenMap["id"]).let { if (it == 0) keyId else it }
                             val cliente = ordenMap["cliente"] as? String ?: ""
                             val auto = ordenMap["auto"] as? String ?: ""
                             val fecha = ordenMap["fecha"] as? String ?: ""
-                            val kilometraje = (ordenMap["kilometraje"] as? Long)?.toInt() ?: 0
+                            val kilometraje = parsearInt(ordenMap["kilometraje"])
                             val fallaReportada = ordenMap["fallaReportada"] as? String ?: ""
                             val diagnostico = ordenMap["diagnostico"] as? String ?: ""
                             val trabajoRealizado = ordenMap["trabajoRealizado"] as? String ?: ""
                             val estado = ordenMap["estado"] as? String ?: "EN ESPERA"
-                            val porcentajeAvance = (ordenMap["porcentajeAvance"] as? Long)?.toInt() ?: 0
+                            val porcentajeAvance = parsearInt(ordenMap["porcentajeAvance"])
                             val fechaEntrega = ordenMap["fechaEntrega"] as? String ?: ""
-                            val costoManoObra = (ordenMap["costoManoObra"] as? Number)?.toDouble() ?: 0.0
-                            val costoRefacciones = (ordenMap["costoRefacciones"] as? Number)?.toDouble() ?: 0.0
-                            val iva = (ordenMap["iva"] as? Number)?.toDouble() ?: 0.0
-                            val total = (ordenMap["total"] as? Number)?.toDouble() ?: 0.0
+                            val costoManoObra = parsearDouble(ordenMap["costoManoObra"])
+                            val costoRefacciones = parsearDouble(ordenMap["costoRefacciones"])
+                            val iva = parsearDouble(ordenMap["iva"])
+                            val total = parsearDouble(ordenMap["total"])
 
                             lista.add(
                                 OrdenServicio(
@@ -200,15 +228,20 @@ object FirebaseSyncManager {
                                     total = total
                                 )
                             )
-                        } catch (_: Exception) {}
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error procesando hijo en /ordenes: ${e.message}")
+                        }
                     }
+                    Log.d(TAG, "✅ Total órdenes deserializadas correctamente: ${lista.size}")
                     onOrdenesActualizadas(lista)
                 }
 
-                override fun onCancelled(error: DatabaseError) {}
+                override fun onCancelled(error: DatabaseError) {
+                    Log.e(TAG, "❌ Error escuchando /ordenes en Firebase: ${error.message} (${error.details})")
+                }
             })
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "Error al suscribirse a /ordenes: ${e.message}")
         }
     }
 
@@ -237,13 +270,13 @@ object FirebaseSyncManager {
                     for (child in snapshot.children) {
                         try {
                             val autoMap = child.value as? Map<*, *> ?: continue
-                            val id = (autoMap["id"] as? Long)?.toInt() ?: 0
+                            val id = parsearInt(autoMap["id"])
                             val cliente = autoMap["cliente"] as? String ?: ""
                             val marca = autoMap["marca"] as? String ?: ""
                             val modelo = autoMap["modelo"] as? String ?: ""
-                            val anio = (autoMap["anio"] as? Long)?.toInt() ?: 0
+                            val anio = parsearInt(autoMap["anio"])
                             val placa = autoMap["placa"] as? String ?: ""
-                            val kilometraje = (autoMap["kilometraje"] as? Long)?.toInt() ?: 0
+                            val kilometraje = parsearInt(autoMap["kilometraje"])
                             val vin = autoMap["vin"] as? String ?: ""
                             val color = autoMap["color"] as? String ?: ""
 
