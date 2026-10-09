@@ -10,10 +10,10 @@ import androidx.room.Update
 interface OrdenServicioDao {
 
     // =========================================
-    // INSERTAR ORDEN
+    // INSERTAR ORDEN (RETORNA EL ID AUTO-GENERADO)
     // =========================================
     @Insert
-    suspend fun insertarOrden(orden: OrdenServicio)
+    suspend fun insertarOrden(orden: OrdenServicio): Long
 
     // =========================================
     // OBTENER TODAS LAS ÓRDENES (De la más reciente a la más antigua)
@@ -32,7 +32,7 @@ interface OrdenServicioDao {
     suspend fun obtenerOrdenesPorCliente(nombreCliente: String): List<OrdenServicio>
 
     // =========================================
-    // ✅ NUEVO: BUSCAR ÓRDENES POR TEXTO (Cliente, Auto, Placa o Estado)
+    // BUSCAR ÓRDENES POR TEXTO (Cliente, Auto, Placa o Estado)
     // =========================================
     @Query("""
         SELECT * FROM ordenes_servicio
@@ -48,7 +48,7 @@ interface OrdenServicioDao {
     suspend fun actualizarOrden(orden: OrdenServicio)
 
     // =========================================
-    // ✅ ACTUALIZAR SOLO ESTADO, AVANCE Y FECHA DE ENTREGA
+    // ACTUALIZAR SOLO ESTADO, AVANCE Y FECHA DE ENTREGA
     // =========================================
     @Query("""
         UPDATE ordenes_servicio 
@@ -65,7 +65,7 @@ interface OrdenServicioDao {
     )
 
     // =========================================
-    // ✅ OBTENER UNA SOLA ORDEN POR SU ID (Para Deep Links)
+    // OBTENER UNA SOLA ORDEN POR SU ID
     // =========================================
     @Query("SELECT * FROM ordenes_servicio WHERE id = :id")
     suspend fun obtenerOrdenPorId(id: Int): OrdenServicio?

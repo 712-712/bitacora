@@ -23,8 +23,11 @@ object OrdenServicioRepository {
     }
 
     suspend fun guardarOrden(orden: OrdenServicio, context: Context? = null) {
-        obtenerDao(context)?.insertarOrden(orden)
-        try { FirebaseSyncManager.subirOrdenAFirebase(orden) } catch (_: Exception) {}
+        val dao = obtenerDao(context)
+        val idGenerado = dao?.insertarOrden(orden) ?: 0L
+        val idFinal = if (orden.id == 0 && idGenerado > 0L) idGenerado.toInt() else orden.id
+        val ordenConId = orden.copy(id = idFinal)
+        try { FirebaseSyncManager.subirOrdenAFirebase(ordenConId) } catch (_: Exception) {}
     }
 
     suspend fun obtenerOrdenes(context: Context? = null): List<OrdenServicio> {
