@@ -74,6 +74,35 @@ object FirebaseSyncManager {
         }
     }
 
+    // ESCUCHAR EN TIEMPO REAL TODOS LOS INFORMES DEL CLIENTE DENTRO DE /servicios/id_cliente/informes_taller
+    fun escucharInformesClienteEnTiempoReal(
+        clienteNombre: String,
+        onInformesActualizados: (List<Map<String, Any>>) -> Unit
+    ) {
+        try {
+            val clienteCleanKey = clienteNombre.lowercase().replace(Regex("[^a-z0-9]"), "_")
+            if (clienteCleanKey.isBlank()) return
+
+            val clienteRef = dbRef?.child("servicios")?.child(clienteCleanKey)?.child("informes_taller")
+            clienteRef?.addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val listaInformes = mutableListOf<Map<String, Any>>()
+                    for (informeSnapshot in snapshot.children) {
+                        try {
+                            val map = informeSnapshot.value as? Map<String, Any> ?: continue
+                            listaInformes.add(map)
+                        } catch (_: Exception) {}
+                    }
+                    onInformesActualizados(listaInformes)
+                }
+
+                override fun onCancelled(error: DatabaseError) {}
+            })
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     fun escucharOrdenEnTiempoReal(ordenId: Int, onOrdenActualizada: (OrdenServicio) -> Unit) {
         try {
             if (ordenId <= 0) return
