@@ -50,61 +50,71 @@ fun VerReporteClienteScreen(
 
     var estadoSeleccionado by remember { mutableStateOf("EN ESPERA") }
 
-    LaunchedEffect(ordenId) {
+    LaunchedEffect(Unit) {
         scope.launch {
             try {
-                val lista = OrdenServicioRepository.obtenerOrdenes(context)
-                val ordenEncontrada = if (ordenId > 0) {
-                    lista.find { it.id == ordenId } ?: lista.lastOrNull()
-                } else {
-                    lista.lastOrNull()
-                }
+                // ESCUCHAR DIRECTA Y PRIORITARIAMENTE DESDE FIREBASE REALTIME DATABASE EN TIEMPO REAL
+                FirebaseSyncManager.escucharTodasLasOrdenesEnTiempoReal { ordenesFirebase ->
+                    if (ordenesFirebase.isNotEmpty()) {
+                        val ultima = if (ordenId > 0) {
+                            ordenesFirebase.find { it.id == ordenId } ?: ordenesFirebase.last()
+                        } else {
+                            ordenesFirebase.last()
+                        }
 
-                orden = ordenEncontrada
-                ordenEncontrada?.let { o ->
-                    estadoSeleccionado = o.estado
-                    try {
-                        AudioUtils.reproducirSonidoMotorTresVeces(context)
-                    } catch (_: Exception) {}
+                        orden = ultima
+                        estadoSeleccionado = ultima.estado
+                        cargando = false
 
-                    FirebaseSyncManager.escucharOrdenEnTiempoReal(o.id) { ordenDescargada ->
-                        orden = ordenDescargada
-                        estadoSeleccionado = ordenDescargada.estado
                         try {
                             AudioUtils.reproducirSonidoMotorTresVeces(context)
                         } catch (_: Exception) {}
-                    }
 
-                    try {
-                        val clientes = ClienteRepository.obtenerClientes(context)
-                        val c = clientes.find { it.nombre.trim().equals(o.cliente.trim(), ignoreCase = true) }
-                        telefonoCliente = c?.telefono ?: "No disponible"
-                        clienteId = c?.id ?: 0
-                    } catch (_: Exception) {
-                        telefonoCliente = "No disponible"
-                        clienteId = 0
-                    }
+                        scope.launch {
+                            try {
+                                val clientes = ClienteRepository.obtenerClientes(context)
+                                val c = clientes.find { it.nombre.trim().equals(ultima.cliente.trim(), ignoreCase = true) }
+                                telefonoCliente = c?.telefono ?: "No disponible"
+                                clienteId = c?.id ?: 0
+                            } catch (_: Exception) {
+                                telefonoCliente = "No disponible"
+                                clienteId = 0
+                            }
 
-                    try {
-                        val partes = o.auto.split("-")
-                        val placaStr = partes.lastOrNull()?.trim() ?: ""
-                        if (placaStr.isNotBlank()) {
-                            autoDetalle = AutoRepository.obtenerAutoPorPlaca(placaStr, context)
+                            try {
+                                val partes = ultima.auto.split("-")
+                                val placaStr = partes.lastOrNull()?.trim() ?: ""
+                                if (placaStr.isNotBlank()) {
+                                    autoDetalle = AutoRepository.obtenerAutoPorPlaca(placaStr, context)
+                                }
+                            } catch (_: Exception) {
+                                autoDetalle = null
+                            }
+
+                            try {
+                                val recepciones = RecepcionRepository.obtenerRecepciones(context)
+                                recepcionDetalle = recepciones.find { r -> r.cliente.equals(ultima.cliente, ignoreCase = true) } ?: recepciones.lastOrNull()
+                            } catch (_: Exception) {
+                                recepcionDetalle = null
+                            }
                         }
-                    } catch (_: Exception) {
-                        autoDetalle = null
-                    }
-
-                    try {
-                        val recepciones = RecepcionRepository.obtenerRecepciones(context)
-                        recepcionDetalle = recepciones.find { r -> r.cliente.equals(o.cliente, ignoreCase = true) } ?: recepciones.lastOrNull()
-                    } catch (_: Exception) {
-                        recepcionDetalle = null
+                    } else {
+                        // SI FIREBASE ESTÁ VACÍO, CONSULTA LOCAL ROOM COMO RESPALDO
+                        scope.launch {
+                            try {
+                                val listaLocal = OrdenServicioRepository.obtenerOrdenes(context)
+                                if (listaLocal.isNotEmpty()) {
+                                    val ultimaLocal = listaLocal.last()
+                                    orden = ultimaLocal
+                                    estadoSeleccionado = ultimaLocal.estado
+                                }
+                            } catch (_: Exception) {} finally {
+                                cargando = false
+                            }
+                        }
                     }
                 }
             } catch (_: Exception) {
-                orden = null
-            } finally {
                 cargando = false
             }
         }
@@ -341,7 +351,9 @@ fun VerReporteClienteScreen(
                             estadoSeleccionado = "RECHAZADO"
                             scope.launch {
                                 try {
+                                    val ordenActualizada = o.copy(estado = "RECHAZADO")
                                     OrdenServicioRepository.actualizarEstadoYAvance(o.id, "RECHAZADO", 0, "", context)
+                                    FirebaseSyncManager.subirOrdenAFirebase(ordenActualizada)
                                     Toast.makeText(context, "❌ Cotización marcada como RECHAZADA", Toast.LENGTH_SHORT).show()
                                 } catch (_: Exception) {}
                             }
@@ -361,7 +373,9 @@ fun VerReporteClienteScreen(
                             estadoSeleccionado = "ACEPTADO"
                             scope.launch {
                                 try {
+                                    val ordenActualizada = o.copy(estado = "ACEPTADO", porcentajeAvance = 100)
                                     OrdenServicioRepository.actualizarEstadoYAvance(o.id, "ACEPTADO", 100, "", context)
+                                    FirebaseSyncManager.subirOrdenAFirebase(ordenActualizada)
                                     Toast.makeText(context, "✅ Cotización marcada como ACEPTADA", Toast.LENGTH_SHORT).show()
                                 } catch (_: Exception) {}
                             }
