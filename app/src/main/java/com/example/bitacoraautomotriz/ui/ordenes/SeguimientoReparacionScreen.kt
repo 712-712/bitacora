@@ -36,6 +36,7 @@ import com.example.bitacoraautomotriz.data.Auto
 import com.example.bitacoraautomotriz.data.OrdenServicio
 import com.example.bitacoraautomotriz.repository.AutoRepository
 import com.example.bitacoraautomotriz.repository.ClienteRepository
+import com.example.bitacoraautomotriz.repository.FirebaseSyncManager
 import com.example.bitacoraautomotriz.repository.OrdenServicioRepository
 import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
 import com.example.bitacoraautomotriz.ui.theme.Colores
@@ -64,6 +65,7 @@ fun SeguimientoReparacionScreen(
     var cargando by remember { mutableStateOf(true) }
 
     var estadoSeleccionado by remember { mutableStateOf("EN ESPERA") }
+    var porcentajeAvanceTaller by remember { mutableStateOf(0) }
     var fechaIngreso by remember { mutableStateOf("") }
     var fechaEntrega by remember { mutableStateOf("") }
     var guardando by remember { mutableStateOf(false) }
@@ -91,6 +93,7 @@ fun SeguimientoReparacionScreen(
             orden = OrdenServicioRepository.obtenerOrdenPorId(ordenId, context)
             orden?.let { o ->
                 estadoSeleccionado = o.estado
+                porcentajeAvanceTaller = o.porcentajeAvance
                 fechaEntrega = o.fechaEntrega
 
                 try {
@@ -146,14 +149,20 @@ fun SeguimientoReparacionScreen(
         guardando = true
         scope.launch {
             try {
+                val ordenActualizada = o.copy(
+                    estado = estadoSeleccionado,
+                    porcentajeAvance = porcentajeAvanceTaller,
+                    fechaEntrega = fechaEntrega
+                )
                 OrdenServicioRepository.actualizarEstadoYAvance(
                     o.id,
                     estadoSeleccionado,
-                    if (estadoSeleccionado == "ACEPTADO") 100 else 0,
+                    porcentajeAvanceTaller,
                     fechaEntrega,
                     context
                 )
-                Toast.makeText(context, "✅ Estado y fechas actualizados", Toast.LENGTH_SHORT).show()
+                FirebaseSyncManager.subirOrdenAFirebase(ordenActualizada)
+                Toast.makeText(context, "✅ Avance y datos transmitidos a la App Cliente", Toast.LENGTH_SHORT).show()
                 guardando = false
             } catch (e: Exception) {
                 Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
@@ -209,6 +218,9 @@ Fecha de cotización: ${o.fecha}
 ❌ "RECHAZO" si no está de acuerdo
 ────────────────────
         """.trimIndent()
+
+        // SUBIR MÁS RECIENTE A FIREBASE ANTES DE ENVIAR WHATSAPP
+        FirebaseSyncManager.subirOrdenAFirebase(o)
 
         val intent = Intent(Intent.ACTION_VIEW)
         intent.data = Uri.parse("https://wa.me/52$telefonoLimpio?text=${Uri.encode(mensaje)}")
@@ -341,6 +353,49 @@ Fecha de cotización: ${o.fecha}
                     tamanioTexto = 15,
                     colorTexto = Color.Black
                 )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // 🎛️ BARRAS / BOTONES DE PORCENTAJE DE AVANCE DE REPARACIÓN (CONTROL TALLER)
+                Text(
+                    text = "ACTUALIZAR AVANCE DE REPARACIÓN (TALLER):",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Colores.EtiquetaCampo,
+                    modifier = Modifier.align(Alignment.Start)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    val pasos = listOf(0, 25, 50, 75, 100)
+                    pasos.forEach { paso ->
+                        val esActivo = porcentajeAvanceTaller == paso
+                        BotonModulo3D(
+                            texto = "$paso%",
+                            colorClaro = if (esActivo) Color(0xFFB9F6CA) else Color(0xFFD5E1E6),
+                            colorMedio = if (esActivo) Color(0xFF00C853) else Color(0xFF90A4AE),
+                            colorOscuro = if (esActivo) Color(0xFF00695C) else Color(0xFF455A64),
+                            onClick = {
+                                porcentajeAvanceTaller = paso
+                                scope.launch {
+                                    val ordenActualizada = o.copy(porcentajeAvance = paso)
+                                    OrdenServicioRepository.actualizarEstadoYAvance(o.id, o.estado, paso, o.fechaEntrega, context)
+                                    FirebaseSyncManager.subirOrdenAFirebase(ordenActualizada)
+                                    Toast.makeText(context, "✅ Avance del $paso% transmitido en tiempo real a Firebase", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp),
+                            tamanioTexto = 13,
+                            colorTexto = if (esActivo) Color.Black else Color.White
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
