@@ -37,14 +37,37 @@ object FirebaseSyncManager {
             // 1.1 RUTA DIRECTA DE ÓRDENES
             dbRef?.child("ordenes")?.child(key)?.setValue(orden)
 
-            // 1.2 RUTA ESTRUCTURADA POR CLIENTE Y SERVICIO EN NODO /servicios
+            // 1.2 RUTA ESTRUCTURADA POR CLIENTE Y SERVICIO EN NODO /servicios CON CLAVE .push()
             val clienteCleanKey = orden.cliente.lowercase().replace(Regex("[^a-z0-9]"), "_")
             if (clienteCleanKey.isNotBlank()) {
-                dbRef?.child("servicios")
-                    ?.child(clienteCleanKey)
-                    ?.child("informes_taller")
-                    ?.child("informe_$key")
-                    ?.setValue(orden)
+                val informesRef = dbRef?.child("servicios")?.child(clienteCleanKey)?.child("informes_taller")
+                informesRef?.child("informe_$key")?.setValue(orden)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    // PUBLICAR INFORMES TALLER USANDO PUSH() CON CLAVE ÚNICA DE FIREBASE
+    fun publicarInformeTallerConPush(clienteNombre: String, informeMap: Map<String, Any>) {
+        try {
+            val clienteCleanKey = clienteNombre.lowercase().replace(Regex("[^a-z0-9]"), "_")
+            if (clienteCleanKey.isNotBlank()) {
+                val informesRef = dbRef?.child("servicios")?.child(clienteCleanKey)?.child("informes_taller")
+                informesRef?.push()?.setValue(informeMap)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    // PUBLICAR RESPUESTAS DEL CLIENTE USANDO PUSH() CON CLAVE ÚNICA DE FIREBASE
+    fun publicarRespuestaClienteConPush(clienteNombre: String, respuestaMap: Map<String, Any>) {
+        try {
+            val clienteCleanKey = clienteNombre.lowercase().replace(Regex("[^a-z0-9]"), "_")
+            if (clienteCleanKey.isNotBlank()) {
+                val respuestasRef = dbRef?.child("servicios")?.child(clienteCleanKey)?.child("respuestas_cliente")
+                respuestasRef?.push()?.setValue(respuestaMap)
             }
         } catch (e: Exception) {
             e.printStackTrace()
