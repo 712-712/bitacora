@@ -85,16 +85,15 @@ fun AppNavigationTaller() {
         composable("welcome") {
             WelcomeScreen(
                 onTallerClick = { navController.navigate("dashboard") },
-                onClienteClick = { navController.navigate("centro_notificaciones/0") }
+                onClienteClick = { navController.navigate("area_cliente") }
             )
         }
 
         composable("dashboard") {
             DashboardScreen(
                 onClientesClick = { navController.navigate("clientes") },
-                onAreaClienteClick = { navController.navigate("centro_notificaciones/0") },
+                onAreaClienteClick = { navController.navigate("area_cliente") },
                 onOrdenesClick = { navController.navigate("ordenes") },
-                onCentroNotificacionesClick = { navController.navigate("centro_notificaciones/0") },
                 onInventarioClick = { navController.navigate("inventario") },
                 onGastosClick = { navController.navigate("gastos") },
                 onFacturacionClick = { navController.navigate("facturacion") },
@@ -198,6 +197,7 @@ fun AppNavigationTaller() {
                 onDatosFacturacion = { navController.navigate("mis_datos_facturacion") },
                 onEstadoReparacion = { navController.navigate("estado_reparacion") },
                 onVerReporteCliente = { navController.navigate("ver_reporte_cliente") },
+                onCentroNotificacionesClick = { navController.navigate("centro_notificaciones/0") },
                 onCitaEntrega = { navController.navigate("cita_entrega") },
                 onHistorial = { navController.navigate("historial") },
                 onRegresar = { navController.popBackStack() }

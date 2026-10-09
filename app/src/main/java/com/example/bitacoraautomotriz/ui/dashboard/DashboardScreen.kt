@@ -25,7 +25,6 @@ fun DashboardScreen(
     onClientesClick: () -> Unit,
     onAreaClienteClick: () -> Unit,
     onOrdenesClick: () -> Unit,
-    onCentroNotificacionesClick: () -> Unit = {},
     onInventarioClick: () -> Unit,
     onGastosClick: () -> Unit,
     onFacturacionClick: () -> Unit,
@@ -64,10 +63,6 @@ fun DashboardScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         BotonModulo3D(texto = "COTIZACIONES DE SERVICIOS", colorClaro = Color(0xFFD7B899), colorMedio = Color(0xFF9B6B43), colorOscuro = Color(0xFF5D3A1A), onClick = onOrdenesClick)
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // BOTÓN VERDE CENTRO DE AVISOS Y NOTIFICACIONES AL CLIENTE
-        BotonModulo3D(texto = "CENTRO DE AVISOS AL CLIENTE", icono = "📱", colorClaro = Color(0xFFB9F6CA), colorMedio = Color(0xFF00C853), colorOscuro = Color(0xFF00695C), onClick = onCentroNotificacionesClick)
         Spacer(modifier = Modifier.height(16.dp))
 
         BotonModulo3D(texto = "INVENTARIO DEL TALLER", colorClaro = Color(0xFFF3A7FF), colorMedio = Color(0xFFD83CFF), colorOscuro = Color(0xFF7B1599), onClick = onInventarioClick)

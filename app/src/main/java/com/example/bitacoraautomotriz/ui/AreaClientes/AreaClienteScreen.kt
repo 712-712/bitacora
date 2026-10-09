@@ -25,6 +25,7 @@ fun AreaClienteScreen(
     onDatosFacturacion: () -> Unit,
     onEstadoReparacion: () -> Unit,
     onVerReporteCliente: () -> Unit = {},
+    onCentroNotificacionesClick: () -> Unit = {},
     onCitaEntrega: () -> Unit,
     onHistorial: () -> Unit,
     onRegresar: () -> Unit
@@ -117,6 +118,21 @@ fun AreaClienteScreen(
                 }
             }
 
+            // BOTÓN VERDE CENTRO DE NOTIFICACIONES Y AVISOS AL CLIENTE (MOVIDO A ESTA PANTALLA)
+            BotonModulo3D(
+                texto = "CENTRO DE AVISOS Y NOTIFICACIONES AL CLIENTE",
+                icono = "📱",
+                colorClaro = Color(0xFFB9F6CA),
+                colorMedio = Color(0xFF00C853),
+                colorOscuro = Color(0xFF00695C),
+                colorTexto = Color.Black,
+                onClick = onCentroNotificacionesClick,
+                modifier = Modifier.fillMaxWidth().height(62.dp),
+                tamanioTexto = 14
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
             // 1. MIS AUTOS
             BotonModulo3D(
                 texto = "MIS AUTOS / AGREGAR MI AUTO",
@@ -162,7 +178,7 @@ fun AreaClienteScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // 4. REPORTE DE COTIZACIÓN Y SERVICIO (NUEVA PANTALLA SOLICITADA)
+            // 4. REPORTE DE COTIZACIÓN Y SERVICIO
             BotonModulo3D(
                 texto = "REPORTE DE COTIZACIÓN Y SERVICIO",
                 icono = "📋",
