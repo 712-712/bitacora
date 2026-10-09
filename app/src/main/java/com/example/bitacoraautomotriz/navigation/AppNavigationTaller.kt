@@ -85,14 +85,14 @@ fun AppNavigationTaller() {
         composable("welcome") {
             WelcomeScreen(
                 onTallerClick = { navController.navigate("dashboard") },
-                onClienteClick = { navController.navigate("area_cliente") }
+                onClienteClick = { navController.navigate("centro_notificaciones/0") }
             )
         }
 
         composable("dashboard") {
             DashboardScreen(
                 onClientesClick = { navController.navigate("clientes") },
-                onAreaClienteClick = { navController.navigate("area_cliente") },
+                onAreaClienteClick = { navController.navigate("centro_notificaciones/0") },
                 onOrdenesClick = { navController.navigate("ordenes") },
                 onCentroNotificacionesClick = { navController.navigate("centro_notificaciones/0") },
                 onInventarioClick = { navController.navigate("inventario") },
