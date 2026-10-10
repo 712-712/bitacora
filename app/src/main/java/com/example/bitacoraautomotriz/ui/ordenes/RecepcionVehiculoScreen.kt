@@ -581,20 +581,15 @@ Agradecemos su confianza.
                 elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("3. FIRMA DIGITAL DEL CLIENTE", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                        if (firmaCapturada) {
-                            Text(
-                                text = "🔒 FIRMADO Y BLOQUEADO",
-                                color = Color(0xFF7DFFB2),
-                                fontWeight = FontWeight.ExtraBold,
-                                fontSize = 13.sp
-                            )
-                        }
+                    Text("3. FIRMA DIGITAL DEL CLIENTE", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
+
+                    if (firmaCapturada) {
+                        Text(
+                            text = "🔒 FIRMADO Y BLOQUEADO",
+                            color = Color(0xFF7DFFB2),
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 14.sp
+                        )
                     }
 
                     Text("El cliente firma en pantalla confirmando la recepción del auto:", fontSize = 13.sp, color = Colores.EtiquetaCampo)
@@ -611,7 +606,6 @@ Agradecemos su confianza.
                             modifier = Modifier
                                 .fillMaxSize()
                                 .pointerInput(firmaCapturada) {
-                                    // SI LA FIRMA YA FUE ACEPTADA, SE BLOQUEA EL TRAZO PARA EVITAR ALTERACIONES
                                     if (!firmaCapturada) {
                                         awaitEachGesture {
                                             val down = awaitFirstDown(requireUnconsumed = false)
@@ -644,12 +638,12 @@ Agradecemos su confianza.
                         }
                     }
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        if (!firmaCapturada) {
+                    if (!firmaCapturada) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             TextButton(onClick = {
                                 if (trazosFirma.isNotEmpty()) {
                                     firmaCapturada = true
@@ -660,16 +654,32 @@ Agradecemos su confianza.
                             }) {
                                 Text("✅ ACEPTAR Y BLOQUEAR FIRMA", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold, fontSize = 14.sp)
                             }
-                        } else {
-                            Text("✅ FIRMA ACEPTADA Y VALIDADA", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                        }
 
-                        TextButton(onClick = {
-                            trazosFirma.clear()
-                            firmaCapturada = false
-                            Toast.makeText(context, "🔓 Campo de firma desbloqueado", Toast.LENGTH_SHORT).show()
-                        }) {
-                            Text("🗑️ BORRAR FIRMA", color = Color(0xFFFF5252), fontWeight = FontWeight.Bold)
+                            TextButton(onClick = {
+                                trazosFirma.clear()
+                                firmaCapturada = false
+                                Toast.makeText(context, "🔓 Campo de firma desbloqueado", Toast.LENGTH_SHORT).show()
+                            }) {
+                                Text("🗑️ BORRAR FIRMA", color = Color(0xFFFF5252), fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    } else {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.Start,
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text("✅ FIRMA ACEPTADA Y VALIDADA", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            TextButton(
+                                onClick = {
+                                    trazosFirma.clear()
+                                    firmaCapturada = false
+                                    Toast.makeText(context, "🔓 Campo de firma desbloqueado", Toast.LENGTH_SHORT).show()
+                                },
+                                contentPadding = PaddingValues(0.dp)
+                            ) {
+                                Text("🗑️ BORRAR FIRMA", color = Color(0xFFFF5252), fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            }
                         }
                     }
                 }
