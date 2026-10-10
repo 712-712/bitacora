@@ -13,6 +13,7 @@ import com.example.bitacoraautomotriz.ui.clientes.HistorialServiciosScreen
 import com.example.bitacoraautomotriz.ui.clientes.MisDatosClienteScreen
 import com.example.bitacoraautomotriz.ui.clientes.MisDatosFacturacionScreen
 import com.example.bitacoraautomotriz.ui.clientes.VerReporteClienteScreen
+import com.example.bitacoraautomotriz.ui.ordenes.RecepcionVehiculoScreen
 
 @Composable
 fun AppNavigationCliente() {
@@ -30,6 +31,7 @@ fun AppNavigationCliente() {
                 onDatosFacturacion = { navController.navigate("mis_datos_facturacion") },
                 onEstadoReparacion = { navController.navigate("estado_reparacion") },
                 onVerReporteCliente = { navController.navigate("ver_reporte_cliente") },
+                onRecepcionVehiculoClick = { navController.navigate("recepcion_vehiculo") },
                 onCitaEntrega = { navController.navigate("cita_entrega") },
                 onHistorial = { navController.navigate("historial") },
                 onRegresar = { activity?.finishAffinity() }
@@ -41,6 +43,7 @@ fun AppNavigationCliente() {
         composable("cita_entrega") { CitaEntregaScreen(onRegresar = { navController.popBackStack() }) }
         composable("estado_reparacion") { EstadoReparacionScreen(onRegresar = { navController.popBackStack() }) }
         composable("ver_reporte_cliente") { VerReporteClienteScreen(onRegresar = { navController.popBackStack() }) }
+        composable("recepcion_vehiculo") { RecepcionVehiculoScreen(onRegresar = { navController.popBackStack() }) }
         composable("historial") { HistorialServiciosScreen(onRegresar = { navController.popBackStack() }) }
     }
 }

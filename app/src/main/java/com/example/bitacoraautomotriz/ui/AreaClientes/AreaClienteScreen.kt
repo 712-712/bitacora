@@ -27,6 +27,7 @@ fun AreaClienteScreen(
     onEstadoReparacion: () -> Unit = {},
     onVerReporteCliente: () -> Unit = {},
     onCentroNotificacionesClick: () -> Unit = {},
+    onRecepcionVehiculoClick: () -> Unit = {},
     onCitaEntrega: () -> Unit,
     onHistorial: () -> Unit,
     onRegresar: () -> Unit
@@ -186,14 +187,14 @@ fun AreaClienteScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // 4. ACTA DE RECEPCIÓN Y CHECK-IN LEGAL (RECEPCIÓN DEL TALLER)
+            // 4. ACTA DE RECEPCIÓN Y CHECK-IN LEGAL (RECUPERADA PANTALLA COMPLETA CON CÁMARA, FIRMA Y METADATOS EXIF)
             BotonModulo3D(
-                texto = "ACTA DE RECEPCIÓN Y CHECK-IN LEGAL",
+                texto = "RECEPCIÓN Y CHECK-IN LEGAL DEL VEHÍCULO",
                 icono = "📷",
                 colorClaro = Color(0xFFD7B899),
                 colorMedio = Color(0xFF9B6B43),
                 colorOscuro = Color(0xFF5D3A1A),
-                onClick = onVerReporteCliente,
+                onClick = onRecepcionVehiculoClick,
                 modifier = Modifier.fillMaxWidth().height(58.dp),
                 tamanioTexto = 15,
                 colorTexto = Color.Black

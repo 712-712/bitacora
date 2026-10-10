@@ -198,6 +198,7 @@ fun AppNavigationTaller() {
                 onEstadoReparacion = { navController.navigate("estado_reparacion") },
                 onVerReporteCliente = { navController.navigate("ver_reporte_cliente") },
                 onCentroNotificacionesClick = { navController.navigate("centro_notificaciones/0") },
+                onRecepcionVehiculoClick = { navController.navigate("recepcion_vehiculo") },
                 onCitaEntrega = { navController.navigate("cita_entrega") },
                 onHistorial = { navController.navigate("historial") },
                 onRegresar = { navController.popBackStack() }
