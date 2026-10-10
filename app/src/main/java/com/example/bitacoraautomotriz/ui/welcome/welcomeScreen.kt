@@ -90,6 +90,7 @@ fun WelcomeScreen(
     val context = LocalContext.current
     var showSplash by remember { mutableStateOf(true) }
 
+    // SONIDO DE MOTOR SÓLO AL INICIAR LA PANTALLA DE TRANSICIÓN/SPLASH
     LaunchedEffect(Unit) {
         try {
             AudioUtils.reproducirSonidoMotorUnaVez(context)
@@ -261,12 +262,7 @@ private fun WelcomeContent(
                     buttonLabel = stringResource(id = R.string.ingresar),
                     accentColor = Color(0xFF43A047),
                     accentColorDark = Color(0xFF1B5E20),
-                    onClick = {
-                        try {
-                            AudioUtils.reproducirSonidoMotorUnaVez(context)
-                        } catch (_: Exception) {}
-                        onClienteClick()
-                    },
+                    onClick = onClienteClick,
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
@@ -279,12 +275,7 @@ private fun WelcomeContent(
                     buttonLabel = stringResource(id = R.string.ingresar),
                     accentColor = Color(0xFF1E88E5),
                     accentColorDark = Color(0xFF0D47A1),
-                    onClick = {
-                        try {
-                            AudioUtils.reproducirSonidoMotorUnaVez(context)
-                        } catch (_: Exception) {}
-                        onTallerClick()
-                    },
+                    onClick = onTallerClick,
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth()
@@ -377,12 +368,7 @@ private fun WelcomeContent(
                             modifier = Modifier.weight(1f)
                         )
                         Button(
-                            onClick = {
-                                try {
-                                    AudioUtils.reproducirSonidoMotorUnaVez(context)
-                                } catch (_: Exception) {}
-                                onClienteClick()
-                            },
+                            onClick = onClienteClick,
                             shape = RoundedCornerShape(50),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF43A047)),
                             contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp)

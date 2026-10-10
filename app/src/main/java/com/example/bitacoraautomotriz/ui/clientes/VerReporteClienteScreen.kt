@@ -29,7 +29,6 @@ import com.example.bitacoraautomotriz.repository.OrdenServicioRepository
 import com.example.bitacoraautomotriz.repository.RecepcionRepository
 import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
 import com.example.bitacoraautomotriz.ui.theme.Colores
-import com.example.bitacoraautomotriz.utils.AudioUtils
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -67,10 +66,6 @@ fun VerReporteClienteScreen(
                         orden = seleccionada
                         estadoSeleccionado = seleccionada.estado
                         cargando = false
-
-                        try {
-                            AudioUtils.reproducirSonidoMotorTresVeces(context)
-                        } catch (_: Exception) {}
 
                         scope.launch {
                             try {

@@ -24,7 +24,6 @@ import com.example.bitacoraautomotriz.repository.FirebaseSyncManager
 import com.example.bitacoraautomotriz.repository.OrdenServicioRepository
 import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
 import com.example.bitacoraautomotriz.ui.theme.Colores
-import com.example.bitacoraautomotriz.utils.AudioUtils
 import kotlinx.coroutines.launch
 
 @Composable
@@ -47,9 +46,6 @@ fun EstadoReparacionScreen(
             if (lista.isNotEmpty()) {
                 val ultima = lista.last()
                 ordenSeleccionada = ultima
-                try {
-                    AudioUtils.reproducirSonidoMotorTresVeces(context)
-                } catch (_: Exception) {}
             }
 
             // ESCUCHAR TODAS LAS ÓRDENES DESDE FIREBASE REALTIME DATABASE EN TIEMPO REAL (<1 SEG)
@@ -58,9 +54,6 @@ fun EstadoReparacionScreen(
                     val ultima = ordenesFirebase.last()
                     ordenSeleccionada = ultima
                     cargando = false
-                    try {
-                        AudioUtils.reproducirSonidoMotorTresVeces(context)
-                    } catch (_: Exception) {}
                 }
             }
         } catch (_: Exception) {
