@@ -751,34 +751,45 @@ fun EnviarInformesClienteScreen(
 
                                 Spacer(modifier = Modifier.height(4.dp))
 
-                                // FIRMA DIGITAL TÁCTIL
-                                Text("FIRMA DIGITAL DEL CLIENTE EN PANTALLA:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                // FIRMA DIGITAL TÁCTIL CON BLOQUEO TRAS ACEPTAR
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text("FIRMA DIGITAL DEL CLIENTE EN PANTALLA:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                    if (firmaCapturada) {
+                                        Text("🔒 BLOQUEADA", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                    }
+                                }
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(130.dp)
                                         .clip(RoundedCornerShape(10.dp))
-                                        .background(Color.White)
-                                        .border(2.dp, Color.Black, RoundedCornerShape(10.dp))
+                                        .background(if (firmaCapturada) Color(0xFFE8F5E9) else Color.White)
+                                        .border(2.dp, if (firmaCapturada) Color(0xFF00C853) else Color.Black, RoundedCornerShape(10.dp))
                                 ) {
                                     Canvas(
                                         modifier = Modifier
                                             .fillMaxSize()
-                                            .pointerInput(Unit) {
-                                                awaitEachGesture {
-                                                    val down = awaitFirstDown(requireUnconsumed = false)
-                                                    down.consume()
-                                                    val listaPuntos = mutableStateListOf(down.position)
-                                                    trazosFirma.add(listaPuntos)
+                                            .pointerInput(firmaCapturada) {
+                                                if (!firmaCapturada) {
+                                                    awaitEachGesture {
+                                                        val down = awaitFirstDown(requireUnconsumed = false)
+                                                        down.consume()
+                                                        val listaPuntos = mutableStateListOf(down.position)
+                                                        trazosFirma.add(listaPuntos)
 
-                                                    do {
-                                                        val event = awaitPointerEvent()
-                                                        val change = event.changes.firstOrNull()
-                                                        if (change != null && change.pressed) {
-                                                            change.consume()
-                                                            listaPuntos.add(change.position)
-                                                        }
-                                                    } while (event.changes.any { it.pressed })
+                                                        do {
+                                                            val event = awaitPointerEvent()
+                                                            val change = event.changes.firstOrNull()
+                                                            if (change != null && change.pressed) {
+                                                                change.consume()
+                                                                listaPuntos.add(change.position)
+                                                            }
+                                                        } while (event.changes.any { it.pressed })
+                                                    }
                                                 }
                                             }
                                     ) {
@@ -791,10 +802,26 @@ fun EnviarInformesClienteScreen(
                                 }
 
                                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    TextButton(onClick = { if (trazosFirma.isNotEmpty()) firmaCapturada = true }) {
-                                        Text(if (firmaCapturada) "✅ FIRMADO" else "✅ ACEPTAR FIRMA", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold)
+                                    if (!firmaCapturada) {
+                                        TextButton(onClick = {
+                                            if (trazosFirma.isNotEmpty()) {
+                                                firmaCapturada = true
+                                                Toast.makeText(context, "🔒 Firma digital aceptada y bloqueada", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                Toast.makeText(context, "Realice su firma antes de aceptar", Toast.LENGTH_SHORT).show()
+                                            }
+                                        }) {
+                                            Text("✅ ACEPTAR Y BLOQUEAR FIRMA", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold)
+                                        }
+                                    } else {
+                                        Text("✅ FIRMA ACEPTADA Y VALIDADA", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold, fontSize = 13.sp)
                                     }
-                                    TextButton(onClick = { trazosFirma.clear(); firmaCapturada = false }) {
+
+                                    TextButton(onClick = {
+                                        trazosFirma.clear()
+                                        firmaCapturada = false
+                                        Toast.makeText(context, "🔓 Campo de firma desbloqueado", Toast.LENGTH_SHORT).show()
+                                    }) {
                                         Text("🗑️ BORRAR", color = Color(0xFFFF5252), fontWeight = FontWeight.Bold)
                                     }
                                 }
