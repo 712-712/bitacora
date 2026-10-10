@@ -124,7 +124,7 @@ fun AreaClienteScreen(
                 }
             }
 
-            // BOTÓN VERDE CENTRO DE NOTIFICACIONES Y AVISOS AL CLIENTE (PANTALLA CONSOLA Y CONTROL AVANCE TALLER)
+            // BOTÓN VERDE CENTRO DE NOTIFICACIONES Y AVISOS AL CLIENTE (SÓLO PARA APP TALLER)
             if (!esAppCliente) {
                 BotonModulo3D(
                     texto = "CENTRO DE AVISOS Y NOTIFICACIONES AL CLIENTE",
@@ -171,7 +171,7 @@ fun AreaClienteScreen(
                 Spacer(modifier = Modifier.height(14.dp))
             }
 
-            // 3. REPORTE DE COTIZACIÓN Y SERVICIO (PANTALLA RECEPTORA CLIENTE)
+            // 3. REPORTE DE COTIZACIÓN Y SERVICIO
             BotonModulo3D(
                 texto = "REPORTE DE COTIZACIÓN Y SERVICIO",
                 icono = "📋",
@@ -186,7 +186,22 @@ fun AreaClienteScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // 4. CITA DE INGRESO AL TALLER (SÓLO PARA LA APP CLIENTE)
+            // 4. ACTA DE RECEPCIÓN Y CHECK-IN LEGAL (RECEPCIÓN DEL TALLER)
+            BotonModulo3D(
+                texto = "ACTA DE RECEPCIÓN Y CHECK-IN LEGAL",
+                icono = "📷",
+                colorClaro = Color(0xFFD7B899),
+                colorMedio = Color(0xFF9B6B43),
+                colorOscuro = Color(0xFF5D3A1A),
+                onClick = onVerReporteCliente,
+                modifier = Modifier.fillMaxWidth().height(58.dp),
+                tamanioTexto = 15,
+                colorTexto = Color.Black
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // 5. CITA DE INGRESO AL TALLER (SÓLO PARA LA APP CLIENTE)
             if (esAppCliente) {
                 BotonModulo3D(
                     texto = "CITA DE INGRESO AL TALLER",
@@ -202,7 +217,7 @@ fun AreaClienteScreen(
                 Spacer(modifier = Modifier.height(14.dp))
             }
 
-            // 5. HISTORIAL
+            // 6. HISTORIAL
             BotonModulo3D(
                 texto = "HISTORIAL",
                 icono = "📜",
