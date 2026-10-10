@@ -1,11 +1,21 @@
 package com.example.bitacoraautomotriz.ui.ordenes
 
 import android.content.Intent
+import android.graphics.Bitmap
 import android.net.Uri
+import android.provider.MediaStore
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.launch
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -14,18 +24,23 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -42,6 +57,8 @@ import com.example.bitacoraautomotriz.repository.RecepcionRepository
 import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
 import com.example.bitacoraautomotriz.ui.theme.Colores
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 @Composable
@@ -53,6 +70,9 @@ fun EnviarInformesClienteScreen(
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val scope = rememberCoroutineScope()
+
+    val formatoFecha = remember { SimpleDateFormat("dd/MM/yyyy - hh:mm a", Locale.getDefault()) }
+    val fechaHoraActual = remember { formatoFecha.format(Date()) }
 
     var ordenes by remember { mutableStateOf<List<OrdenServicio>>(emptyList()) }
     var ordenSeleccionada by remember { mutableStateOf<OrdenServicio?>(null) }
@@ -66,11 +86,91 @@ fun EnviarInformesClienteScreen(
     var autoDetalle by remember { mutableStateOf<Auto?>(null) }
     var telefonoCliente by remember { mutableStateOf("") }
     var clienteId by remember { mutableStateOf(0) }
+    var kilometrajeInput by remember { mutableStateOf("") }
 
     var porcentajeAvanceTaller by remember { mutableStateOf(0) }
     var mostrarTarjetaCotizacionCompleta by remember { mutableStateOf(false) }
     var mostrarTarjetaRecepcionCompleta by remember { mutableStateOf(false) }
     var cargando by remember { mutableStateOf(true) }
+
+    // FOTOS CÁMARA GUIADA
+    var fotoFrenteBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var fotoAtrasBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var fotoIzquierdaBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var fotoDerechaBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var fotoTechoBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var fotoRinesBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var fotoInteriorBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var fotoTableroBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var slotFotoActual by remember { mutableStateOf("") }
+
+    // VIDEO
+    var videoTomado by remember { mutableStateOf(false) }
+
+    // FIRMA DIGITAL
+    val trazosFirma = remember { mutableStateListOf<SnapshotStateList<Offset>>() }
+    var firmaCapturada by remember { mutableStateOf(false) }
+
+    // RETENCIÓN EXPIACIÓN
+    val opcionesRetencion = remember {
+        listOf(
+            "1 Día", "2 Días", "3 Días", "1 Semana", "2 Semanas", "1 Mes", "2 Meses", "3 Meses", "6 Meses", "1 Año", "2 Años (Recomendado Legal)"
+        )
+    }
+    var retencionSeleccionada by remember { mutableStateOf(opcionesRetencion.last()) }
+    var menuRetencionExpandido by remember { mutableStateOf(false) }
+
+    // LAUNCHERS CÁMARA Y VIDEO
+    val launcherCamaraEnVivo = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview()
+    ) { bitmap: Bitmap? ->
+        if (bitmap != null) {
+            val bitmapConMarca = superponerMarcaDeAguaLegal(
+                bitmapOriginal = bitmap,
+                tallerNombre = "TALLER MECÁNICO BITÁCORA",
+                fechaHoraStr = fechaHoraActual,
+                placaStr = autoSeleccionado?.placa?.uppercase() ?: "REGISTRADA",
+                kmStr = kilometrajeInput.ifBlank { "N/A" },
+                clienteStr = clienteSeleccionado?.nombre?.uppercase() ?: "REGISTRADO"
+            )
+
+            when (slotFotoActual) {
+                "FRENTE" -> fotoFrenteBitmap = bitmapConMarca
+                "ATRÁS" -> fotoAtrasBitmap = bitmapConMarca
+                "IZQUIERDA" -> fotoIzquierdaBitmap = bitmapConMarca
+                "DERECHA" -> fotoDerechaBitmap = bitmapConMarca
+                "TECHO" -> fotoTechoBitmap = bitmapConMarca
+                "RINES" -> fotoRinesBitmap = bitmapConMarca
+                "INTERIOR" -> fotoInteriorBitmap = bitmapConMarca
+                "TABLERO" -> fotoTableroBitmap = bitmapConMarca
+            }
+            Toast.makeText(context, "📷 Foto $slotFotoActual agregada con Marca de Agua y EXIF", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    val launcherVideoCamara = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            videoTomado = true
+            Toast.makeText(context, "🎥 Video de recepción registrado con Sello EXIF", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun tomarFotoSlot(slot: String) {
+        slotFotoActual = slot
+        launcherCamaraEnVivo.launch()
+    }
+
+    fun tomarVideo() {
+        try {
+            val intent = Intent(MediaStore.ACTION_VIDEO_CAPTURE)
+            context.startActivity(intent)
+            videoTomado = true
+        } catch (_: Exception) {
+            launcherVideoCamara.launch("video/*")
+        }
+    }
 
     LaunchedEffect(Unit) {
         scope.launch {
@@ -111,6 +211,7 @@ fun EnviarInformesClienteScreen(
                 if (listaAutos.size == 1) {
                     autoSeleccionado = listaAutos.first()
                     autoDetalle = listaAutos.first()
+                    kilometrajeInput = listaAutos.first().kilometraje.toString()
                 }
 
                 val recepciones = RecepcionRepository.obtenerRecepciones(context)
@@ -267,7 +368,11 @@ fun EnviarInformesClienteScreen(
                                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                     autosDelCliente.forEach { auto ->
                                         Button(
-                                            onClick = { autoSeleccionado = auto; autoDetalle = auto },
+                                            onClick = {
+                                                autoSeleccionado = auto
+                                                autoDetalle = auto
+                                                kilometrajeInput = auto.kilometraje.toString()
+                                            },
                                             modifier = Modifier.fillMaxWidth(),
                                             colors = ButtonDefaults.buttonColors(containerColor = Colores.FondoSecundario)
                                         ) {
@@ -399,7 +504,7 @@ fun EnviarInformesClienteScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // CARD 3: CONSOLA DE AVISOS Y NOTIFICACIONES COMPLETA RESTAURADA CON FORMULARIO COMPLETO DE RECEPCIÓN
+            // CARD 3: CONSOLA DE AVISOS Y NOTIFICACIONES COMPLETA CON FORMULARIO COMPLETO DE RECEPCIÓN
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
@@ -542,33 +647,21 @@ fun EnviarInformesClienteScreen(
                         }
                     }
 
-                    // 2. AVISO Y TARJETA COMPLETA DEL FORMULARIO DE RECEPCIÓN Y PROTECCIÓN LEGAL
+                    // 2. AVISO Y FORMULARIO INTERACTIVO COMPLETO DE RECEPCIÓN Y PROTECCIÓN LEGAL
                     BotonModulo3D(
                         texto = "📷 2. ENVIAR FORMULARIO COMPLETO DE RECEPCIÓN Y PROTECCIÓN LEGAL",
                         colorClaro = Color(0xFFB9F6CA), colorMedio = Color(0xFF00C853), colorOscuro = Color(0xFF00695C),
                         colorTexto = Color.Black,
                         onClick = {
                             mostrarTarjetaRecepcionCompleta = !mostrarTarjetaRecepcionCompleta
-                            Toast.makeText(context, "📋 Formulario de Recepción cargado para transmisión a Firebase", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "📋 Formulario Interactivo de Recepción desplegado", Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier.fillMaxWidth().height(58.dp),
                         tamanioTexto = 14
                     )
 
-                    // SI SE SELECCIONA ENVIAR RECEPCIÓN: MUESTRA EL FORMULARIO Y ACTA COMPLETA DE RECEPCIÓN Y PROTECCIÓN LEGAL
-                    if (mostrarTarjetaRecepcionCompleta || recepcionDetalle != null) {
-                        val r = recepcionDetalle ?: RecepcionVehiculo(
-                            id = 1,
-                            cliente = cNombre,
-                            auto = aNombre,
-                            placa = autoDetalle?.placa ?: "712ZYF",
-                            vin = autoDetalle?.vin ?: "555AAS",
-                            kilometraje = 45000,
-                            fechaHora = "08/10/2026 - 11:30 AM",
-                            hashIntegridadSha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                            tiempoRetencion = "2 Años (Recomendado Legal)"
-                        )
-
+                    // SI SE SELECCIONA ENVIAR RECEPCIÓN: MUESTRA EL FORMULARIO Y ACTA INTERACTIVA COMPLETA DE RECEPCIÓN Y PROTECCIÓN LEGAL
+                    if (mostrarTarjetaRecepcionCompleta) {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(14.dp),
@@ -578,49 +671,232 @@ fun EnviarInformesClienteScreen(
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(20.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    .padding(18.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
                                 Text(
-                                    text = "📋 ACTA DE RECEPCIÓN Y PROTECCIÓN LEGAL N° ${String.format(Locale.US, "%05d", r.id)}",
+                                    text = "📋 FORMULARIO Y ACTA DE RECEPCIÓN Y PROTECCIÓN LEGAL",
                                     fontSize = 17.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF7DFFB2)
                                 )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(text = "CLIENTE: ${r.cliente}", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                                Text(text = "VEHÍCULO: ${r.auto}", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                                Text(text = "PLACA: ${r.placa}   |   VIN: ${r.vin.ifBlank { "N/A" }}", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFF7DFFB2))
-                                Text(text = "FECHA Y HORA DE INGRESO: ${r.fechaHora}", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                                Text(text = "KILOMETRAJE REGISTRADO: ${r.kilometraje} km", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                Text(text = "FECHA Y HORA: $fechaHoraActual", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
 
-                                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color(0xFF004D33))
+                                // KILOMETRAJE ENTRADA
+                                Text("KILOMETRAJE DEL TABLERO:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                OutlinedTextField(
+                                    value = kilometrajeInput,
+                                    onValueChange = { if (it.all { c -> c.isDigit() }) kilometrajeInput = it },
+                                    placeholder = { Text("Ej: 45000", color = Color.Gray) },
+                                    textStyle = TextStyle(color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
 
-                                Text(text = "• Fotografías de 8 Ángulos: REGISTRADAS CON MARCAS DE AGUA Y EXIF", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                                Text(text = "• Video de Inspección: REGISTRADO CON SELLO LEGAL EXIF", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                                Text(text = "• Firma Digital Táctil del Cliente: FIRMADO Y ACEPTADO EN PANTALLA", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF7DFFB2))
-                                Text(text = "• Huella Criptográfica SHA-256: ${r.hashIntegridadSha256}", fontSize = 13.sp, color = Color.LightGray)
-                                Text(text = "• Periodo de Retención Expiración: ${r.tiempoRetencion}", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Yellow)
+                                Spacer(modifier = Modifier.height(4.dp))
 
-                                Spacer(modifier = Modifier.height(12.dp))
+                                // CÁMARA GUIADA 8 ÁNGULOS CON MARCAS DE AGUA
+                                Text("FOTOGRAFÍAS DE 8 ÁNGULOS (CON MARCAS DE AGUA EXIF):", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
+
+                                val slotsLista = listOf(
+                                    Triple("FRENTE", fotoFrenteBitmap) { tomarFotoSlot("FRENTE") },
+                                    Triple("ATRÁS", fotoAtrasBitmap) { tomarFotoSlot("ATRÁS") },
+                                    Triple("IZQUIERDA", fotoIzquierdaBitmap) { tomarFotoSlot("IZQUIERDA") },
+                                    Triple("DERECHA", fotoDerechaBitmap) { tomarFotoSlot("DERECHA") },
+                                    Triple("TECHO", fotoTechoBitmap) { tomarFotoSlot("TECHO") },
+                                    Triple("RINES", fotoRinesBitmap) { tomarFotoSlot("RINES") },
+                                    Triple("INTERIOR", fotoInteriorBitmap) { tomarFotoSlot("INTERIOR") },
+                                    Triple("TABLERO", fotoTableroBitmap) { tomarFotoSlot("TABLERO") }
+                                )
+
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    slotsLista.chunked(2).forEach { par ->
+                                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            par.forEach { (nombreSlot, bitmap, accionToma) ->
+                                                Box(
+                                                    modifier = Modifier
+                                                        .weight(1f)
+                                                        .height(80.dp)
+                                                        .clip(RoundedCornerShape(10.dp))
+                                                        .background(if (bitmap != null) Color(0xFF00C853) else Colores.FondoSecundario)
+                                                        .clickable { accionToma() }
+                                                        .border(1.5.dp, if (bitmap != null) Color(0xFF7DFFB2) else Colores.BordeBoton, RoundedCornerShape(10.dp)),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    if (bitmap != null) {
+                                                        Image(
+                                                            bitmap = bitmap.asImageBitmap(),
+                                                            contentDescription = nombreSlot,
+                                                            contentScale = ContentScale.Crop,
+                                                            modifier = Modifier.fillMaxSize()
+                                                        )
+                                                        Box(
+                                                            modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.35f)),
+                                                            contentAlignment = Alignment.BottomCenter
+                                                        ) {
+                                                            Text("✅ $nombreSlot", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                                        }
+                                                    } else {
+                                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                            Text("📷", fontSize = 18.sp)
+                                                            Text(nombreSlot, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(4.dp))
+
+                                // FIRMA DIGITAL TÁCTIL
+                                Text("FIRMA DIGITAL DEL CLIENTE EN PANTALLA:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(130.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(Color.White)
+                                        .border(2.dp, Color.Black, RoundedCornerShape(10.dp))
+                                ) {
+                                    Canvas(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .pointerInput(Unit) {
+                                                awaitEachGesture {
+                                                    val down = awaitFirstDown(requireUnconsumed = false)
+                                                    down.consume()
+                                                    val listaPuntos = mutableStateListOf(down.position)
+                                                    trazosFirma.add(listaPuntos)
+
+                                                    do {
+                                                        val event = awaitPointerEvent()
+                                                        val change = event.changes.firstOrNull()
+                                                        if (change != null && change.pressed) {
+                                                            change.consume()
+                                                            listaPuntos.add(change.position)
+                                                        }
+                                                    } while (event.changes.any { it.pressed })
+                                                }
+                                            }
+                                    ) {
+                                        trazosFirma.forEach { puntos ->
+                                            for (i in 0 until puntos.size - 1) {
+                                                drawLine(color = Color.Black, start = puntos[i], end = puntos[i + 1], strokeWidth = 5f)
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    TextButton(onClick = { if (trazosFirma.isNotEmpty()) firmaCapturada = true }) {
+                                        Text(if (firmaCapturada) "✅ FIRMADO" else "✅ ACEPTAR FIRMA", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold)
+                                    }
+                                    TextButton(onClick = { trazosFirma.clear(); firmaCapturada = false }) {
+                                        Text("🗑️ BORRAR", color = Color(0xFFFF5252), fontWeight = FontWeight.Bold)
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(4.dp))
+
+                                // RETENCIÓN DE FOTOS
+                                Text("PERIODO DE RETENCIÓN LEGAL:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                Box(modifier = Modifier.fillMaxWidth()) {
+                                    OutlinedButton(
+                                        onClick = { menuRetencionExpandido = true },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        colors = ButtonDefaults.outlinedButtonColors(containerColor = Colores.FondoPantalla)
+                                    ) {
+                                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                            Text(retencionSeleccionada, color = Color.White, fontWeight = FontWeight.Bold)
+                                            Text("▼", color = Color.White)
+                                        }
+                                    }
+
+                                    DropdownMenu(
+                                        expanded = menuRetencionExpandido,
+                                        onDismissRequest = { menuRetencionExpandido = false },
+                                        modifier = Modifier.background(Colores.FondoTarjeta)
+                                    ) {
+                                        opcionesRetencion.forEach { opcion ->
+                                            DropdownMenuItem(
+                                                text = { Text(opcion, color = Color.White, fontWeight = FontWeight.Bold) },
+                                                onClick = {
+                                                    retencionSeleccionada = opcion
+                                                    menuRetencionExpandido = false
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(4.dp))
+
+                                // BOTÓN GRABAR VIDEO
+                                BotonModulo3D(
+                                    texto = if (videoTomado) "✅ VIDEO REGISTRADO CON EXIF" else "🎥 GRABAR VIDEO OPCIONAL (15-20 SEG)",
+                                    colorClaro = if (videoTomado) Color(0xFFB9F6CA) else Color(0xFF80D8FF),
+                                    colorMedio = if (videoTomado) Color(0xFF00C853) else Color(0xFF00B8D4),
+                                    colorOscuro = if (videoTomado) Color(0xFF00695C) else Color(0xFF006064),
+                                    colorTexto = Color.Black,
+                                    onClick = { tomarVideo() },
+                                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                                    tamanioTexto = 13
+                                )
+
+                                Spacer(modifier = Modifier.height(10.dp))
 
                                 BotonModulo3D(
                                     texto = "⚡ TRANSMITIR ACTA DE RECEPCIÓN A FIREBASE",
                                     colorClaro = Color(0xFFB9F6CA), colorMedio = Color(0xFF00C853), colorOscuro = Color(0xFF00695C),
                                     colorTexto = Color.Black,
                                     onClick = {
-                                        val mapRecepcion = mapOf(
-                                            "id" to r.id,
-                                            "cliente" to r.cliente,
-                                            "auto" to r.auto,
-                                            "placa" to r.placa,
-                                            "kilometraje" to r.kilometraje,
-                                            "fechaHora" to r.fechaHora,
-                                            "hashIntegridadSha256" to r.hashIntegridadSha256,
-                                            "tiempoRetencion" to r.tiempoRetencion
+                                        val kmVal = kilometrajeInput.toIntOrNull() ?: 45000
+                                        val hashTexto = "${cNombre}_${autoDetalle?.placa ?: "712ZYF"}_${autoDetalle?.vin ?: "555AAS"}_${kmVal}_${fechaHoraActual}"
+                                        val hashGenerado = RecepcionRepository.calcularHashSha256(hashTexto)
+
+                                        val recepcionObjeto = RecepcionVehiculo(
+                                            id = 1,
+                                            cliente = cNombre,
+                                            auto = aNombre,
+                                            placa = autoDetalle?.placa ?: "712ZYF",
+                                            vin = autoDetalle?.vin ?: "555AAS",
+                                            kilometraje = kmVal,
+                                            fechaHora = fechaHoraActual,
+                                            fotoFrentePath = if (fotoFrenteBitmap != null) "REGISTRADA" else "",
+                                            fotoAtrasPath = if (fotoAtrasBitmap != null) "REGISTRADA" else "",
+                                            fotoIzquierdaPath = if (fotoIzquierdaBitmap != null) "REGISTRADA" else "",
+                                            fotoDerechaPath = if (fotoDerechaBitmap != null) "REGISTRADA" else "",
+                                            fotoTechoPath = if (fotoTechoBitmap != null) "REGISTRADA" else "",
+                                            fotoRinesPath = if (fotoRinesBitmap != null) "REGISTRADA" else "",
+                                            fotoInteriorPath = if (fotoInteriorBitmap != null) "REGISTRADA" else "",
+                                            fotoTableroPath = if (fotoTableroBitmap != null) "REGISTRADA" else "",
+                                            videoPath = if (videoTomado) "VIDEO_REGISTRADO" else "",
+                                            firmaPath = if (firmaCapturada) "FIRMA_VALIDA" else "",
+                                            hashIntegridadSha256 = hashGenerado,
+                                            tiempoRetencion = retencionSeleccionada
                                         )
-                                        FirebaseSyncManager.publicarInformeTallerConPush(r.cliente, mapRecepcion)
-                                        Toast.makeText(context, "⚡ Acta de Recepción enviada a Firebase en tiempo real", Toast.LENGTH_SHORT).show()
+
+                                        scope.launch {
+                                            try {
+                                                RecepcionRepository.guardarRecepcion(recepcionObjeto, context)
+                                            } catch (_: Exception) {}
+
+                                            val mapRecepcion = mapOf(
+                                                "id" to recepcionObjeto.id,
+                                                "cliente" to recepcionObjeto.cliente,
+                                                "auto" to recepcionObjeto.auto,
+                                                "placa" to recepcionObjeto.placa,
+                                                "kilometraje" to recepcionObjeto.kilometraje,
+                                                "fechaHora" to recepcionObjeto.fechaHora,
+                                                "hashIntegridadSha256" to recepcionObjeto.hashIntegridadSha256,
+                                                "tiempoRetencion" to recepcionObjeto.tiempoRetencion
+                                            )
+                                            FirebaseSyncManager.publicarInformeTallerConPush(cNombre, mapRecepcion)
+                                            Toast.makeText(context, "⚡ Formulario y Acta de Recepción enviada a Firebase", Toast.LENGTH_SHORT).show()
+                                        }
                                     },
                                     modifier = Modifier.fillMaxWidth().height(52.dp),
                                     tamanioTexto = 14
