@@ -10,7 +10,7 @@ import androidx.room.Update
 interface AutoDao {
 
     @Insert
-    suspend fun insertarAuto(auto: Auto)
+    suspend fun insertarAuto(auto: Auto): Long
 
     @Update
     suspend fun actualizarAuto(auto: Auto)

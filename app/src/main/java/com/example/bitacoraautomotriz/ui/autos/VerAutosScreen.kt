@@ -40,7 +40,7 @@ fun VerAutosScreen(
 
     var autos by remember { mutableStateOf<List<Auto>>(value = emptyList()) }
     var busqueda by remember { mutableStateOf(value = "") }
-    var refreshTrigger by remember { mutableStateOf(value = 0) }
+    var refreshTrigger by remember { mutableIntStateOf(value = 0) }
     var cargando by remember { mutableStateOf(value = true) }
 
     LaunchedEffect(refreshTrigger) {

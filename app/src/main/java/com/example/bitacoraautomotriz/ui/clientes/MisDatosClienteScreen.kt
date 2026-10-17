@@ -19,12 +19,15 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.bitacoraautomotriz.data.Auto
@@ -453,32 +456,38 @@ fun MisDatosClienteScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "🚗 ${auto.marca.uppercase()} ${auto.modelo.uppercase()} (${auto.anio})",
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                                Text(
-                                    text = "PLACA: ${auto.placa.uppercase()}",
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF7DFFB2)
-                                )
-                            }
+                            // NOMBRE Y AÑO DEL VEHÍCULO
+                            Text(
+                                text = "🚗 ${auto.marca.uppercase()} ${auto.modelo.uppercase()} (${auto.anio})",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
 
+                            // PLACA JUSTO POR DEBAJO DEL TEXTO DEL VEHÍCULO
+                            Text(
+                                text = "PLACA: ${auto.placa.uppercase()}",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF7DFFB2)
+                            )
+
+                            // COLOR EN NEGRITA NEGRO Y VIN
                             if (auto.color.isNotBlank() || auto.vin.isNotBlank()) {
                                 Text(
-                                    text = "COLOR: ${auto.color.ifBlank { "N/A" }}   |   VIN: ${auto.vin.ifBlank { "N/A" }}",
-                                    fontSize = 14.sp,
-                                    color = Color.White.copy(alpha = 0.9f)
+                                    text = buildAnnotatedString {
+                                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = Color.Black)) {
+                                            append("COLOR: ${auto.color.ifBlank { "N/A" }.uppercase()}")
+                                        }
+                                        if (auto.vin.isNotBlank()) {
+                                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = Color.White)) {
+                                                append("   |   VIN: ${auto.vin.uppercase()}")
+                                            }
+                                        }
+                                    },
+                                    fontSize = 15.sp
                                 )
                             }
 

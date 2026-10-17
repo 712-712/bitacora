@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -59,32 +60,97 @@ fun DashboardScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        BotonModulo3D(texto = "CLIENTES", colorClaro = Color(0xFF80D8FF), colorMedio = Color(0xFF00B8D4), colorOscuro = Color(0xFF006064), onClick = onClientesClick)
+        // 1. CLIENTES
+        BotonModulo3D(
+            texto = "CLIENTES",
+            colorClaro = Color(0xFF80D8FF),
+            colorMedio = Color(0xFF00B8D4),
+            colorOscuro = Color(0xFF006064),
+            onClick = onClientesClick
+        )
         Spacer(modifier = Modifier.height(16.dp))
 
-        BotonModulo3D(texto = "COTIZACIONES DE SERVICIOS", colorClaro = Color(0xFFD7B899), colorMedio = Color(0xFF9B6B43), colorOscuro = Color(0xFF5D3A1A), onClick = onOrdenesClick)
+        // 2. COTIZACIONES DE SERVICIOS
+        BotonModulo3D(
+            texto = "COTIZACIONES DE SERVICIOS",
+            colorClaro = Color(0xFFD7B899),
+            colorMedio = Color(0xFF9B6B43),
+            colorOscuro = Color(0xFF5D3A1A),
+            onClick = onOrdenesClick
+        )
         Spacer(modifier = Modifier.height(16.dp))
 
-        BotonModulo3D(texto = "INVENTARIO DEL TALLER", colorClaro = Color(0xFFF3A7FF), colorMedio = Color(0xFFD83CFF), colorOscuro = Color(0xFF7B1599), onClick = onInventarioClick)
+        // 3. FACTURACIÓN
+        BotonModulo3D(
+            texto = "FACTURACIÓN",
+            colorClaro = Color(0xFF7C4DFF),
+            colorMedio = Color(0xFF651FFF),
+            colorOscuro = Color(0xFF311B92),
+            colorTexto = Color.White,
+            onClick = onFacturacionClick
+        )
         Spacer(modifier = Modifier.height(16.dp))
 
-        BotonModulo3D(texto = "GASTOS DEL TALLER", colorClaro = Color(0xFFFF9999), colorMedio = Color(0xFFFF4141), colorOscuro = Color(0xFFB51F1F), onClick = onGastosClick)
+        // 4. INVENTARIO DEL TALLER
+        BotonModulo3D(
+            texto = "INVENTARIO DEL TALLER",
+            colorClaro = Color(0xFFF3A7FF),
+            colorMedio = Color(0xFFD83CFF),
+            colorOscuro = Color(0xFF7B1599),
+            onClick = onInventarioClick
+        )
         Spacer(modifier = Modifier.height(16.dp))
 
-        BotonModulo3D(texto = "FACTURACIÓN", colorClaro = Color(0xFF8FFFFF), colorMedio = Color(0xFF00DDEB), colorOscuro = Color(0xFF007F88), onClick = onFacturacionClick)
+        // 5. GASTOS DEL TALLER
+        BotonModulo3D(
+            texto = "GASTOS DEL TALLER",
+            icono = "💰",
+            colorClaro = Color(0xFFFF9999),
+            colorMedio = Color(0xFFFF4141),
+            colorOscuro = Color(0xFFB51F1F),
+            onClick = onGastosClick
+        )
         Spacer(modifier = Modifier.height(16.dp))
 
-        BotonModulo3D(texto = "REPORTES", colorClaro = Color(0xFFADB8FF), colorMedio = Color(0xFF5C70FF), colorOscuro = Color(0xFF29399E), onClick = onReportesClick)
+        // 6. REPORTES
+        BotonModulo3D(
+            texto = "REPORTES",
+            icono = "📊",
+            colorClaro = Color(0xFFADB8FF),
+            colorMedio = Color(0xFF5C70FF),
+            colorOscuro = Color(0xFF29399E),
+            onClick = onReportesClick
+        )
         Spacer(modifier = Modifier.height(16.dp))
 
-        BotonModulo3D(texto = "CONFIGURACIÓN", colorClaro = Color(0xFFFFF59D), colorMedio = Color(0xFFFFEB3B), colorOscuro = Color(0xFFFBC02D), onClick = onConfiguracionClick)
+        // 7. CONSOLA Y AVISOS AL CLIENTE
+        BotonModulo3D(
+            texto = "CONSOLA Y AVISOS AL CLIENTE",
+            icono = "🎛️",
+            colorClaro = Color(0xFFB9F6CA),
+            colorMedio = Color(0xFF00C853),
+            colorOscuro = Color(0xFF00695C),
+            onClick = onAreaClienteClick,
+            modifier = Modifier.fillMaxWidth().height(58.dp),
+            tamanioTexto = 15
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 8. CONFIGURACIÓN
+        BotonModulo3D(
+            texto = "CONFIGURACIÓN",
+            icono = "⚙️",
+            colorClaro = Color(0xFFFFF59D),
+            colorMedio = Color(0xFFFFEB3B),
+            colorOscuro = Color(0xFFFBC02D),
+            onClick = onConfiguracionClick
+        )
         Spacer(modifier = Modifier.height(24.dp))
 
-        BotonModulo3D(texto = "ÁREA DEL CLIENTE", colorClaro = Color(0xFFD7B899), colorMedio = Color(0xFF9B6B43), colorOscuro = Color(0xFF5D3A1A), onClick = onAreaClienteClick)
-        Spacer(modifier = Modifier.height(16.dp))
-
+        // 9. SALIR DE LA APP
         BotonModulo3D(
             texto = "SALIR DE LA APP",
+            icono = "🚪",
             colorClaro = Colores.RegresarClaro,
             colorMedio = Colores.RegresarMedio,
             colorOscuro = Colores.RegresarOscuro,

@@ -4,14 +4,24 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.bitacoraautomotriz.data.Repuesto
@@ -25,18 +35,63 @@ fun VerInventarioScreen(
     onRegresar: () -> Unit,
 ) {
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
     var repuestos by remember { mutableStateOf<List<Repuesto>>(value = emptyList()) }
+    var busquedaQuery by remember { mutableStateOf("") }
     var cargando by remember { mutableStateOf(value = true) }
 
     LaunchedEffect(Unit) {
         try {
-            repuestos = RepuestoRepository.obtenerRepuestos(context)
+            repuestos = RepuestoRepository.obtenerRepuestos(context).sortedByDescending { it.id }
         } catch (_: Exception) {
             repuestos = emptyList()
         } finally {
             cargando = false
         }
     }
+
+    val repuestosFiltrados by remember(repuestos, busquedaQuery) {
+        derivedStateOf {
+            if (busquedaQuery.isBlank()) {
+                repuestos
+            } else {
+                val qRaw = busquedaQuery.trim().lowercase(Locale.getDefault())
+                val digitsOnly = busquedaQuery.replace(Regex("[^0-9]"), "")
+
+                repuestos.filter { r ->
+                    val idStr = r.id.toString()
+                    val idFormatted = String.format(Locale.US, "%04d", r.id)
+
+                    val matchId = (digitsOnly.isNotBlank() && idStr.contains(digitsOnly)) ||
+                                  (digitsOnly.isNotBlank() && idFormatted.contains(digitsOnly)) ||
+                                  idStr.contains(qRaw) ||
+                                  idFormatted.contains(qRaw)
+
+                    val matchTexto = r.nombre.lowercase(Locale.getDefault()).contains(qRaw) ||
+                                     r.marca.lowercase(Locale.getDefault()).contains(qRaw) ||
+                                     r.categoria.lowercase(Locale.getDefault()).contains(qRaw)
+
+                    matchId || matchTexto
+                }
+            }
+        }
+    }
+
+    val coloresCamposTexto = OutlinedTextFieldDefaults.colors(
+        focusedContainerColor = Colores.FondoSecundario,
+        unfocusedContainerColor = Colores.FondoSecundario,
+        disabledContainerColor = Colores.FondoSecundario,
+        focusedTextColor = Color.White,
+        unfocusedTextColor = Color.White,
+        disabledTextColor = Color.White,
+        focusedBorderColor = Colores.BordeBoton,
+        unfocusedBorderColor = Colores.BordeBoton.copy(alpha = 0.5f),
+        cursorColor = Color.White,
+        selectionColors = TextSelectionColors(
+            handleColor = Color.White,
+            backgroundColor = Color(0xFF00DDEB).copy(alpha = 0.4f)
+        )
+    )
 
     Box(
         modifier = Modifier
@@ -55,13 +110,57 @@ fun VerInventarioScreen(
             verticalArrangement = Arrangement.Top
         ) {
             Text(
-                text = "VER REPUESTOS",
+                text = "REPUESTOS REGISTRADOS",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = Colores.TituloPrincipal
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // CUADRO DE BÚSQUEDA INTEGRADO POR DEBAJO DEL TÍTULO REPUESTOS REGISTRADOS
+            OutlinedTextField(
+                value = busquedaQuery,
+                onValueChange = { busquedaQuery = it },
+                placeholder = {
+                    Text(
+                        text = "BUSCAR REPUESTO (NOMBRE, CATEGORÍA, MARCA...)",
+                        color = Color.LightGray,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Buscar Repuesto",
+                        tint = Color.White
+                    )
+                },
+                trailingIcon = {
+                    if (busquedaQuery.isNotEmpty()) {
+                        IconButton(onClick = { busquedaQuery = "" }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Limpiar Búsqueda",
+                                tint = Color.White
+                            )
+                        }
+                    }
+                },
+                singleLine = true,
+                textStyle = TextStyle(color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold),
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Characters,
+                    imeAction = ImeAction.Search
+                ),
+                keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
+                shape = RoundedCornerShape(12.dp),
+                colors = coloresCamposTexto,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
 
             if (cargando) {
                 Box(
@@ -72,24 +171,15 @@ fun VerInventarioScreen(
                 ) {
                     CircularProgressIndicator(color = Color.White)
                 }
-            } else if (repuestos.isEmpty()) {
+            } else if (repuestosFiltrados.isEmpty()) {
                 Text(
-                    text = "NO HAY REPUESTOS REGISTRADOS",
-                    fontSize = 18.sp,
+                    text = if (busquedaQuery.isBlank()) "NO HAY REPUESTOS REGISTRADOS" else "NO SE ENCONTRARON REPUESTOS PARA \"$busquedaQuery\"",
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
             } else {
-                Text(
-                    text = "REPUESTOS REGISTRADOS",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Colores.EtiquetaCampo
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                repuestos.forEach { repuesto ->
+                repuestosFiltrados.forEach { repuesto ->
                     val cantidad = repuesto.cantidad.coerceAtLeast(0)
                     val precioUnitario = if (repuesto.precio.isNaN() || repuesto.precio < 0) 0.0 else repuesto.precio
                     val importe = cantidad * precioUnitario

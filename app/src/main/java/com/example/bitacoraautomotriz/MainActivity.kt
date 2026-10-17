@@ -1,6 +1,7 @@
 package com.example.bitacoraautomotriz
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import com.example.bitacoraautomotriz.navigation.AppNavigationCliente
@@ -12,18 +13,33 @@ import com.example.bitacoraautomotriz.repository.GastoRepository
 import com.example.bitacoraautomotriz.repository.OrdenServicioRepository
 import com.example.bitacoraautomotriz.repository.RepuestoRepository
 import com.example.bitacoraautomotriz.ui.theme.BitacoraAutomotrizTheme
-import com.google.firebase.database.ktx.database
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.auth.FirebaseAuth
 
-class MainActivity : ComponentActivity() { // <-- Abre la clase correctamente aquí
+class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        iniciarSesionYArrancar()
+    }
 
-        // 1. Llamamos a tu función de prueba de Firebase
-        enviarMensajePrueba()
+    private fun iniciarSesionYArrancar() {
+        val auth = FirebaseAuth.getInstance()
 
-        // 2. Tu código original de inicialización (dentro de onCreate)
+        if (auth.currentUser != null) {
+            iniciarApp()
+            return
+        }
+
+        auth.signInAnonymously()
+            .addOnSuccessListener { iniciarApp() }
+            .addOnFailureListener { e ->
+                Log.e("Auth", "Error de login: ${e.message}")
+                iniciarApp() // la app abre igual, pero Firebase no cargará datos sin sesión
+            }
+    }
+
+    private fun iniciarApp() {
+        // Inicialización de repositorios locales
         ClienteRepository.inicializar(applicationContext)
         AutoRepository.inicializar(applicationContext)
         OrdenServicioRepository.inicializar(applicationContext)
@@ -31,6 +47,7 @@ class MainActivity : ComponentActivity() { // <-- Abre la clase correctamente aq
         GastoRepository.inicializar(applicationContext)
         FacturaRepository.inicializar(applicationContext)
 
+        // Detectamos dinámicamente si es la variante "cliente" o "taller"
         val pkgName = applicationContext.packageName.lowercase()
         val esAppCliente = pkgName.contains("cliente")
 
@@ -43,19 +60,5 @@ class MainActivity : ComponentActivity() { // <-- Abre la clase correctamente aq
                 }
             }
         }
-    } // <-- Cierra el onCreate aquí de forma correcta
-
-    // 3. Tu función de prueba de Firebase va aquí abajo
-    fun enviarMensajePrueba() {
-        val database = Firebase.database
-        val referencia = database.getReference("conexion_prueba")
-
-        referencia.setValue("¡Hola desde Bitácora Automotriz!")
-            .addOnSuccessListener {
-                println("¡Conexión exitosa! El mensaje se guardó correctamente.")
-            }
-            .addOnFailureListener { error ->
-                println("Hubo un error al conectar con Firebase: ${error.message}")
-            }
     }
-} // <-- Cierra la clase MainActivity al final de todo
+}

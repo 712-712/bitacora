@@ -30,6 +30,7 @@ fun ReportesScreen(
     onReporteGastos: () -> Unit,
     onReporteFacturacion: () -> Unit,
     onReporteRecepciones: () -> Unit = {},
+    onHistorialServicios: () -> Unit = {},
     onRegresar: () -> Unit
 ) {
 
@@ -59,20 +60,21 @@ fun ReportesScreen(
             modifier = Modifier.height(24.dp)
         )
 
-        // BOTÓN VERDE DESTACADO DE REPORTE DE RECEPCIÓN E INSPECCIÓN DEL VEHÍCULO
+        // 1. REPORTE ACTAS DE RECEPCIÓN E INSPECCIÓN DEL VEHÍCULO
         BotonModulo3D(
-            texto = "REPORTE RECEPCIÓN E\nINSPECCIÓN DEL VEHÍCULO",
-            colorClaro = Color(0xFFB9F6CA),
-            colorMedio = Color(0xFF00C853),
-            colorOscuro = Color(0xFF00695C),
+            texto = "REPORTE ACTAS DE RECEPCIÓN E\nINSPECCIÓN DEL VEHÍCULO",
+            colorClaro = Color(0xFFADB8FF),
+            colorMedio = Color(0xFF5C70FF),
+            colorOscuro = Color(0xFF29399E),
             onClick = onReporteRecepciones,
-            modifier = Modifier.fillMaxWidth().height(68.dp),
+            modifier = Modifier.fillMaxWidth().height(64.dp),
             tamanioTexto = 15,
             colorTexto = Color.Black
         )
 
         Spacer(modifier = Modifier.height(14.dp))
 
+        // 2. REPORTE DE CLIENTES
         BotonModulo3D(
             texto = "REPORTE DE CLIENTES",
             colorClaro = Color(0xFFADB8FF),
@@ -84,6 +86,7 @@ fun ReportesScreen(
 
         Spacer(modifier = Modifier.height(14.dp))
 
+        // 3. REPORTE DE AUTOS
         BotonModulo3D(
             texto = "REPORTE DE AUTOS",
             colorClaro = Color(0xFFADB8FF),
@@ -95,6 +98,7 @@ fun ReportesScreen(
 
         Spacer(modifier = Modifier.height(14.dp))
 
+        // 4. REPORTE DE ÓRDENES
         BotonModulo3D(
             texto = "REPORTE DE ÓRDENES",
             colorClaro = Color(0xFFADB8FF),
@@ -106,6 +110,7 @@ fun ReportesScreen(
 
         Spacer(modifier = Modifier.height(14.dp))
 
+        // 5. REPORTE DE INVENTARIO
         BotonModulo3D(
             texto = "REPORTE DE INVENTARIO",
             colorClaro = Color(0xFFADB8FF),
@@ -117,6 +122,7 @@ fun ReportesScreen(
 
         Spacer(modifier = Modifier.height(14.dp))
 
+        // 6. REPORTE DE GASTOS
         BotonModulo3D(
             texto = "REPORTE DE GASTOS",
             colorClaro = Color(0xFFADB8FF),
@@ -128,12 +134,28 @@ fun ReportesScreen(
 
         Spacer(modifier = Modifier.height(14.dp))
 
+        // 7. REPORTE DE FACTURACIÓN
         BotonModulo3D(
             texto = "REPORTE DE FACTURACIÓN",
             colorClaro = Color(0xFFADB8FF),
             colorMedio = Color(0xFF5C70FF),
             colorOscuro = Color(0xFF29399E),
             onClick = onReporteFacturacion,
+            colorTexto = Color.Black
+        )
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // 8. HISTORIAL GENERAL DE SERVICIOS (UBICADO JUSTO DEBAJO DE REPORTE DE FACTURACIÓN)
+        BotonModulo3D(
+            texto = "HISTORIAL GENERAL DE SERVICIOS",
+            icono = "📜",
+            colorClaro = Color(0xFFADB8FF),
+            colorMedio = Color(0xFF5C70FF),
+            colorOscuro = Color(0xFF29399E),
+            onClick = onHistorialServicios,
+            modifier = Modifier.fillMaxWidth().height(58.dp),
+            tamanioTexto = 15,
             colorTexto = Color.Black
         )
 

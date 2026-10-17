@@ -46,15 +46,102 @@
 
 ## 7. Diseño, Accesibilidad y Paleta de Colores por Módulo (Reglas Globales)
 - **Accesibilidad (Adultos Mayores):**
-  - Todos los botones (`BotonModulo3D`) deben tener un tamaño accesible, áreas táctiles amplias y texto en **Negro Negrita** (`colorTexto = Color.Black`), excepto los botones de regresó o salir que usan texto en **Blanco** (`colorTexto = Color.White`).
+  - Todos los botones (`BotonModulo3D`) deben tener un tamaño accesible, áreas táctiles amplias y texto en **Negro Negrita** (`colorTexto = Color.Black`), excepto los botones de regreso o salir que usan texto en **Blanco** (`colorTexto = Color.White`).
 - **Paleta de Colores por Módulo (Criterio obligatorio en TODOS los submenús y pantallas de la app):**
   - **Clientes:** Azul (`#80D8FF`, `#00B8D4`, `#006064`)
   - **Autos / Vehículos:** Verde (`#B9F6CA`, `#00C853`, `#00695C`)
   - **Cotizaciones / Órdenes:** Café (`#D7B899`, `#9B6B43`, `#5D3A1A`)
   - **Inventario:** Morado / Fucsia (`#F3A7FF`, `#D83CFF`, `#7B1599`)
   - **Gastos:** Rojo (`#xFFFF9999`, `#xFFFF4141`, `#B51F1F`)
-  - **Facturación:** Cian (`#8FFFFF`, `#00DDEB`, `#007F88`)
+  - **Facturación:** Violeta (`#7C4DFF`, `#651FFF`, `#311B92`)
+  - **Alerta de Mantenimiento:** Carmesí Intenso (`#D81B60`, `#AD1457`, `#880E4F`)
   - **Reportes:** Índigo (`#ADB8FF`, `#5C70FF`, `#29399E`)
   - **Configuración:** Amarillo (`#FFF59D`, `#FFEB3B`, `#FBC02D`)
   - **Área del Cliente:** Café (`#D7B899`, `#9B6B43`, `#5D3A1A`)
   - **Regresar / Salir de la app:** Gris unificado (`#D5E1E6`, `#90A4AE`, `#455A64`)
+
+## 8. Código Oficial Estándar para Botones Planos (BotonModulo3D)
+Queda estrictamente prohibido el uso de sombras inferiores en 3D, relieves o capas dobles desplazadas. Todos los botones de la app deben utilizar única y exclusivamente la implementación plana, limpia y accesible con bordes redondeados (`14.dp`) y degradado vertical por módulo:
+
+```kotlin
+package com.example.bitacoraautomotriz.ui.componentes
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.bitacoraautomotriz.ui.theme.Colores
+
+@Composable
+fun BotonModulo3D(
+    texto: String,
+    colorClaro: Color = Colores.TituloPrincipal,
+    colorMedio: Color = Colores.BordeBoton,
+    colorOscuro: Color = Colores.FondoSecundario,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier.fillMaxWidth().height(58.dp),
+    tamanioTexto: Int = 16,
+    icono: String? = null,
+    colorTexto: Color = Color.Black
+) {
+    fun atenuar(color: Color): Color {
+        return Color(
+            red = (color.red * 0.50f + 0.50f).coerceAtMost(1f),
+            green = (color.green * 0.50f + 0.50f).coerceAtMost(1f),
+            blue = (color.blue * 0.50f + 0.50f).coerceAtMost(1f),
+            alpha = color.alpha
+        )
+    }
+
+    val interactionSource = remember { MutableInteractionSource() }
+
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(atenuar(colorClaro), atenuar(colorMedio), atenuar(colorOscuro))
+                ),
+                shape = RoundedCornerShape(14.dp)
+            )
+            .clickable(interactionSource = interactionSource, indication = null) { onClick() }
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            if (icono != null) {
+                Text(
+                    text = icono,
+                    fontSize = (tamanioTexto + 2).sp,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+            }
+            Text(
+                text = texto,
+                fontSize = tamanioTexto.sp,
+                fontWeight = FontWeight.Bold,
+                color = colorTexto,
+                textAlign = TextAlign.Center,
+                lineHeight = (tamanioTexto + 2).sp,
+                maxLines = 2
+            )
+        }
+    }
+}
+```

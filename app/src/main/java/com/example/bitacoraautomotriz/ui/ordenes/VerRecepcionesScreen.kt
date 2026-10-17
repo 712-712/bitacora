@@ -1,13 +1,16 @@
 package com.example.bitacoraautomotriz.ui.ordenes
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,6 +24,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.bitacoraautomotriz.data.RecepcionVehiculo
@@ -44,37 +48,55 @@ fun VerRecepcionesScreen(
 
     LaunchedEffect(Unit) {
         try {
-            recepciones = RecepcionRepository.obtenerRecepciones(context)
+            val listaLocal = RecepcionRepository.obtenerRecepciones(context)
+            if (listaLocal.isNotEmpty()) {
+                recepciones = listaLocal.sortedByDescending { it.id }
+                cargando = false
+            }
+        } catch (_: Exception) {}
+
+        try {
+            FirebaseSyncManager.escucharRecepcionesEnTiempoReal { recepcionesFirebase ->
+                if (recepcionesFirebase.isNotEmpty()) {
+                    recepciones = recepcionesFirebase.sortedByDescending { it.id }
+                }
+                cargando = false
+            }
         } catch (_: Exception) {
-            recepciones = emptyList()
-        } finally {
             cargando = false
         }
     }
 
     val query = busqueda.uppercase().trim()
-    val recepcionesFiltradas = recepciones.filter { r ->
-        r.cliente.uppercase().contains(query, ignoreCase = true) ||
+    val recepcionesFiltradas = remember(recepciones, query) {
+        if (query.isBlank()) {
+            recepciones
+        } else {
+            recepciones.filter { r ->
+                r.cliente.uppercase().contains(query, ignoreCase = true) ||
                 r.placa.uppercase().contains(query, ignoreCase = true) ||
                 r.auto.uppercase().contains(query, ignoreCase = true) ||
                 r.vin.uppercase().contains(query, ignoreCase = true) ||
                 r.id.toString().contains(query, ignoreCase = true)
+            }
+        }
     }
 
-    fun retransmitirFirebase(r: RecepcionVehiculo) {
-        val mapRecepcion = mapOf(
-            "id" to r.id,
-            "cliente" to r.cliente,
-            "auto" to r.auto,
-            "placa" to r.placa,
-            "kilometraje" to r.kilometraje,
-            "fechaHora" to r.fechaHora,
-            "hashIntegridadSha256" to r.hashIntegridadSha256,
-            "tiempoRetencion" to r.tiempoRetencion
+    val coloresCamposTexto = OutlinedTextFieldDefaults.colors(
+        focusedContainerColor = Colores.FondoSecundario,
+        unfocusedContainerColor = Colores.FondoSecundario,
+        disabledContainerColor = Colores.FondoSecundario,
+        focusedTextColor = Color.White,
+        unfocusedTextColor = Color.White,
+        disabledTextColor = Color.White,
+        focusedBorderColor = Colores.BordeBoton,
+        unfocusedBorderColor = Colores.BordeBoton.copy(alpha = 0.5f),
+        cursorColor = Color.White,
+        selectionColors = TextSelectionColors(
+            handleColor = Color.White,
+            backgroundColor = Color(0xFF00DDEB).copy(alpha = 0.4f)
         )
-        FirebaseSyncManager.publicarInformeTallerConPush(r.cliente, mapRecepcion)
-        Toast.makeText(context, "⚡ Acta N° ${r.id} transmitida en tiempo real a Firebase", Toast.LENGTH_SHORT).show()
-    }
+    )
 
     Box(
         modifier = Modifier
@@ -99,10 +121,13 @@ fun VerRecepcionesScreen(
             verticalArrangement = Arrangement.Top
         ) {
             Text(
-                text = "HISTORIAL DE RECEPCIONES",
-                fontSize = 22.sp,
+                text = "ACTAS DE RECEPCIONES E\nINSPECCIONES VEHICULARES",
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = Colores.TituloPrincipal
+                color = Colores.TituloPrincipal,
+                textAlign = TextAlign.Center,
+                lineHeight = 24.sp,
+                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -110,22 +135,54 @@ fun VerRecepcionesScreen(
             Text(
                 text = "Consulta de actas de recepción y marcas de agua legales",
                 fontSize = 14.sp,
-                color = Colores.EtiquetaCampo
+                color = Colores.EtiquetaCampo,
+                textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // CUADRO DE BÚSQUEDA INTEGRADO EN TIEMPO REAL CON BOTÓN LIMPIAR
             OutlinedTextField(
                 value = busqueda,
-                onValueChange = { busqueda = it.uppercase() },
-                placeholder = { Text("Buscar por Cliente, Placa o Folio...", color = Color.Gray) },
-                textStyle = TextStyle(color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold),
+                onValueChange = { busqueda = it },
+                placeholder = {
+                    Text(
+                        text = "BUSCAR (CLIENTE, PLACA O FOLIO...)",
+                        color = Color.LightGray,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Buscar Recepción",
+                        tint = Color.White
+                    )
+                },
+                trailingIcon = {
+                    if (busqueda.isNotEmpty()) {
+                        IconButton(onClick = { busqueda = "" }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Limpiar Búsqueda",
+                                tint = Color.White
+                            )
+                        }
+                    }
+                },
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Search),
+                textStyle = TextStyle(color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold),
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Characters,
+                    imeAction = ImeAction.Search
+                ),
+                shape = RoundedCornerShape(12.dp),
+                colors = coloresCamposTexto,
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             if (cargando) {
                 Box(
@@ -160,14 +217,14 @@ fun VerRecepcionesScreen(
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Text(
-                                    text = "📋 ACTA N° ${String.format(Locale.US, "%05d", r.id)}",
-                                    fontSize = 18.sp,
+                                    text = "📋 ACTA DE RECEPCIÓN Y PROTECCIÓN LEGAL N° ${String.format(Locale.US, "%05d", r.id)}",
+                                    fontSize = 17.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF7DFFB2)
                                 )
-                                Text(text = "CLIENTE: ${r.cliente}", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                                Text(text = "VEHÍCULO: ${r.auto}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                                Text(text = "PLACA: ${r.placa}   |   VIN: ${r.vin.ifBlank { "N/A" }}", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFF7DFFB2))
+                                Text(text = "CLIENTE: ${r.cliente.uppercase()}", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                Text(text = "VEHÍCULO: ${r.auto.uppercase()}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                Text(text = "PLACA: ${r.placa.uppercase()}   |   VIN: ${r.vin.uppercase().ifBlank { "N/A" }}", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFF7DFFB2))
                                 Text(text = "FECHA / HORA: ${r.fechaHora}", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                                 Text(text = "KILOMETRAJE: ${r.kilometraje} km", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
 
@@ -177,17 +234,6 @@ fun VerRecepcionesScreen(
                                 Text(text = "• Firma Digital Táctil: FIRMADA Y ACEPTADA EN PANTALLA", fontSize = 13.sp, color = Color(0xFF7DFFB2))
                                 Text(text = "• Huella Criptográfica SHA-256: ${r.hashIntegridadSha256}", fontSize = 12.sp, color = Color.LightGray)
                                 Text(text = "• Periodo de Retención Expiración: ${r.tiempoRetencion}", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.Yellow)
-
-                                Spacer(modifier = Modifier.height(8.dp))
-
-                                BotonModulo3D(
-                                    texto = "⚡ TRANSMITIR A FIREBASE",
-                                    colorClaro = Color(0xFFB9F6CA), colorMedio = Color(0xFF00C853), colorOscuro = Color(0xFF00695C),
-                                    colorTexto = Color.Black,
-                                    onClick = { retransmitirFirebase(r) },
-                                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                                    tamanioTexto = 14
-                                )
                             }
                         }
                     }

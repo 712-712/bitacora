@@ -13,9 +13,9 @@ android {
     defaultConfig {
         applicationId = "com.example.bitacoraautomotriz"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        targetSdk = 37
+        versionCode = 2
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -99,14 +99,15 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
     // ZXing para generar código QR
-    implementation("com.google.zxing:core:3.5.3")
+    implementation("com.google.zxing:core:3.5.4")
 
     // Navigation Compose
     implementation(libs.androidx.navigation.compose)
 
-    // Firebase BOM y Database Realtime
+    // Firebase BOM, Database Realtime y Authentication
     implementation(platform(libs.firebase.bom))
     implementation("com.google.firebase:firebase-database")
+    implementation("com.google.firebase:firebase-auth")   // <-- NUEVA
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

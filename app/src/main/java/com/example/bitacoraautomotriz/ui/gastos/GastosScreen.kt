@@ -25,10 +25,8 @@ import com.example.bitacoraautomotriz.ui.theme.Colores
 fun GastosScreen(
     onNuevoGasto: () -> Unit,
     onVerGastos: () -> Unit,
-    onBuscarGasto: () -> Unit,
     onRegresar: () -> Unit
 ) {
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -80,21 +78,7 @@ fun GastosScreen(
             colorTexto = Color.Black
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // BUSCAR GASTO
-        BotonModulo3D(
-            texto = "BUSCAR GASTO",
-            colorClaro = Color(0xFFFF9999),
-            colorMedio = Color(0xFFFF4141),
-            colorOscuro = Color(0xFFB51F1F),
-            onClick = onBuscarGasto,
-            modifier = Modifier.fillMaxWidth().height(58.dp),
-            tamanioTexto = 16,
-            colorTexto = Color.Black
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         // REGRESAR
         BotonModulo3D(

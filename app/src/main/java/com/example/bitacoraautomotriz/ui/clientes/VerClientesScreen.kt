@@ -8,14 +8,24 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,6 +36,7 @@ import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
 import com.example.bitacoraautomotriz.ui.theme.Colores
 import kotlinx.coroutines.launch
 import java.net.URLEncoder
+import java.util.Locale
 
 @Composable
 fun VerClientesScreen(
@@ -34,9 +45,11 @@ fun VerClientesScreen(
     onRegresar: () -> Unit
 ) {
     var clientes by remember { mutableStateOf(emptyList<Cliente>()) }
-    var refreshTrigger by remember { mutableStateOf(0) }
+    var busquedaQuery by remember { mutableStateOf("") }
+    var refreshTrigger by remember { mutableIntStateOf(0) }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
 
     LaunchedEffect(refreshTrigger) {
         clientes = try {
@@ -45,6 +58,59 @@ fun VerClientesScreen(
             emptyList()
         }
     }
+
+    val clientesFiltrados by remember(clientes, busquedaQuery) {
+        derivedStateOf {
+            if (busquedaQuery.isBlank()) {
+                clientes
+            } else {
+                val qRaw = busquedaQuery.trim().lowercase(Locale.getDefault())
+                val digitsOnly = busquedaQuery.replace(Regex("[^0-9]"), "")
+
+                clientes.filter { c ->
+                    val idStr = c.id.toString()
+                    val idFormatted = String.format(Locale.US, "%05d", c.id)
+                    val idTag = "id cliente: ${c.id}"
+                    val idShortTag = "id: ${c.id}"
+
+                    // Coincidencia Inteligente por ID (acepta número solo, ID: 6, ID CLIENTE: 6, #6, 00006)
+                    val matchId = (digitsOnly.isNotBlank() && idStr.contains(digitsOnly)) ||
+                                  (digitsOnly.isNotBlank() && idFormatted.contains(digitsOnly)) ||
+                                  idStr.contains(qRaw) ||
+                                  idFormatted.contains(qRaw) ||
+                                  idTag.contains(qRaw) ||
+                                  idShortTag.contains(qRaw)
+
+                    // Coincidencia por otros datos de texto
+                    val matchTexto = c.nombre.lowercase(Locale.getDefault()).contains(qRaw) ||
+                                     c.telefono.lowercase(Locale.getDefault()).contains(qRaw) ||
+                                     (digitsOnly.isNotBlank() && c.telefono.replace(Regex("[^0-9]"), "").contains(digitsOnly)) ||
+                                     c.correo.lowercase(Locale.getDefault()).contains(qRaw) ||
+                                     c.direccion.lowercase(Locale.getDefault()).contains(qRaw) ||
+                                     c.rfc.lowercase(Locale.getDefault()).contains(qRaw) ||
+                                     c.razonSocial.lowercase(Locale.getDefault()).contains(qRaw)
+
+                    matchId || matchTexto
+                }
+            }
+        }
+    }
+
+    val coloresCamposTexto = OutlinedTextFieldDefaults.colors(
+        focusedContainerColor = Colores.FondoSecundario,
+        unfocusedContainerColor = Colores.FondoSecundario,
+        disabledContainerColor = Colores.FondoSecundario,
+        focusedTextColor = Color.White,
+        unfocusedTextColor = Color.White,
+        disabledTextColor = Color.White,
+        focusedBorderColor = Colores.BordeBoton,
+        unfocusedBorderColor = Colores.BordeBoton.copy(alpha = 0.5f),
+        cursorColor = Color.White,
+        selectionColors = TextSelectionColors(
+            handleColor = Color.White,
+            backgroundColor = Color(0xFF00DDEB).copy(alpha = 0.4f)
+        )
+    )
 
     Box(
         modifier = Modifier
@@ -68,17 +134,62 @@ fun VerClientesScreen(
                 fontWeight = FontWeight.Bold,
                 color = Colores.TituloPrincipal
             )
-            Spacer(modifier = Modifier.height(24.dp))
 
-            if (clientes.isEmpty()) {
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // CUADRO DE BÚSQUEDA INTEGRADO EN TIEMPO REAL CON BOTÓN LIMPIAR
+            OutlinedTextField(
+                value = busquedaQuery,
+                onValueChange = { busquedaQuery = it },
+                placeholder = {
+                    Text(
+                        text = "BUSCAR CLIENTE (NOMBRE, TELÉFONO, ID...)",
+                        color = Color.LightGray,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Buscar Cliente",
+                        tint = Color.White
+                    )
+                },
+                trailingIcon = {
+                    if (busquedaQuery.isNotEmpty()) {
+                        IconButton(onClick = { busquedaQuery = "" }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Limpiar Búsqueda",
+                                tint = Color.White
+                            )
+                        }
+                    }
+                },
+                singleLine = true,
+                textStyle = TextStyle(color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold),
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Characters,
+                    imeAction = ImeAction.Search
+                ),
+                keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
+                shape = RoundedCornerShape(12.dp),
+                colors = coloresCamposTexto,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            if (clientesFiltrados.isEmpty()) {
                 Text(
-                    text = "NO HAY CLIENTES REGISTRADOS",
-                    fontSize = 18.sp,
+                    text = if (busquedaQuery.isBlank()) "NO HAY CLIENTES REGISTRADOS" else "NO SE ENCONTRARON CLIENTES PARA \"$busquedaQuery\"",
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Colores.TextoGlobal
                 )
             } else {
-                clientes.forEach { cliente ->
+                clientesFiltrados.forEach { cliente ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()

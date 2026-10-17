@@ -90,13 +90,22 @@ fun WelcomeScreen(
     val context = LocalContext.current
     var showSplash by remember { mutableStateOf(true) }
 
-    // SONIDO DE MOTOR SÓLO AL INICIAR LA PANTALLA DE TRANSICIÓN/SPLASH
+    // SONIDO DE MOTOR (1 SOLA VEZ EN LA PANTALLA DE TRANSICIÓN/SPLASH Y AUTOMÁTICAMENTE NAVEGA AL TERMINAR)
     LaunchedEffect(Unit) {
         try {
-            AudioUtils.reproducirSonidoMotorUnaVez(context)
-        } catch (_: Exception) {}
-        delay(2200L)
-        showSplash = false
+            AudioUtils.reproducirSonidoMotorUnaVez(context) {
+                showSplash = false
+            }
+        } catch (_: Exception) {
+            showSplash = false
+        }
+    }
+
+    // Al salir de la pantalla de bienvenida/transición, aseguramos detener cualquier audio activo
+    DisposableEffect(Unit) {
+        onDispose {
+            AudioUtils.detenerSonido()
+        }
     }
 
     if (showSplash) {
@@ -136,7 +145,7 @@ private fun WelcomeContent(
     }
     var menuExpanded by remember { mutableStateOf(false) }
 
-    val urlDescarga = "https://github.com/712-712/bitacora/releases/download/v1.0/app-cliente-debug.apk"
+    val urlDescarga = "https://drive.google.com/drive/folders/12vj9pyw80vQavhTJAQHLzAnmbsNJS0aQ?usp=sharing"
     val qrBitmap = remember { generarQrBitmapRealConAltaCorreccion(urlDescarga, 450, 450) }
 
     Box(

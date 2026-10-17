@@ -385,14 +385,14 @@ fun NuevaFacturaScreen(
                 )
             }
 
-            // BOTÓN GUARDAR (CIAN FACTURACIÓN)
+            // BOTÓN GUARDAR (VIOLETA FACTURACIÓN)
             BotonModulo3D(
                 texto = if (guardando) "GUARDANDO..." else "GUARDAR",
                 icono = "💾",
-                colorClaro = Color(0xFF8FFFFF),
-                colorMedio = Color(0xFF00DDEB),
-                colorOscuro = Color(0xFF007F88),
-                colorTexto = Color.Black,
+                colorClaro = Color(0xFF7C4DFF),
+                colorMedio = Color(0xFF651FFF),
+                colorOscuro = Color(0xFF311B92),
+                colorTexto = Color.White,
                 onClick = { if (!guardando) guardar() },
                 modifier = Modifier.fillMaxWidth().height(58.dp),
                 tamanioTexto = 16

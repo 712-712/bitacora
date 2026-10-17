@@ -302,7 +302,7 @@ fun HistorialServiciosScreen(
                             )
 
                             Text(
-                                text = "AVANCE: ${orden.porcentajeAvance}%",
+                                text = "AVANCE ${orden.porcentajeAvance}%",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF2E7D32)

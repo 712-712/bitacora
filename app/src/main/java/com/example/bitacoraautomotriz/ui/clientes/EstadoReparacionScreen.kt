@@ -67,23 +67,27 @@ fun EstadoReparacionScreen(
     val avanceActual = porcentajeAvanceManual ?: (ordenActual?.porcentajeAvance?.coerceIn(0, 100) ?: 50)
 
     fun guardarAvanceTaller(nuevoPorcentaje: Int) {
-        val o = ordenActual ?: return
+        val o = ordenActual
         porcentajeAvanceManual = nuevoPorcentaje
-        scope.launch {
-            try {
-                val ordenActualizada = o.copy(porcentajeAvance = nuevoPorcentaje)
-                OrdenServicioRepository.actualizarEstadoYAvance(
-                    o.id,
-                    o.estado,
-                    nuevoPorcentaje,
-                    o.fechaEntrega,
-                    context
-                )
-                FirebaseSyncManager.subirOrdenAFirebase(ordenActualizada)
-                Toast.makeText(context, "⚡ Avance del $nuevoPorcentaje% transmitido en tiempo real a Firebase", Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {
-                Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+        if (o != null) {
+            scope.launch {
+                try {
+                    val ordenActualizada = o.copy(porcentajeAvance = nuevoPorcentaje)
+                    OrdenServicioRepository.actualizarEstadoYAvance(
+                        o.id,
+                        o.estado,
+                        nuevoPorcentaje,
+                        o.fechaEntrega,
+                        context
+                    )
+                    FirebaseSyncManager.subirOrdenAFirebase(ordenActualizada)
+                    Toast.makeText(context, "⚡ Avance del $nuevoPorcentaje% transmitido en tiempo real a Firebase", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
             }
+        } else {
+            Toast.makeText(context, "⚡ Avance del $nuevoPorcentaje% seleccionado", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -122,10 +126,10 @@ fun EstadoReparacionScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
-            // TÍTULO ACTUALIZADO DE LA PANTALLA (NUEVO TEXTO SOLICITADO ALINEADO)
+            // TÍTULO ACTUALIZADO DE LA PANTALLA
             Text(
-                text = "ESTADO DE LA REPARACIÓN\nDEL VEHÍCULO DEL CLIENTE",
-                fontSize = 20.sp,
+                text = "ESTADO DE REPARACIÓN DE MI AUTO",
+                fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
                 color = Colores.TituloPrincipal,
                 textAlign = TextAlign.Center,
@@ -135,7 +139,7 @@ fun EstadoReparacionScreen(
             Spacer(modifier = Modifier.height(6.dp))
 
             Text(
-                text = "Sincronizado en tiempo real con Firebase",
+                text = "Sincronizado en tiempo real con el taller",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
                 color = Colores.EtiquetaCampo,
@@ -186,7 +190,7 @@ fun EstadoReparacionScreen(
                             HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Color(0xFF004D33))
                         } else {
                             Text(
-                                text = "ESTADO DE SERVICIO DEL VEHÍCULO",
+                                text = "DEMOSTRACIÓN DE ESTADO DE SERVICIO",
                                 fontSize = 17.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White,
@@ -273,7 +277,7 @@ fun EstadoReparacionScreen(
                     }
                 }
 
-                // SI SE EJECUTA DESDE LA APP TALLER, MUESTRA LOS BOTONES PEQUEÑOS DE AVANCE 0%, 25%, 50%, 75% Y 100%
+                // SI SE EJECUTA DESDE LA APP TALLER, MUESTRA LOS BOTONES PEQUEÑOS DE AVANCE Y EL BOTÓN "ENVIAR A FIREBASE"
                 if (!esAppCliente) {
                     Spacer(modifier = Modifier.height(20.dp))
 
@@ -287,10 +291,10 @@ fun EstadoReparacionScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(18.dp),
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             Text(
-                                text = "ACTUALIZAR AVANCE (MECÁNICO / TALLER):",
+                                text = "SELECCIONAR PORCENTAJE DE PRUEBA:",
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Colores.TituloPrincipal
@@ -317,6 +321,21 @@ fun EstadoReparacionScreen(
                                     )
                                 }
                             }
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            // BOTÓN ENVIAR A FIREBASE DE LA PANTALLA DE AVANCE
+                            BotonModulo3D(
+                                texto = "ENVIAR A FIREBASE",
+                                icono = "⚡",
+                                colorClaro = Color(0xFFB9F6CA),
+                                colorMedio = Color(0xFF00C853),
+                                colorOscuro = Color(0xFF00695C),
+                                colorTexto = Color.Black,
+                                onClick = { guardarAvanceTaller(avanceActual) },
+                                modifier = Modifier.fillMaxWidth().height(52.dp),
+                                tamanioTexto = 15
+                            )
                         }
                     }
                 }

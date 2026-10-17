@@ -85,10 +85,10 @@ fun EnviarInformesClienteScreen(
     var autoSeleccionado by remember { mutableStateOf<Auto?>(null) }
     var autoDetalle by remember { mutableStateOf<Auto?>(null) }
     var telefonoCliente by remember { mutableStateOf("") }
-    var clienteId by remember { mutableStateOf(0) }
+    var clienteId by remember { mutableIntStateOf(0) }
     var kilometrajeInput by remember { mutableStateOf("") }
 
-    var porcentajeAvanceTaller by remember { mutableStateOf(0) }
+    var porcentajeAvanceTaller by remember { mutableIntStateOf(0) }
     var mostrarTarjetaCotizacionCompleta by remember { mutableStateOf(false) }
     var mostrarTarjetaRecepcionCompleta by remember { mutableStateOf(false) }
     var cargando by remember { mutableStateOf(true) }

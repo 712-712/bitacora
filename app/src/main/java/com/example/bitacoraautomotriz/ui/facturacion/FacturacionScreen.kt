@@ -24,10 +24,9 @@ import com.example.bitacoraautomotriz.ui.theme.Colores
 fun FacturacionScreen(
     onNuevaFactura: () -> Unit,
     onVerFacturas: () -> Unit,
-    onBuscarFactura: () -> Unit,
+    onDatosFiscalesSat: () -> Unit = {},
     onRegresar: () -> Unit
 ) {
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -42,7 +41,6 @@ fun FacturacionScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
-
         Text(
             text = "MÓDULO DE FACTURACIÓN",
             fontSize = 26.sp,
@@ -50,18 +48,16 @@ fun FacturacionScreen(
             color = Color.White
         )
 
-        Spacer(
-            modifier = Modifier.height(28.dp)
-        )
+        Spacer(modifier = Modifier.height(28.dp))
 
         // NUEVA FACTURA
         BotonModulo3D(
             texto = "NUEVA FACTURA",
-            colorClaro = Color(0xFF8FFFFF),
-            colorMedio = Color(0xFF00DDEB),
-            colorOscuro = Color(0xFF007F88),
+            colorClaro = Color(0xFF7C4DFF),
+            colorMedio = Color(0xFF651FFF),
+            colorOscuro = Color(0xFF311B92),
             onClick = onNuevaFactura,
-            colorTexto = Color.Black
+            colorTexto = Color.White
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -69,26 +65,26 @@ fun FacturacionScreen(
         // VER FACTURAS
         BotonModulo3D(
             texto = "VER FACTURAS",
-            colorClaro = Color(0xFF8FFFFF),
-            colorMedio = Color(0xFF00DDEB),
-            colorOscuro = Color(0xFF007F88),
+            colorClaro = Color(0xFF7C4DFF),
+            colorMedio = Color(0xFF651FFF),
+            colorOscuro = Color(0xFF311B92),
             onClick = onVerFacturas,
-            colorTexto = Color.Black
+            colorTexto = Color.White
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // BUSCAR FACTURA
+        // DATOS FISCALES (SAT)
         BotonModulo3D(
-            texto = "BUSCAR FACTURA",
-            colorClaro = Color(0xFF8FFFFF),
-            colorMedio = Color(0xFF00DDEB),
-            colorOscuro = Color(0xFF007F88),
-            onClick = onBuscarFactura,
-            colorTexto = Color.Black
+            texto = "DATOS FISCALES (SAT)",
+            colorClaro = Color(0xFF7C4DFF),
+            colorMedio = Color(0xFF651FFF),
+            colorOscuro = Color(0xFF311B92),
+            onClick = onDatosFiscalesSat,
+            colorTexto = Color.White
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         // REGRESAR
         BotonModulo3D(

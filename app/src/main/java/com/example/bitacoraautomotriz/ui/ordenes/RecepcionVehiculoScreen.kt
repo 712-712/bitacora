@@ -1,6 +1,8 @@
 package com.example.bitacoraautomotriz.ui.ordenes
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -10,7 +12,6 @@ import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.result.launch
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -45,11 +46,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import com.example.bitacoraautomotriz.R
 import com.example.bitacoraautomotriz.data.Auto
 import com.example.bitacoraautomotriz.data.Cliente
 import com.example.bitacoraautomotriz.data.RecepcionVehiculo
 import com.example.bitacoraautomotriz.repository.AutoRepository
 import com.example.bitacoraautomotriz.repository.ClienteRepository
+import com.example.bitacoraautomotriz.repository.FirebaseSyncManager
 import com.example.bitacoraautomotriz.repository.RecepcionRepository
 import com.example.bitacoraautomotriz.ui.componentes.BotonModulo3D
 import com.example.bitacoraautomotriz.ui.theme.Colores
@@ -173,31 +177,64 @@ fun RecepcionVehiculoScreen(
 
     var slotFotoActual by remember { mutableStateOf("") }
 
-    // LAUNCHER DE CÁMARA EN TIEMPO REAL CON MARCA DE AGUA
+    // LAUNCHER DE CÁMARA EN TIEMPO REAL CON MARCA DE AGUA Y PROTECCIÓN DE ERRORES
     val launcherCamaraEnVivo = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview()
     ) { bitmap: Bitmap? ->
         if (bitmap != null) {
-            val bitmapConMarca = superponerMarcaDeAguaLegal(
-                bitmapOriginal = bitmap,
-                tallerNombre = if (nombreTaller.isBlank()) "TALLER MECÁNICO BITÁCORA" else nombreTaller,
-                fechaHoraStr = fechaHoraActual,
-                placaStr = autoSeleccionado?.placa?.uppercase() ?: "REGISTRADA",
-                kmStr = kilometraje.ifBlank { "N/A" },
-                clienteStr = clienteSeleccionado?.nombre?.uppercase() ?: "REGISTRADO"
-            )
+            try {
+                val bitmapConMarca = superponerMarcaDeAguaLegal(
+                    bitmapOriginal = bitmap,
+                    tallerNombre = if (nombreTaller.isBlank()) "TALLER MECÁNICO BITÁCORA" else nombreTaller,
+                    fechaHoraStr = fechaHoraActual,
+                    placaStr = autoSeleccionado?.placa?.uppercase() ?: "REGISTRADA",
+                    kmStr = kilometraje.ifBlank { "N/A" },
+                    clienteStr = clienteSeleccionado?.nombre?.uppercase() ?: "REGISTRADO"
+                )
 
-            when (slotFotoActual) {
-                "FRENTE" -> fotoFrenteBitmap = bitmapConMarca
-                "ATRÁS" -> fotoAtrasBitmap = bitmapConMarca
-                "IZQUIERDA" -> fotoIzquierdaBitmap = bitmapConMarca
-                "DERECHA" -> fotoDerechaBitmap = bitmapConMarca
-                "TECHO" -> fotoTechoBitmap = bitmapConMarca
-                "RINES" -> fotoRinesBitmap = bitmapConMarca
-                "INTERIOR" -> fotoInteriorBitmap = bitmapConMarca
-                "TABLERO" -> fotoTableroBitmap = bitmapConMarca
+                when (slotFotoActual) {
+                    "FRENTE" -> fotoFrenteBitmap = bitmapConMarca
+                    "ATRÁS" -> fotoAtrasBitmap = bitmapConMarca
+                    "IZQUIERDA" -> fotoIzquierdaBitmap = bitmapConMarca
+                    "DERECHA" -> fotoDerechaBitmap = bitmapConMarca
+                    "TECHO" -> fotoTechoBitmap = bitmapConMarca
+                    "RINES" -> fotoRinesBitmap = bitmapConMarca
+                    "INTERIOR" -> fotoInteriorBitmap = bitmapConMarca
+                    "TABLERO" -> fotoTableroBitmap = bitmapConMarca
+                }
+                Toast.makeText(context, "📷 Foto $slotFotoActual capturada exitosamente con marca de agua", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error al procesar foto: ${e.message}", Toast.LENGTH_SHORT).show()
             }
-            Toast.makeText(context, "📷 Foto $slotFotoActual tomada con marca de agua y metadatos EXIF", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // LAUNCHER DE PERMISO DE CÁMARA ROBUSTO QUE PREVIENE CRASHES
+    val launcherPermisoCamara = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { esConcedido: Boolean ->
+        if (esConcedido) {
+            try {
+                launcherCamaraEnVivo.launch(null)
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error al abrir la cámara: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            Toast.makeText(context, "⚠️ Se requiere permiso de Cámara para tomar fotos de la recepción", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    fun tomarFotoSlot(slot: String) {
+        slotFotoActual = slot
+        val permisoCamara = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
+        if (permisoCamara == PackageManager.PERMISSION_GRANTED) {
+            try {
+                launcherCamaraEnVivo.launch(null)
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error abriendo cámara: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            launcherPermisoCamara.launch(Manifest.permission.CAMERA)
         }
     }
 
@@ -250,115 +287,67 @@ fun RecepcionVehiculoScreen(
                 c.id.toString().contains(queryCliente, ignoreCase = true)
     }
 
-    fun tomarFotoSlot(slot: String) {
-        slotFotoActual = slot
-        launcherCamaraEnVivo.launch()
-    }
-
     fun tomarVideo() {
         try {
             val intent = Intent(MediaStore.ACTION_VIDEO_CAPTURE)
             context.startActivity(intent)
-            videoTomado = true
-        } catch (_: Exception) {
-            launcherVideoCamara.launch("video/*")
+        } catch (e: Exception) {
+            Toast.makeText(context, "No se pudo abrir la grabadora de video: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 
     fun guardarRecepcionVehiculo() {
-        if (clienteSeleccionado == null) { mensaje = "SELECCIONE EL CLIENTE"; return }
-        if (autoSeleccionado == null) { mensaje = "SELECCIONE EL VEHÍCULO"; return }
-        if (kilometraje.isBlank()) { mensaje = "INGRESE EL KILOMETRAJE DEL TABLERO"; return }
-        val kmNum = kilometraje.toIntOrNull()
-        if (kmNum == null || kmNum < 0) { mensaje = "INGRESE UN KILOMETRAJE VÁLIDO"; return }
-
-        guardando = true
-        mensaje = ""
+        if (clienteSeleccionado == null) {
+            mensaje = "⚠️ SELECCIONE UN CLIENTE DE LA LISTA"
+            return
+        }
+        if (autoSeleccionado == null) {
+            mensaje = "⚠️ SELECCIONE EL AUTO DEL CLIENTE"
+            return
+        }
+        if (kilometraje.isBlank()) {
+            mensaje = "⚠️ INGRESE EL KILOMETRAJE REGISTRADO EN EL TABLERO"
+            return
+        }
+        val kmNum = kilometraje.toIntOrNull() ?: 0
+        if (kmNum <= 0) {
+            mensaje = "⚠️ INGRESE UN KILOMETRAJE VÁLIDO MAYOR A CERO"
+            return
+        }
+        if (!firmaCapturada) {
+            mensaje = "⚠️ SE REQUIERE LA FIRMA DIGITAL DEL CLIENTE EN PANTALLA"
+            return
+        }
 
         val c = clienteSeleccionado!!
         val a = autoSeleccionado!!
-        val hashTexto = "${c.nombre}_${a.placa}_${a.vin}_${kmNum}_${fechaHoraActual}"
+        val hashTexto = "${c.nombre}_${a.placa}_${kmNum}_${fechaHoraActual}"
         val hashGenerado = RecepcionRepository.calcularHashSha256(hashTexto)
 
         val recepcion = RecepcionVehiculo(
-            cliente = c.nombre.trim().uppercase(),
-            auto = "${a.marca} ${a.modelo} (${a.anio})".uppercase(),
-            placa = a.placa.trim().uppercase(),
-            vin = a.vin.trim().uppercase(),
+            cliente = c.nombre,
+            auto = "${a.marca} ${a.modelo} (${a.placa})",
+            placa = a.placa,
+            vin = a.vin,
             kilometraje = kmNum,
             fechaHora = fechaHoraActual,
-            fotoFrentePath = if (fotoFrenteBitmap != null) "REGISTRADA_CON_MARCA_AGUA" else "",
-            fotoAtrasPath = if (fotoAtrasBitmap != null) "REGISTRADA_CON_MARCA_AGUA" else "",
-            fotoIzquierdaPath = if (fotoIzquierdaBitmap != null) "REGISTRADA_CON_MARCA_AGUA" else "",
-            fotoDerechaPath = if (fotoDerechaBitmap != null) "REGISTRADA_CON_MARCA_AGUA" else "",
-            fotoTechoPath = if (fotoTechoBitmap != null) "REGISTRADA_CON_MARCA_AGUA" else "",
-            fotoRinesPath = if (fotoRinesBitmap != null) "REGISTRADA_CON_MARCA_AGUA" else "",
-            fotoInteriorPath = if (fotoInteriorBitmap != null) "REGISTRADA_CON_MARCA_AGUA" else "",
-            fotoTableroPath = if (fotoTableroBitmap != null) "REGISTRADA_CON_MARCA_AGUA" else "",
-            videoPath = if (videoTomado) "VIDEO_REGISTRADO" else "",
-            firmaPath = if (firmaCapturada) "FIRMA_TACTIL_VALIDA" else "",
             hashIntegridadSha256 = hashGenerado,
             tiempoRetencion = retencionSeleccionada
         )
+
+        guardando = true
+        mensaje = ""
 
         scope.launch {
             try {
                 RecepcionRepository.guardarRecepcion(recepcion, context)
                 guardando = false
-                Toast.makeText(context, "✅ Acta de recepción guardada con firma, marca de agua y metadatos EXIF", Toast.LENGTH_LONG).show()
-                mensaje = "✅ REGISTRO DE RECEPCIÓN Y PROTECCIÓN LEGAL COMPLETADO CON ÉXITO."
+                Toast.makeText(context, "✅ Acta de Recepción N° ${recepcion.id} guardada y transmitida a Firebase", Toast.LENGTH_LONG).show()
+                onRegresar()
             } catch (e: Exception) {
                 guardando = false
-                mensaje = "ERROR AL GUARDAR: ${e.message}"
+                mensaje = "❌ ERROR AL GUARDAR RECEPCIÓN: ${e.message}"
             }
-        }
-    }
-
-    fun enviarComprobanteWhatsApp() {
-        if (clienteSeleccionado == null || autoSeleccionado == null) {
-            Toast.makeText(context, "Seleccione cliente y auto primero", Toast.LENGTH_SHORT).show()
-            return
-        }
-        val c = clienteSeleccionado!!
-        val a = autoSeleccionado!!
-        val telLimpio = c.telefono.replace(Regex("[^0-9]"), "")
-
-        if (telLimpio.isBlank()) {
-            Toast.makeText(context, "El cliente no tiene teléfono registrado", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        val emisor = if (nombreTaller.isBlank()) "TALLER MECÁNICO" else nombreTaller.trim().uppercase()
-        val kmNum = kilometraje.ifBlank { a.kilometraje.toString() }
-
-        val textoMensaje = """
-📋 *ACTA DE INGRESO Y RECEPCIÓN DE VEHÍCULO*
-Taller: $emisor
-Fecha / Hora: $fechaHoraActual
-
-────────────────────
-Cliente: ${c.nombre.uppercase()}
-Vehículo: ${a.marca.uppercase()} ${a.modelo.uppercase()} (${a.anio})
-Placa: ${a.placa.uppercase()}   |   VIN: ${a.vin.ifBlank { "N/A" }.uppercase()}
-Kilometraje: $kmNum km
-
-*Estado de la evidencia fotográfica y legal:*
-• Fotos registradas con marcas de agua y metadatos EXIF: OK
-• Video de inspección: ${if (videoTomado) "INCLUIDO" else "OPCIONAL"}
-• Firma digital del cliente: ACEPTADA Y BLOQUEADA
-• Creador Hash SHA-256: Protegido
-• Periodo de retención legal: $retencionSeleccionada
-
-Agradecemos su confianza.
-────────────────────
-        """.trimIndent()
-
-        val intent = Intent(Intent.ACTION_VIEW)
-        intent.data = Uri.parse("https://wa.me/52$telLimpio?text=${Uri.encode(textoMensaje)}")
-        try {
-            context.startActivity(intent)
-        } catch (_: Exception) {
-            Toast.makeText(context, "No se pudo abrir WhatsApp", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -396,7 +385,7 @@ Agradecemos su confianza.
 
             Text(
                 text = "Check-in fotográfico, marcas de agua y firma digital",
-                fontSize = 15.sp,
+                fontSize = 14.sp,
                 color = Colores.EtiquetaCampo,
                 textAlign = TextAlign.Center
             )
@@ -521,46 +510,35 @@ Agradecemos su confianza.
                         Triple("TABLERO", fotoTableroBitmap) { tomarFotoSlot("TABLERO") }
                     )
 
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         slotsLista.chunked(2).forEach { par ->
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                par.forEach { (nombreSlot, bitmap, accionToma) ->
-                                    Box(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .height(90.dp)
-                                            .clip(RoundedCornerShape(12.dp))
-                                            .background(if (bitmap != null) Color(0xFF00C853) else Colores.FondoSecundario)
-                                            .clickable { accionToma() }
-                                            .border(1.5.dp, if (bitmap != null) Color(0xFF7DFFB2) else Colores.BordeBoton, RoundedCornerShape(12.dp)),
-                                        contentAlignment = Alignment.Center
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                par.forEach { (nombreSlot, bitmapSlot, accionTomar) ->
+                                    Card(
+                                        modifier = Modifier.weight(1f).height(100.dp).clickable { accionTomar() },
+                                        shape = RoundedCornerShape(10.dp),
+                                        colors = CardDefaults.cardColors(containerColor = Colores.FondoSecundario)
                                     ) {
-                                        if (bitmap != null) {
-                                            Image(
-                                                bitmap = bitmap.asImageBitmap(),
-                                                contentDescription = nombreSlot,
-                                                contentScale = ContentScale.Crop,
-                                                modifier = Modifier.fillMaxSize()
-                                            )
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxSize()
-                                                    .background(Color.Black.copy(alpha = 0.35f)),
-                                                contentAlignment = Alignment.BottomCenter
-                                            ) {
-                                                Text(
-                                                    text = "✅ $nombreSlot",
-                                                    color = Color.White,
-                                                    fontSize = 12.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    modifier = Modifier.padding(bottom = 4.dp)
+                                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                            if (bitmapSlot != null) {
+                                                Image(
+                                                    bitmap = bitmapSlot.asImageBitmap(),
+                                                    contentDescription = "Foto $nombreSlot",
+                                                    contentScale = ContentScale.Crop,
+                                                    modifier = Modifier.fillMaxSize()
                                                 )
-                                            }
-                                        } else {
-                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                                Text("📷", fontSize = 22.sp)
-                                                Spacer(modifier = Modifier.height(2.dp))
-                                                Text(nombreSlot, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                                Box(
+                                                    modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(Color.Black.copy(alpha = 0.7f)).padding(2.dp),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Text(text = "✅ $nombreSlot", color = Color.Green, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                                }
+                                            } else {
+                                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                    Text(text = "📷", fontSize = 24.sp)
+                                                    Spacer(modifier = Modifier.height(2.dp))
+                                                    Text(text = nombreSlot, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                                }
                                             }
                                         }
                                     }
@@ -568,154 +546,51 @@ Agradecemos su confianza.
                             }
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // BOTÓN VIDEO
+                    Button(
+                        onClick = { tomarVideo() },
+                        colors = ButtonDefaults.buttonColors(containerColor = if (videoTomado) Color(0xFF00C853) else Colores.FondoSecundario),
+                        modifier = Modifier.fillMaxWidth().height(48.dp)
+                    ) {
+                        Text(
+                            text = if (videoTomado) "🎥 VIDEO REGISTRADO CON SELLO EXIF" else "🎥 Opcional: Grabar Video de Recorrido 360°",
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // 3. LIENZO DE FIRMA DIGITAL TÁCTIL CON BOTONES ALINEADOS VERTICALMENTE EN UNA LÍNEA ABAJO
+            // 3. RETENCIÓN LEGAL Y FIRMA DIGITAL EN PANTALLA
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
                 colors = CardDefaults.cardColors(containerColor = Colores.FondoTarjeta),
                 elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
             ) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("3. FIRMA DIGITAL DEL CLIENTE", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("3. RETENCIÓN LEGAL Y FIRMA DIGITAL", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
 
-                    if (firmaCapturada) {
-                        Text(
-                            text = "🔒 FIRMADO Y BLOQUEADO",
-                            color = Color(0xFF7DFFB2),
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 14.sp
-                        )
-                    }
-
-                    Text("El cliente firma en pantalla confirmando la recepción del auto:", fontSize = 13.sp, color = Colores.EtiquetaCampo)
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(160.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(if (firmaCapturada) Color(0xFFE8F5E9) else Color.White)
-                            .border(2.dp, if (firmaCapturada) Color(0xFF00C853) else Color.Black, RoundedCornerShape(12.dp))
-                    ) {
-                        Canvas(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .pointerInput(firmaCapturada) {
-                                    if (!firmaCapturada) {
-                                        awaitEachGesture {
-                                            val down = awaitFirstDown(requireUnconsumed = false)
-                                            down.consume()
-                                            val listaPuntos = mutableStateListOf(down.position)
-                                            trazosFirma.add(listaPuntos)
-
-                                            do {
-                                                val event = awaitPointerEvent()
-                                                val change = event.changes.firstOrNull()
-                                                if (change != null && change.pressed) {
-                                                    change.consume()
-                                                    listaPuntos.add(change.position)
-                                                }
-                                            } while (event.changes.any { it.pressed })
-                                        }
-                                    }
-                                }
-                        ) {
-                            trazosFirma.forEach { puntos ->
-                                for (i in 0 until puntos.size - 1) {
-                                    drawLine(
-                                        color = Color.Black,
-                                        start = puntos[i],
-                                        end = puntos[i + 1],
-                                        strokeWidth = 6f
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    // BOTONES DE ACCIÓN DE FIRMA ALINEADOS EN COLUMNA VERTICAL COMPLETA
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(6.dp),
-                        horizontalAlignment = Alignment.Start
-                    ) {
-                        if (!firmaCapturada) {
-                            TextButton(
-                                onClick = {
-                                    if (trazosFirma.isNotEmpty()) {
-                                        firmaCapturada = true
-                                        Toast.makeText(context, "🔒 Firma digital aceptada y bloqueada de forma segura", Toast.LENGTH_SHORT).show()
-                                    } else {
-                                        Toast.makeText(context, "Realice su firma antes de aceptar", Toast.LENGTH_SHORT).show()
-                                    }
-                                },
-                                contentPadding = PaddingValues(0.dp)
-                            ) {
-                                Text("✅ ACEPTAR Y BLOQUEAR FIRMA", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                            }
-
-                            TextButton(
-                                onClick = {
-                                    trazosFirma.clear()
-                                    firmaCapturada = false
-                                    Toast.makeText(context, "🔓 Campo de firma desbloqueado", Toast.LENGTH_SHORT).show()
-                                },
-                                contentPadding = PaddingValues(0.dp)
-                            ) {
-                                Text("🗑️ BORRAR FIRMA", color = Color(0xFFFF5252), fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                            }
-                        } else {
-                            Text("✅ FIRMA ACEPTADA Y VALIDADA", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold, fontSize = 15.sp)
-
-                            TextButton(
-                                onClick = {
-                                    trazosFirma.clear()
-                                    firmaCapturada = false
-                                    Toast.makeText(context, "🔓 Campo de firma desbloqueado", Toast.LENGTH_SHORT).show()
-                                },
-                                contentPadding = PaddingValues(0.dp)
-                            ) {
-                                Text("🗑️ BORRAR FIRMA", color = Color(0xFFFF5252), fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                            }
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            // 4. TEMPORIZADOR DE CONTEO REGRESIVO Y RETENCIÓN DE FOTOS
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp),
-                colors = CardDefaults.cardColors(containerColor = Colores.FondoSecundario),
-                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("4. TEMPORIZADOR DE AUTO-ELIMINACIÓN DE FOTOS", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Colores.TituloPrincipal)
-                    Text("Seleccione el tiempo tras el cual la evidencia expira y se purga automáticamente:", fontSize = 13.sp, color = Colores.EtiquetaCampo)
+                    Text("SELECCIONE PERIODO DE ALMACENAMIENTO DE FOTOS:", fontSize = 14.sp, color = Color.Black, fontWeight = FontWeight.Bold)
 
                     Box(modifier = Modifier.fillMaxWidth()) {
-                        OutlinedButton(
+                        Button(
                             onClick = { menuRetencionExpandido = true },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.outlinedButtonColors(containerColor = Colores.FondoPantalla)
+                            colors = ButtonDefaults.buttonColors(containerColor = Colores.FondoSecundario),
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                Text(text = retencionSeleccionada, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                                Text(text = "▼", color = Color.White)
-                            }
+                            Text(text = "⏱️ Retención: $retencionSeleccionada", color = Color.White, fontWeight = FontWeight.Bold)
                         }
 
                         DropdownMenu(
                             expanded = menuRetencionExpandido,
                             onDismissRequest = { menuRetencionExpandido = false },
-                            modifier = Modifier.background(Colores.FondoTarjeta)
+                            modifier = Modifier.background(Colores.FondoSecundario)
                         ) {
                             opcionesRetencion.forEach { opcion ->
                                 DropdownMenuItem(
@@ -728,84 +603,134 @@ Agradecemos su confianza.
                             }
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Text("FIRMA DIGITAL DEL CLIENTE EN PANTALLA:", fontSize = 14.sp, color = Color.Black, fontWeight = FontWeight.Bold)
+
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(150.dp)
+                            .border(2.dp, if (firmaCapturada) Color.Green else Color.White, RoundedCornerShape(10.dp)),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            Canvas(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .pointerInput(firmaCapturada) {
+                                        if (!firmaCapturada) {
+                                            awaitEachGesture {
+                                                val down = awaitFirstDown()
+                                                val nuevoTrazo = SnapshotStateList<Offset>()
+                                                nuevoTrazo.add(down.position)
+                                                trazosFirma.add(nuevoTrazo)
+
+                                                do {
+                                                    val event = awaitPointerEvent()
+                                                    event.changes.forEach { change ->
+                                                        if (change.pressed) {
+                                                            nuevoTrazo.add(change.position)
+                                                            change.consume()
+                                                        }
+                                                    }
+                                                } while (event.changes.any { it.pressed })
+                                            }
+                                        }
+                                    }
+                            ) {
+                                trazosFirma.forEach { trazo ->
+                                    for (i in 0 until trazo.size - 1) {
+                                        drawLine(
+                                            color = Color.Black,
+                                            start = trazo[i],
+                                            end = trazo[i + 1],
+                                            strokeWidth = 5f
+                                        )
+                                    }
+                                }
+                            }
+
+                            if (trazosFirma.isEmpty() && !firmaCapturada) {
+                                Text(
+                                    text = "Firme aquí con el dedo...",
+                                    color = Color.Gray,
+                                    fontSize = 16.sp,
+                                    modifier = Modifier.align(Alignment.Center)
+                                )
+                            }
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = {
+                                trazosFirma.clear()
+                                firmaCapturada = false
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5252)),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("BORRAR FIRMA", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        }
+
+                        Button(
+                            onClick = {
+                                if (trazosFirma.isNotEmpty()) {
+                                    firmaCapturada = true
+                                    Toast.makeText(context, "✅ Firma digital aceptada y protegida con SHA-256", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(context, "⚠️ Dibuje su firma en el recuadro blanco antes de aceptar", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C853)),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(if (firmaCapturada) "✅ FIRMADA" else "ACEPTAR FIRMA", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        }
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
-
-            // 5. BOTÓN VIDEO
-            BotonModulo3D(
-                texto = if (videoTomado) "✅ VIDEO REGISTRADO" else "🎥 GRABAR VIDEO OPCIONAL\n(15-20 SEGUNDOS)",
-                colorClaro = if (videoTomado) Color(0xFFB9F6CA) else Color(0xFF80D8FF),
-                colorMedio = if (videoTomado) Color(0xFF00C853) else Color(0xFF00B8D4),
-                colorOscuro = if (videoTomado) Color(0xFF00695C) else Color(0xFF006064),
-                colorTexto = Color.Black,
-                onClick = { tomarVideo() },
-                modifier = Modifier.fillMaxWidth().height(62.dp),
-                tamanioTexto = 14
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // 6. BOTÓN AMARILLO DE CONSEJOS Y ASPECTOS LEGALES
-            BotonModulo3D(
-                texto = "💡 CONSEJOS Y ASPECTOS LEGALES",
-                colorClaro = Color(0xFFFFF59D),
-                colorMedio = Color(0xFFFFEB3B),
-                colorOscuro = Color(0xFFFBC02D),
-                colorTexto = Color.Black,
-                onClick = { mostrarDialogoConsejos = true },
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-                tamanioTexto = 15
-            )
-
             if (mensaje.isNotBlank()) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(mensaje, color = Color(0xFFFF5252), fontSize = 15.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                Spacer(modifier = Modifier.height(14.dp))
+                Text(
+                    text = mensaje,
+                    color = Color(0xFFFF5252),
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // BOTONES DE GUARDADO Y WHATSAPP
+            // BOTÓN PRINCIPAL GUARDAR Y TRANSMITIR RECEPCIÓN DE VEHÍCULO
             BotonModulo3D(
-                texto = if (guardando) "GUARDANDO..." else "💾 GUARDAR ACTA DE RECEPCIÓN",
+                texto = if (guardando) "GUARDANDO RECEPCIÓN..." else "💾 GUARDAR Y REGISTRAR ENTRADA",
                 colorClaro = Color(0xFFB9F6CA),
                 colorMedio = Color(0xFF00C853),
                 colorOscuro = Color(0xFF00695C),
-                colorTexto = Color.Black,
                 onClick = { if (!guardando) guardarRecepcionVehiculo() },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                tamanioTexto = 16
+                modifier = Modifier.fillMaxWidth().height(58.dp),
+                colorTexto = Color.Black
             )
 
             Spacer(modifier = Modifier.height(12.dp))
-
-            BotonModulo3D(
-                texto = "📱 ENVIAR COMPROBANTE AL CLIENTE",
-                colorClaro = Color(0xFFD7B899),
-                colorMedio = Color(0xFF9B6B43),
-                colorOscuro = Color(0xFF5D3A1A),
-                colorTexto = Color.Black,
-                onClick = { enviarComprobanteWhatsApp() },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                tamanioTexto = 16
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // BOTÓN REGRESAR FIJO E INMÓVIL AL FONDO DE LA PANTALLA
+        // BOTÓN REGRESAR FIJO E INMÓVIL AL FONDO
         Surface(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth(),
+            modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth(),
             color = Colores.FondoPantalla
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 12.dp)
-            ) {
+            Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp)) {
                 BotonModulo3D(
                     texto = "REGRESAR",
                     icono = "🔙",
@@ -818,48 +743,6 @@ Agradecemos su confianza.
                     colorTexto = Color.White
                 )
             }
-        }
-
-        // DIÁLOGO TARJETA DE CONSEJOS Y ASPECTOS LEGALES
-        if (mostrarDialogoConsejos) {
-            AlertDialog(
-                onDismissRequest = { mostrarDialogoConsejos = false },
-                containerColor = Colores.FondoTarjeta,
-                title = {
-                    Text(
-                        text = "💡 CONSEJOS Y ASPECTOS LEGALES DE PROTECCIÓN",
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                text = {
-                    Column(
-                        modifier = Modifier.verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Text("📜 1. AVISO DE PRIVACIDAD:", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold)
-                        Text("Los vehículos son fotografiados al ingreso como inventario obligatorio del estado físico del auto.", color = Color.White, fontSize = 14.sp)
-
-                        Text("✍️ 2. CONSENTIMIENTO FIRMADO:", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold)
-                        Text("La firma digital táctil del cliente en la app sirve como prueba legal de aceptación del estado de recepción.", color = Color.White, fontSize = 14.sp)
-
-                        Text("🔐 3. INTEGRIDAD HASH SHA-256:", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold)
-                        Text("Cada acta genera una huella criptográfica SHA-256. Si alguien intenta alterar las fotos, la firma o los datos, el Hash cambia y demuestra manipulación en un juicio.", color = Color.White, fontSize = 14.sp)
-
-                        Text("⏳ 4. TIEMPO DE RETENCIÓN:", color = Color(0xFF7DFFB2), fontWeight = FontWeight.Bold)
-                        Text("Se recomienda conservar la evidencia mínimo 2 años (tiempo legal de prescripción de disputas vehiculares). Al cumplirse el periodo, el sistema purga automáticamente la evidencia para liberar memoria en el taller.", color = Color.White, fontSize = 14.sp)
-                    }
-                },
-                confirmButton = {
-                    Button(
-                        onClick = { mostrarDialogoConsejos = false },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C853))
-                    ) {
-                        Text("ENTENDIDO", color = Color.Black, fontWeight = FontWeight.Bold)
-                    }
-                }
-            )
         }
     }
 }

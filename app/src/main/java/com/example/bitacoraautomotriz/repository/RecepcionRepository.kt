@@ -10,7 +10,11 @@ object RecepcionRepository {
 
     suspend fun guardarRecepcion(recepcion: RecepcionVehiculo, context: Context): Long {
         val db = ClienteDatabase.obtenerDatabase(context)
-        return db.recepcionVehiculoDao().insertar(recepcion)
+        val idGenerado = db.recepcionVehiculoDao().insertar(recepcion)
+        val idFinal = if (recepcion.id == 0 && idGenerado > 0L) idGenerado.toInt() else recepcion.id
+        val recepcionConId = recepcion.copy(id = idFinal)
+        try { FirebaseSyncManager.subirRecepcionAFirebase(recepcionConId) } catch (_: Exception) {}
+        return idGenerado
     }
 
     suspend fun obtenerRecepciones(context: Context): List<RecepcionVehiculo> {

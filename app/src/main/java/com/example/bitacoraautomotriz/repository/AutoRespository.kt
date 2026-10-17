@@ -23,11 +23,16 @@ object AutoRepository {
     }
 
     suspend fun guardarAuto(auto: Auto, context: Context? = null) {
-        obtenerDao(context)?.insertarAuto(auto)
+        val dao = obtenerDao(context)
+        val idGenerado = dao?.insertarAuto(auto) ?: 0L
+        val idFinal = if (auto.id == 0 && idGenerado > 0L) idGenerado.toInt() else auto.id
+        val autoConId = auto.copy(id = idFinal)
+        try { FirebaseSyncManager.subirAutoAFirebase(autoConId) } catch (_: Exception) {}
     }
 
     suspend fun actualizarAuto(auto: Auto, context: Context? = null) {
         obtenerDao(context)?.actualizarAuto(auto)
+        try { FirebaseSyncManager.subirAutoAFirebase(auto) } catch (_: Exception) {}
     }
 
     suspend fun eliminarAuto(auto: Auto, context: Context? = null) {

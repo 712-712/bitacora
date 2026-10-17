@@ -65,19 +65,6 @@ fun OrdenesScreen(
             colorTexto = Color.Black
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        BotonModulo3D(
-            texto = "PROGRAMAR ALERTA DE REVISIÓN",
-            icono = "🔔",
-            colorClaro = Color(0xFFD7B899),
-            colorMedio = Color(0xFF9B6B43),
-            colorOscuro = Color(0xFF5D3A1A),
-            onClick = { onProgramarAlerta() },
-            tamanioTexto = 15,
-            colorTexto = Color.Black
-        )
-
         Spacer(modifier = Modifier.height(24.dp))
 
         BotonModulo3D(

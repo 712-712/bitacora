@@ -47,6 +47,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -102,7 +103,7 @@ fun BarcodeScannerScreen(
     var vinManual by remember { mutableStateOf("") }
 
     var ultimoCodigoLeido by remember { mutableStateOf<String?>(null) }
-    var ultimaLecturaTimestamp by remember { mutableStateOf(0L) }
+    var ultimaLecturaTimestamp by remember { mutableLongStateOf(0L) }
 
     fun buscarPorVin(vin: String) {
         cargando = true

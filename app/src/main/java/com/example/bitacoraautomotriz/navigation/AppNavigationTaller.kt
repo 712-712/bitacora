@@ -14,14 +14,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.bitacoraautomotriz.ui.mapa.MapaScreen
-import com.example.bitacoraautomotriz.ui.areacliente.AreaClienteScreen
+import com.example.bitacoraautomotriz.ui.areacliente.ConsolaControlClienteScreen
 import com.example.bitacoraautomotriz.ui.autos.AutosDelClienteScreen
 import com.example.bitacoraautomotriz.ui.autos.AutosScreen
 import com.example.bitacoraautomotriz.ui.autos.BusquedaAutoScreen
 import com.example.bitacoraautomotriz.ui.autos.EditarAutoScreen
 import com.example.bitacoraautomotriz.ui.autos.NuevoAutoScreen
 import com.example.bitacoraautomotriz.ui.autos.VerAutosScreen
-import com.example.bitacoraautomotriz.ui.clientes.BusquedaClienteScreen
 import com.example.bitacoraautomotriz.ui.clientes.CitaEntregaScreen
 import com.example.bitacoraautomotriz.ui.clientes.ClientesScreen
 import com.example.bitacoraautomotriz.ui.clientes.EditarClienteScreen
@@ -38,16 +37,13 @@ import com.example.bitacoraautomotriz.ui.dashboard.DashboardScreen
 import com.example.bitacoraautomotriz.ui.escaner.BarcodeScannerScreen
 import com.example.bitacoraautomotriz.ui.escaner.RegistrarAutoScreen
 import com.example.bitacoraautomotriz.ui.escaner.VerAutoScreen
-import com.example.bitacoraautomotriz.ui.facturacion.BusquedaFacturaScreen
 import com.example.bitacoraautomotriz.ui.facturacion.FacturacionScreen
 import com.example.bitacoraautomotriz.ui.facturacion.NuevaFacturaScreen
 import com.example.bitacoraautomotriz.ui.facturacion.VerFacturasScreen
-import com.example.bitacoraautomotriz.ui.gastos.BusquedaGastoScreen
 import com.example.bitacoraautomotriz.ui.gastos.GastosScreen
 import com.example.bitacoraautomotriz.ui.gastos.NuevoGastoScreen
 import com.example.bitacoraautomotriz.ui.gastos.VerGastosScreen
 import com.example.bitacoraautomotriz.ui.inventario.BuscarRefaccionMapaScreen
-import com.example.bitacoraautomotriz.ui.inventario.BuscarRepuestosScreen
 import com.example.bitacoraautomotriz.ui.inventario.InventarioScreen
 import com.example.bitacoraautomotriz.ui.inventario.MapaRutaScreen
 import com.example.bitacoraautomotriz.ui.inventario.NuevoRepuestoScreen
@@ -58,7 +54,6 @@ import com.example.bitacoraautomotriz.ui.ordenes.NuevaOrdenScreen
 import com.example.bitacoraautomotriz.ui.ordenes.OrdenesScreen
 import com.example.bitacoraautomotriz.ui.ordenes.ProgramarAlertaScreen
 import com.example.bitacoraautomotriz.ui.ordenes.RecepcionVehiculoScreen
-import com.example.bitacoraautomotriz.ui.ordenes.SeguimientoReparacionScreen
 import com.example.bitacoraautomotriz.ui.ordenes.VerRecepcionesScreen
 import com.example.bitacoraautomotriz.ui.reportes.ReporteAutosScreen
 import com.example.bitacoraautomotriz.ui.reportes.ReporteClientesScreen
@@ -107,7 +102,6 @@ fun AppNavigationTaller() {
             ClientesScreen(
                 onNuevoCliente = { navController.navigate("nuevo_cliente") },
                 onVerClientes = { navController.navigate("ver_clientes") },
-                onBuscarCliente = { navController.navigate("buscar_cliente") },
                 onVerAutos = { navController.navigate("ver_autos") },
                 onAgregarAuto = { navController.navigate("nuevo_auto") },
                 onRegresar = { navController.popBackStack() }
@@ -128,16 +122,6 @@ fun AppNavigationTaller() {
                 onVerAutos = { id, nombre ->
                     navController.navigate("autos_del_cliente/$id/$nombre")
                 },
-                onRegresar = { navController.popBackStack() }
-            )
-        }
-        composable("buscar_cliente") {
-            BusquedaClienteScreen(
-                onClienteSeleccionado = { id, nombre ->
-                    navController.navigate("autos_del_cliente/$id/$nombre")
-                },
-                onEditarCliente = { id -> navController.navigate("editar_cliente/$id") },
-                onEliminarCliente = { id -> navController.popBackStack() },
                 onRegresar = { navController.popBackStack() }
             )
         }
@@ -192,15 +176,12 @@ fun AppNavigationTaller() {
         }
 
         composable("area_cliente") {
-            AreaClienteScreen(
-                onDatosClienteAutos = { navController.navigate("mis_datos") },
-                onDatosFacturacion = { navController.navigate("mis_datos_facturacion") },
+            ConsolaControlClienteScreen(
+                esModoCliente = true,
                 onEstadoReparacion = { navController.navigate("estado_reparacion") },
                 onVerReporteCliente = { navController.navigate("ver_reporte_cliente") },
-                onCentroNotificacionesClick = { navController.navigate("centro_notificaciones/0") },
                 onRecepcionVehiculoClick = { navController.navigate("recepcion_vehiculo") },
-                onCitaEntrega = { navController.navigate("cita_entrega") },
-                onHistorial = { navController.navigate("historial") },
+                onAlertaMantenimientoClick = { navController.navigate("programar_alerta") },
                 onRegresar = { navController.popBackStack() }
             )
         }
@@ -208,7 +189,16 @@ fun AppNavigationTaller() {
         composable("mis_datos_facturacion") { MisDatosFacturacionScreen(onRegresar = { navController.popBackStack() }) }
         composable("cita_entrega") { CitaEntregaScreen(onRegresar = { navController.popBackStack() }) }
         composable("estado_reparacion") { EstadoReparacionScreen(onRegresar = { navController.popBackStack() }) }
-        composable("ver_reporte_cliente") { VerReporteClienteScreen(onRegresar = { navController.popBackStack() }) }
+        composable(
+            route = "ver_reporte_cliente?ordenId={ordenId}",
+            arguments = listOf(navArgument("ordenId") {
+                type = NavType.IntType
+                defaultValue = 0
+            })
+        ) { backStackEntry ->
+            val ordenId = backStackEntry.arguments?.getInt("ordenId") ?: 0
+            VerReporteClienteScreen(ordenId = ordenId, esModoCliente = true, onRegresar = { navController.popBackStack() })
+        }
         composable("historial") { HistorialServiciosScreen(onRegresar = { navController.popBackStack() }) }
 
         composable("nuevo_auto") { backStackEntry ->
@@ -318,14 +308,12 @@ fun AppNavigationTaller() {
             InventarioScreen(
                 onNuevoRepuesto = { navController.navigate("nuevo_repuesto") },
                 onVerInventario = { navController.navigate("ver_inventario") },
-                onBuscarRepuesto = { navController.navigate("buscar_repuesto") },
                 onBuscarRefaccionMapa = { navController.navigate("buscar_refaccion_mapa") },
                 onRegresar = { navController.popBackStack() }
             )
         }
         composable("nuevo_repuesto") { NuevoRepuestoScreen(onGuardar = { navController.popBackStack() }, onRegresar = { navController.popBackStack() }) }
         composable("ver_inventario") { VerInventarioScreen(onRegresar = { navController.popBackStack() }) }
-        composable("buscar_repuesto") { BuscarRepuestosScreen(onRegresar = { navController.popBackStack() }) }
         composable("buscar_refaccion_mapa") {
             BuscarRefaccionMapaScreen(
                 onBuscarResultados = { query ->
@@ -410,18 +398,7 @@ fun AppNavigationTaller() {
         composable("buscar_orden") {
             BuscarOrdenScreen(
                 onRegresar = { navController.popBackStack() },
-                onEditarOrden = { ordenId -> navController.navigate("seguimiento_reparacion/$ordenId") }
-            )
-        }
-        composable(
-            route = "seguimiento_reparacion/{ordenId}",
-            arguments = listOf(navArgument("ordenId") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val ordenId = backStackEntry.arguments?.getInt("ordenId") ?: 0
-            SeguimientoReparacionScreen(
-                ordenId = ordenId,
-                onCentroNotificaciones = { id -> navController.navigate("centro_notificaciones/$id") },
-                onRegresar = { navController.popBackStack() }
+                onEditarOrden = { ordenId -> navController.navigate("ver_reporte_cliente?ordenId=$ordenId") }
             )
         }
 
@@ -429,25 +406,22 @@ fun AppNavigationTaller() {
             GastosScreen(
                 onNuevoGasto = { navController.navigate("nuevo_gasto") },
                 onVerGastos = { navController.navigate("ver_gastos") },
-                onBuscarGasto = { navController.navigate("buscar_gasto") },
                 onRegresar = { navController.popBackStack() }
             )
         }
         composable("nuevo_gasto") { NuevoGastoScreen(onGuardar = { navController.popBackStack() }, onRegresar = { navController.popBackStack() }) }
         composable("ver_gastos") { VerGastosScreen(onRegresar = { navController.popBackStack() }) }
-        composable("buscar_gasto") { BusquedaGastoScreen(onRegresar = { navController.popBackStack() }) }
 
         composable("facturacion") {
             FacturacionScreen(
                 onNuevaFactura = { navController.navigate("nueva_factura") },
                 onVerFacturas = { navController.navigate("ver_facturas") },
-                onBuscarFactura = { navController.navigate("buscar_factura") },
+                onDatosFiscalesSat = { navController.navigate("mis_datos_facturacion") },
                 onRegresar = { navController.popBackStack() }
             )
         }
         composable("nueva_factura") { NuevaFacturaScreen(onGuardar = { navController.popBackStack() }, onRegresar = { navController.popBackStack() }) }
         composable("ver_facturas") { VerFacturasScreen(onRegresar = { navController.popBackStack() }) }
-        composable("buscar_factura") { BusquedaFacturaScreen(onRegresar = { navController.popBackStack() }) }
 
         composable("reportes") {
             ReportesScreen(
@@ -458,6 +432,7 @@ fun AppNavigationTaller() {
                 onReporteGastos = { navController.navigate("reporte_gastos") },
                 onReporteFacturacion = { navController.navigate("reporte_facturacion") },
                 onReporteRecepciones = { navController.navigate("ver_recepciones") },
+                onHistorialServicios = { navController.navigate("historial") },
                 onRegresar = { navController.popBackStack() }
             )
         }

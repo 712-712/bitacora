@@ -4,14 +4,24 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.bitacoraautomotriz.data.Factura
@@ -27,12 +37,14 @@ fun VerFacturasScreen(
     onRegresar: () -> Unit,
 ) {
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
     var facturas by remember { mutableStateOf<List<Factura>>(value = emptyList()) }
+    var busquedaQuery by remember { mutableStateOf("") }
     var cargando by remember { mutableStateOf(value = true) }
 
     LaunchedEffect(Unit) {
         try {
-            facturas = FacturaRepository.obtenerFacturas(context)
+            facturas = FacturaRepository.obtenerFacturas(context).sortedByDescending { it.id }
         } catch (_: Exception) {
             facturas = emptyList()
         } finally {
@@ -59,6 +71,39 @@ fun VerFacturasScreen(
 
     val totalFacturadoMes = facturasDelMes.sumOf { if (it.total.isNaN() || it.total < 0) 0.0 else it.total }
 
+    val facturasFiltradas by remember(facturas, busquedaQuery) {
+        derivedStateOf {
+            if (busquedaQuery.isBlank()) {
+                facturas
+            } else {
+                val q = busquedaQuery.trim().lowercase(Locale.getDefault())
+                facturas.filter { f ->
+                    f.numero.lowercase(Locale.getDefault()).contains(q) ||
+                    f.cliente.lowercase(Locale.getDefault()).contains(q) ||
+                    f.fecha.lowercase(Locale.getDefault()).contains(q) ||
+                    f.id.toString().contains(q) ||
+                    String.format(Locale.US, "%.2f", f.total).contains(q)
+                }
+            }
+        }
+    }
+
+    val coloresCamposTexto = OutlinedTextFieldDefaults.colors(
+        focusedContainerColor = Colores.FondoSecundario,
+        unfocusedContainerColor = Colores.FondoSecundario,
+        disabledContainerColor = Colores.FondoSecundario,
+        focusedTextColor = Color.White,
+        unfocusedTextColor = Color.White,
+        disabledTextColor = Color.White,
+        focusedBorderColor = Colores.BordeBoton,
+        unfocusedBorderColor = Colores.BordeBoton.copy(alpha = 0.5f),
+        cursorColor = Color.White,
+        selectionColors = TextSelectionColors(
+            handleColor = Color.White,
+            backgroundColor = Color(0xFF00DDEB).copy(alpha = 0.4f)
+        )
+    )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -84,6 +129,7 @@ fun VerFacturasScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // TARJETA ROJA: TOTAL GENERAL FACTURADO
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
@@ -126,7 +172,51 @@ fun VerFacturasScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // CUADRO DE BÚSQUEDA INTEGRADO JUSTO DEBAJO DE LA TARJETA ROJA
+            OutlinedTextField(
+                value = busquedaQuery,
+                onValueChange = { busquedaQuery = it },
+                placeholder = {
+                    Text(
+                        text = "BUSCAR FACTURA (FOLIO, CLIENTE, FECHA...)",
+                        color = Color.LightGray,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Buscar Factura",
+                        tint = Color.White
+                    )
+                },
+                trailingIcon = {
+                    if (busquedaQuery.isNotEmpty()) {
+                        IconButton(onClick = { busquedaQuery = "" }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Limpiar Búsqueda",
+                                tint = Color.White
+                            )
+                        }
+                    }
+                },
+                singleLine = true,
+                textStyle = TextStyle(color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold),
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Characters,
+                    imeAction = ImeAction.Search
+                ),
+                keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
+                shape = RoundedCornerShape(12.dp),
+                colors = coloresCamposTexto,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
 
             if (cargando) {
                 Box(
@@ -137,15 +227,15 @@ fun VerFacturasScreen(
                 ) {
                     CircularProgressIndicator(color = Color.White)
                 }
-            } else if (facturas.isEmpty()) {
+            } else if (facturasFiltradas.isEmpty()) {
                 Text(
-                    text = "NO HAY FACTURAS REGISTRADAS",
-                    fontSize = 18.sp,
+                    text = if (busquedaQuery.isBlank()) "NO HAY FACTURAS REGISTRADAS" else "NO SE ENCONTRARON FACTURAS PARA \"$busquedaQuery\"",
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
             } else {
-                facturas.forEach { factura ->
+                facturasFiltradas.forEach { factura ->
                     val subtotal = if (factura.subtotal.isNaN() || factura.subtotal < 0) 0.0 else factura.subtotal
                     val iva = if (factura.iva.isNaN() || factura.iva < 0) 0.0 else factura.iva
                     val total = if (factura.total.isNaN() || factura.total < 0) 0.0 else factura.total

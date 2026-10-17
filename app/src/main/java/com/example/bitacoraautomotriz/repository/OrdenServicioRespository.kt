@@ -49,6 +49,7 @@ object OrdenServicioRepository {
 
     suspend fun eliminarOrden(orden: OrdenServicio, context: Context? = null) {
         obtenerDao(context)?.eliminarOrden(orden)
+        try { FirebaseSyncManager.eliminarOrdenDeFirebase(orden) } catch (_: Exception) {}
     }
 
     suspend fun actualizarEstadoYAvance(id: Int, estado: String, porcentajeAvance: Int, fechaEntrega: String, context: Context? = null) {

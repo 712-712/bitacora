@@ -202,23 +202,15 @@ fun ProgramarAlertaScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
-            // TÍTULO EN 2 LÍNEAS ALINEADAS SOLICITADO
+            // TÍTULO EN 2 LÍNEAS ALINEADAS CENTRADAS
             Text(
-                text = "PANEL DE ALERTAS",
+                text = "PANEL DE ALERTAS\nAL CLIENTE",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = Colores.TituloPrincipal,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(2.dp))
-
-            Text(
-                text = "AL CLIENTE",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Colores.TituloPrincipal,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                lineHeight = 28.sp,
+                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -473,27 +465,13 @@ fun ProgramarAlertaScreen(
                             onClick = {
                                 editandoMensaje = false
                                 focusManager.clearFocus()
-                                Toast.makeText(context, "✅ Mensaje de alerta guardado", Toast.LENGTH_SHORT).show()
+                                enviarAlerta()
+                                Toast.makeText(context, "✅ Alerta guardada y programada en tiempo real", Toast.LENGTH_SHORT).show()
                             },
                             modifier = Modifier.weight(1f).height(46.dp),
                             tamanioTexto = 14
                         )
                     }
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    // BOTÓN ENVIAR ALERTA A CLIENTE
-                    BotonModulo3D(
-                        texto = "ENVIAR ALERTA A CLIENTE",
-                        icono = "📱",
-                        colorClaro = Color(0xFFD7B899),
-                        colorMedio = Color(0xFF9B6B43),
-                        colorOscuro = Color(0xFF5D3A1A),
-                        colorTexto = Color.Black,
-                        onClick = { enviarAlerta() },
-                        modifier = Modifier.fillMaxWidth().height(52.dp),
-                        tamanioTexto = 15
-                    )
                 }
             }
 

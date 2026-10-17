@@ -25,7 +25,6 @@ import com.example.bitacoraautomotriz.ui.theme.Colores
 fun ClientesScreen(
     onNuevoCliente: () -> Unit,
     onVerClientes: () -> Unit,
-    onBuscarCliente: () -> Unit,
     onVerAutos: () -> Unit,
     onAgregarAuto: () -> Unit,
     onRegresar: () -> Unit
@@ -47,64 +46,64 @@ fun ClientesScreen(
         )
         Spacer(modifier = Modifier.height(32.dp))
 
+        // 1. NUEVO CLIENTE
         BotonModulo3D(
             texto = "NUEVO CLIENTE",
             colorClaro = Color(0xFF80D8FF),
             colorMedio = Color(0xFF00B8D4),
             colorOscuro = Color(0xFF006064),
             onClick = onNuevoCliente,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().height(58.dp),
+            tamanioTexto = 18
         )
         Spacer(modifier = Modifier.height(16.dp))
 
+        // 2. VER MIS CLIENTES
         BotonModulo3D(
             texto = "VER MIS CLIENTES",
             colorClaro = Color(0xFF80D8FF),
             colorMedio = Color(0xFF00B8D4),
             colorOscuro = Color(0xFF006064),
             onClick = onVerClientes,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().height(58.dp),
+            tamanioTexto = 18
         )
         Spacer(modifier = Modifier.height(16.dp))
 
-        BotonModulo3D(
-            texto = "BUSCAR CLIENTE",
-            colorClaro = Color(0xFF80D8FF),
-            colorMedio = Color(0xFF00B8D4),
-            colorOscuro = Color(0xFF006064),
-            onClick = onBuscarCliente,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Botones de Autos dentro del módulo de Clientes (Color Verde)
+        // 3. VER AUTOS CLIENTES
         BotonModulo3D(
             texto = "VER AUTOS CLIENTES",
             colorClaro = Color(0xFFB9F6CA),
             colorMedio = Color(0xFF00C853),
             colorOscuro = Color(0xFF00695C),
             onClick = onVerAutos,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().height(58.dp),
+            tamanioTexto = 18
         )
         Spacer(modifier = Modifier.height(16.dp))
 
+        // 4. AGREGAR AUTO NUEVO
         BotonModulo3D(
             texto = "AGREGAR AUTO NUEVO",
             colorClaro = Color(0xFFB9F6CA),
             colorMedio = Color(0xFF00C853),
             colorOscuro = Color(0xFF00695C),
             onClick = onAgregarAuto,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().height(58.dp),
+            tamanioTexto = 18
         )
         Spacer(modifier = Modifier.height(24.dp))
 
+        // 5. REGRESAR
         BotonModulo3D(
             texto = "REGRESAR",
+            icono = "🔙",
             colorClaro = Colores.RegresarClaro,
             colorMedio = Colores.RegresarMedio,
             colorOscuro = Colores.RegresarOscuro,
             onClick = onRegresar,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().height(58.dp),
+            tamanioTexto = 18,
             colorTexto = Color.White
         )
         Spacer(modifier = Modifier.height(16.dp))

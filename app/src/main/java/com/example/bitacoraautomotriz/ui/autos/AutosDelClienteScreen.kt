@@ -27,7 +27,7 @@ fun AutosDelClienteScreen(
     onRegresar: () -> Unit
 ) {
     var autos by remember { mutableStateOf(emptyList<Auto>()) }
-    var refreshTrigger by remember { mutableStateOf(0) }
+    var refreshTrigger by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(refreshTrigger) {
         autos = AutoRepository.obtenerAutosPorCliente(nombreCliente).sortedByDescending { it.id }
